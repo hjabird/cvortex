@@ -45,16 +45,32 @@ cvtx_Vec3f cvtx_Particle_ind_dvort(
 	const cvtx_Particle *induced_particle,
 	const cvtx_VortFunc *kernel);
 
-cvtx_Vec3f cvtx_Particle_array_ind_vel(
-	const cvtx_Particle* array_start,
+cvtx_Vec3f cvtx_ParticleArr_ind_vel(
+	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Vec3f mes_point,
 	const cvtx_VortFunc *kernel);
 
-cvtx_Vec3f cvtx_Particle_array_ind_dvort(
-	const cvtx_Particle *self,
+cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
+	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Particle *induced_particle,
+	const cvtx_VortFunc *kernel);
+
+void cvtx_ParticleArr_Arr_ind_vel(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Vec3f *mes_start,
+	const int num_mes,
+	cvtx_Vec3f *result_array,
+	const cvtx_VortFunc *kernel);
+
+void cvtx_ParticleArr_Arr_ind_dvort(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Particle **induced_start,
+	const int num_induced,
+	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel);
 
 #endif /* CVTX_PARTICLE_H */

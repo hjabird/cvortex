@@ -70,38 +70,72 @@ cvtx_Vec3f cvtx_Particle_ind_dvort(
 	return ret;
 }
 
-cvtx_Vec3f cvtx_Particle_array_ind_vel(
-	const cvtx_Particle* array_start,
+cvtx_Vec3f cvtx_ParticleArr_ind_vel(
+	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Vec3f mes_point,
-	const cvtx_VortFunc *kernel )
+	const cvtx_VortFunc *kernel)
 {
 	cvtx_Vec3f vel, ret;
 	int i;
 	assert(num_particles >= 0);
 	ret = cvtx_Vec3f_zero();
 	for (i = 0; i < num_particles; ++i) {
-		vel = cvtx_Particle_ind_vel(array_start + i,
+		vel = cvtx_Particle_ind_vel(array_start[i],
 			mes_point, kernel);
 		ret = cvtx_Vec3f_plus(ret, vel);
 	}
 	return ret;
 }
 
-cvtx_Vec3f cvtx_Particle_array_ind_dvort(
-	const cvtx_Particle * array_start, 
-	const int num_particles, 
-	const cvtx_Particle * induced_particle, 
-	const cvtx_VortFunc * kernel)
+cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Particle *induced_particle,
+	const cvtx_VortFunc *kernel)
 {
 	cvtx_Vec3f dvort, ret;
 	int i;
 	assert(num_particles >= 0);
 	ret = cvtx_Vec3f_zero();
 	for (i = 0; i < num_particles; ++i) {
-		dvort = cvtx_Particle_ind_dvort(array_start + i,
+		dvort = cvtx_Particle_ind_dvort(array_start[i],
 			induced_particle, kernel);
 		ret = cvtx_Vec3f_plus(ret, dvort);
 	}
 	return ret;
+}
+
+void cvtx_ParticleArr_Arr_ind_vel(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Vec3f *mes_start,
+	const int num_mes,
+	cvtx_Vec3f *result_array,
+	const cvtx_VortFunc *kernel)
+{
+	int i;
+#pragma omp parallel for schedule(static)
+	for(i = 0; i < num_mes; ++i){
+		result_array[i] = cvtx_ParticleArr_ind_vel(
+			array_start, num_particles, mes_start[i], kernel);
+	}
+	return;
+}
+
+void cvtx_ParticleArr_Arr_ind_dvort(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Particle **induced_start,
+	const int num_induced,
+	cvtx_Vec3f *result_array,
+	const cvtx_VortFunc *kernel)
+{
+	int i;
+#pragma omp parallel for schedule(static)
+	for(i = 0; i < num_induced; ++i){
+		result_array[i] = cvtx_ParticleArr_ind_dvort(
+			array_start, num_particles, induced_start[i], kernel);
+	}
+	return;
 }
