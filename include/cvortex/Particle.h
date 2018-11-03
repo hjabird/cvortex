@@ -37,31 +37,24 @@ typedef struct {
 
 cvtx_Vec3f cvtx_Particle_ind_vel(
 	const cvtx_Particle *self, 
-	const cvtx_Vec3f *mes_point, 
-	const cvtx_ParticleKernalFunctions *kernel);
+	const cvtx_Vec3f mes_point, 
+	const cvtx_VortFunc *kernel);
 
 cvtx_Vec3f cvtx_Particle_ind_dvort(
 	const cvtx_Particle *self, 
 	const cvtx_Particle *induced_particle,
-	const cvtx_ParticleKernalFunctions *kernel);
+	const cvtx_VortFunc *kernel);
 
 cvtx_Vec3f cvtx_Particle_array_ind_vel(
 	const cvtx_Particle* array_start,
 	const int num_particles,
-	const cvtx_Vec3f *mes_point,
-	const cvtx_ParticleKernalFunctions *kernel);
+	const cvtx_Vec3f mes_point,
+	const cvtx_VortFunc *kernel);
 
 cvtx_Vec3f cvtx_Particle_array_ind_dvort(
 	const cvtx_Particle *self,
 	const int num_particles,
 	const cvtx_Particle *induced_particle,
-	const cvtx_ParticleKernalFunctions *kernel);
-
-void cvtx_Particle_updated_ind_particle(
-	const cvtx_Particle *self,
-	cvtx_Particle *induced_particle,
-	const cvtx_ParticleKernalFunctions *kernel,
-	float dt);
-
+	const cvtx_VortFunc *kernel);
 
 #endif /* CVTX_PARTICLE_H */

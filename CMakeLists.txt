@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(cvortex)
 
+option(BUILD_UNIT_TESTS "Builds tests" OFF)
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 file (GLOB CVORTEX_INCLUDE "include/cvortex/*.h")
 file (GLOB CVORTEX_SOURCE  "src/*.c")
 source_group("" FILES ${cvortex})
@@ -15,3 +18,7 @@ set_property(TARGET cvortex PROPERTY FOLDER "libraries")
 set_target_properties(cvortex PROPERTIES
                       RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
                       PUBLIC_HEADER "${CVORTEX_INCLUDE}")
+
+if(BUILD_UNIT_TESTS)
+    add_subdirectory(test)
+endif(BUILD_UNIT_TESTS)

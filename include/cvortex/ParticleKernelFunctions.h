@@ -1,7 +1,7 @@
-#ifndef CVTX_PARTICLE_KERNEL_FUNCTIONS_H
-#define CVTX_PARTICLE_KERNEL_FUNCTIONS_H
+#ifndef CVTX_VORT_FUNC_H
+#define CVTX_VORT_FUNC_H
 /*============================================================================
-ParticleKernelFunctions.h
+VortFunc.h
 
 Common functions used to regularise vortex particles.
 
@@ -30,9 +30,9 @@ typedef struct {
 	float(*reduction_factor_fn)(float rho);
 	float(*vorticity_fraction_fn)(float rho);
 	void(*combined_fn)(float rho, float* reduction, float* vort_frac);
-} cvtx_ParticleKernalFunctions;
+} cvtx_VortFunc;
 
-const cvtx_ParticleKernalFunctions cvtx_ParticleKernalFunctions_singular(void);
-const cvtx_ParticleKernalFunctions cvtx_ParticleKernalFunctions_winckelmans(void);
+const cvtx_VortFunc cvtx_VortFunc_singular(void);
+const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
 
-#endif /* CVTX_PARTICLE_KERNEL_FUNCTIONS_H */
+#endif /* CVTX_CVTX_VORT_FUNC_H */

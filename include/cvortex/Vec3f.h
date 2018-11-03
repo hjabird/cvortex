@@ -25,18 +25,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
+#include <stdbool.h>
 
-typedef struct{
+typedef struct cvtx_Vec3f{
 	float x[3];
 } cvtx_Vec3f;
 
-float cvtx_Vec3f_abs(const cvtx_Vec3f *self);
-float cvtx_Vec3f_dot(const cvtx_Vec3f *self, const cvtx_Vec3f *other);
-cvtx_Vec3f cvtx_Vec3f_cross(const cvtx_Vec3f *self, const cvtx_Vec3f *other);
-cvtx_Vec3f cvtx_Vec3f_plus(const cvtx_Vec3f *self, const cvtx_Vec3f *other);
-cvtx_Vec3f cvtx_Vec3f_minus(const cvtx_Vec3f *self, const cvtx_Vec3f *other);
-cvtx_Vec3f cvtx_Vec3f_mult(const cvtx_Vec3f *self, const float multiplier);
-cvtx_Vec3f cvtx_Vec3f_div(const cvtx_Vec3f *self, const float div);
+float cvtx_Vec3f_abs(const cvtx_Vec3f self);
+float cvtx_Vec3f_dot(const cvtx_Vec3f self, const cvtx_Vec3f other);
+cvtx_Vec3f cvtx_Vec3f_cross(const cvtx_Vec3f self, const cvtx_Vec3f other);
+cvtx_Vec3f cvtx_Vec3f_plus(const cvtx_Vec3f self, const cvtx_Vec3f other);
+cvtx_Vec3f cvtx_Vec3f_minus(const cvtx_Vec3f self, const cvtx_Vec3f other);
+cvtx_Vec3f cvtx_Vec3f_uminus(const cvtx_Vec3f self);
+cvtx_Vec3f cvtx_Vec3f_mult(const cvtx_Vec3f self, const float multiplier);
+cvtx_Vec3f cvtx_Vec3f_div(const cvtx_Vec3f self, const float div);
 cvtx_Vec3f cvtx_Vec3f_zero(void);
+bool cvtx_Vec3f_isequal(const cvtx_Vec3f self, const cvtx_Vec3f other);
+bool cvtx_Vec3f_isnequal(const cvtx_Vec3f self, const cvtx_Vec3f other);
 
 #endif /* CVTX_VEC3F_H */
