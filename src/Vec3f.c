@@ -55,8 +55,8 @@ cvtx_Vec3f cvtx_Vec3f_cross(const cvtx_Vec3f self, const cvtx_Vec3f other){
 	cvtx_Vec3f ret;
 	ret.x[0] = self.x[1] * other.x[2] - 
 		self.x[2] * other.x[1];
-	ret.x[1] = self.x[2] * other.x[1] - 
-		self.x[1] * other.x[2];
+	ret.x[1] = self.x[2] * other.x[0] - 
+		self.x[0] * other.x[2];
 	ret.x[2] = self.x[0] * other.x[1] - 
 		self.x[1] * other.x[0];
 	return ret;	
