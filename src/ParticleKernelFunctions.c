@@ -35,7 +35,7 @@ static float vort_frac_singular(float rho) {
 	return 0;
 }
 
-static void combined_static(float rho, float* reduction, float* vort_frac) {
+static void combined_singular(float rho, float* reduction, float* vort_frac) {
 	*reduction = 1;
 	*vort_frac = 0;
 	return;
@@ -65,18 +65,20 @@ static void combined_winckel(float rho, float* reduction, float* vort_frac) {
 }
 
 
-const cvtx_VortFunc cvtx_ParticleKernalFunctions_singular(void)
+const cvtx_VortFunc cvtx_VortFunc_singular(void)
 {
 	cvtx_VortFunc ret;
 	ret.reduction_factor_fn = &vort_red_singular;
 	ret.vorticity_fraction_fn = &vort_frac_singular;
+	ret.combined_fn = &combined_singular;
 	return ret;
 }
 
-const cvtx_VortFunc cvtx_ParticleKernalFunctions_winckelmans(void)
+const cvtx_VortFunc cvtx_VortFunc_winckelmans(void)
 {
 	cvtx_VortFunc ret;
 	ret.reduction_factor_fn = &vort_red_winckel;
 	ret.vorticity_fraction_fn = &vort_frac_winckel;
+	ret.combined_fn = &combined_winckel;
 	return ret;
 }

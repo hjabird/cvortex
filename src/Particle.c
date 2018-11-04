@@ -34,13 +34,17 @@ cvtx_Vec3f cvtx_Particle_ind_vel(
 	const cvtx_VortFunc * kernel)
 {
 	cvtx_Vec3f rad, num, ret;
-	float cor, den, rho;
-	rad = cvtx_Vec3f_minus(mes_point, self->coord);
-	num = cvtx_Vec3f_cross(rad, self->vorticity);
-	den = powf(cvtx_Vec3f_abs(rad), 3);
-	rho = fabsf(cvtx_Vec3f_abs(rad) / self->radius);
-	cor = kernel->reduction_factor_fn(rho) * -(float)1. / (4 * (float)acos(-1));
-	ret = cvtx_Vec3f_mult(num, cor / den);
+	if(cvtx_Vec3f_isequal(self->coord, mes_point)){
+		ret = cvtx_Vec3f_zero();
+	} else {
+		float cor, den, rho;
+		rad = cvtx_Vec3f_minus(self->coord, mes_point);
+		rho = fabsf(cvtx_Vec3f_abs(rad) / self->radius);
+		cor = kernel->reduction_factor_fn(rho) / ((float)4. * (float)acos(-1));
+		den = powf(cvtx_Vec3f_abs(rad), 3);
+		num = cvtx_Vec3f_cross(rad, self->vorticity);
+		ret = cvtx_Vec3f_mult(num, cor / den);
+	}
 	return ret;
 }
 
@@ -51,22 +55,26 @@ cvtx_Vec3f cvtx_Particle_ind_dvort(
 {
 	cvtx_Vec3f ret, rad, cross_om, t2, t21, t21n, t22, t224;
 	float g, f, radd, rho, t1, t21d, t221, t222, t223;
-	rad = cvtx_Vec3f_minus(induced_particle->coord, self->coord);
-	radd = cvtx_Vec3f_abs(rad);
-	rho = fabsf(radd / self->radius);
-	kernel->combined_fn(rho, &g, &f);
-	t1 = (float)1. / ((float)4. * (float)acos(-1) * powf(self->radius, 3));
-	cross_om = cvtx_Vec3f_cross(induced_particle->vorticity, self->vorticity);
-	t21n = cvtx_Vec3f_mult(cross_om, g);
-	t21d = rho * rho * rho;
-	t21 = cvtx_Vec3f_div(t21n, t21d);
-	t221 = 1 / (radd * radd);
-	t222 = (3 * g) / (rho * rho * rho) - f;
-	t223 = cvtx_Vec3f_dot(induced_particle->vorticity, rad);
-	t224 = cvtx_Vec3f_cross(rad, self->vorticity);
-	t22 = cvtx_Vec3f_mult(t224, t221 * t222 * t223);
-	t2 = cvtx_Vec3f_plus(t21, t22);
-	ret = cvtx_Vec3f_mult(t2, t1);
+	if(cvtx_Vec3f_isequal(self->coord, induced_particle->coord)){
+		ret = cvtx_Vec3f_zero();
+	} else {
+		rad = cvtx_Vec3f_minus(induced_particle->coord, self->coord);
+		radd = cvtx_Vec3f_abs(rad);
+		rho = fabsf(radd / self->radius);
+		kernel->combined_fn(rho, &g, &f);
+		cross_om = cvtx_Vec3f_cross(induced_particle->vorticity, self->vorticity);
+		t1 = (float)1. / ((float)4. * (float)acos(-1) * powf(self->radius, 3));
+		t21n = cvtx_Vec3f_mult(cross_om, -g);
+		t21d = rho * rho * rho;
+		t21 = cvtx_Vec3f_div(t21n, t21d);
+		t221 = (float)1. / (radd * radd);
+		t222 = (3 * g) / (rho * rho * rho) - f;
+		t223 = cvtx_Vec3f_dot(induced_particle->vorticity, rad);
+		t224 = cvtx_Vec3f_cross(rad, self->vorticity);
+		t22 = cvtx_Vec3f_mult(t224, t221 * t222 * t223);
+		t2 = cvtx_Vec3f_plus(t21, t22);
+		ret = cvtx_Vec3f_mult(t2, t1);
+	}
 	return ret;
 }
 
