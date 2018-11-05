@@ -2,7 +2,7 @@
 #define CVTX_TEST_VORTFUNC_H
 
 /*============================================================================
-testparticle.h
+testvortfunc.h
 
 Test functionality of vortex particle & methods.
 
@@ -35,18 +35,24 @@ int testVortFunc(){
     SECTION("VortFunc");
     /* Singular kernel */
     cvtx_VortFunc vfs = cvtx_VortFunc_singular();
-    TEST(vfs.g_fn(0.1) == 1.);
-    TEST(vfs.g_fn(3) == 1.);
-    TEST(vfs.zeta_fn(0.1) == 0.);
-    TEST(vfs.zeta_fn(10) == 0.);
+    TEST(vfs.g_fn((float)0.1) == 1.);
+    TEST(vfs.g_fn((float)3) == 1.);
+    TEST(vfs.zeta_fn((float)0.1) == 0.);
+    TEST(vfs.zeta_fn((float)10) == 0.);
 
     cvtx_VortFunc vfw = cvtx_VortFunc_winckelmans();
-    TEST(vfw.g_fn(0.) == 0.);
-    TEST(fabsf(vfw.g_fn(1.) - 0.61872) < 0.00001);
-    TEST(fabsf(vfw.g_fn(10.) - 0.9998168) < 0.0000001);
-    TEST(vfw.zeta_fn(0) == 7.5);
-    TEST(fabs(vfw.zeta_fn(10) - 7.2433e-7) < 1e-11);
+    TEST(vfw.g_fn((float)0.) == 0.);
+    TEST(fabsf(vfw.g_fn((float)1.) - (float)0.61872) < 0.00001);
+    TEST(fabsf(vfw.g_fn((float)10.) - (float)0.9998168) < 0.0000001);
+    TEST(vfw.zeta_fn((float)0) == 7.5);
+    TEST(fabs(vfw.zeta_fn((float)10) - 7.2433e-7) < 1e-11);
 
+    cvtx_VortFunc vfp = cvtx_VortFunc_planetary();
+    TEST(vfp.g_fn((float)0.) == 0.);
+    TEST(vfp.g_fn((float)1.) == 1.);
+    TEST(vfp.g_fn((float)10.) == 1.);
+    TEST(vfp.zeta_fn((float)0.99) == 3.);
+    TEST(vfp.zeta_fn((float)1.01) == 0.);
     return 0;
 }
 

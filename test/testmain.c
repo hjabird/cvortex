@@ -27,35 +27,40 @@ SOFTWARE.
 #include <string.h>
 #include <assert.h>
 
+#define _CRT_SECURE_NO_WARNINGS
 #define TEST(X) test(__FILE__, __LINE__, X)
 
 #define SECTION(X) section(X)
 
 int tests_passed = 0;
+int tests_completed = 0;
 char working_section_name[512] = "";
 
 void test(char* file_name, int line_no, int passed){
     if(!passed){
         printf("Test failed:\n\t%s\n\tLine %i\n", file_name, line_no);
         assert(0);
+    } else {
+        tests_passed += 1;
     }
-    tests_passed += 1;
+    tests_completed += 1;
     return;
 }
 
 void section(char section_name[]){
     if(tests_passed > 0){
-        printf("Completed %i tests in section %s.\n", 
-            tests_passed, working_section_name);
+        printf("Passed %i of %i tests in section %s.\n", 
+            tests_passed, tests_completed, working_section_name);
     }
     tests_passed = 0;
+    tests_completed = 0;
     strcpy(working_section_name, section_name);
     return;
 }
 
 #include "testvec3f.h"
 #include "testparticle.h"
-#include "testVortFunc.h"
+#include "testvortfunc.h"
 
 int main(int argc, char* argv[]){
     testVec3f();
