@@ -38,9 +38,9 @@ cvtx_Vec3f cvtx_Particle_ind_vel(
 		ret = cvtx_Vec3f_zero();
 	} else {
 		float cor, den, rho;
-		rad = cvtx_Vec3f_minus(self->coord, mes_point);
+		rad = cvtx_Vec3f_minus(mes_point, self->coord);
 		rho = fabsf(cvtx_Vec3f_abs(rad) / self->radius);
-		cor = kernel->reduction_factor_fn(rho) / ((float)4. * (float)acos(-1));
+		cor = - kernel->g_fn(rho) / ((float)4. * (float)acos(-1));
 		den = powf(cvtx_Vec3f_abs(rad), 3);
 		num = cvtx_Vec3f_cross(rad, self->vorticity);
 		ret = cvtx_Vec3f_mult(num, cor / den);

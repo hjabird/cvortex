@@ -27,7 +27,7 @@ SOFTWARE.
 ============================================================================*/
 
 #include "Vec3f.h"
-#include "ParticleKernelFunctions.h"
+#include "VortFunc.h"
 
 typedef struct {
 	cvtx_Vec3f coord;
