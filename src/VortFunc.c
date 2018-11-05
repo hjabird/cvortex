@@ -35,9 +35,9 @@ static float zeta_singular(float rho) {
 	return 0;
 }
 
-static void combined_singular(float rho, float* reduction, float* vort_frac) {
-	*reduction = 1;
-	*vort_frac = 0;
+static void combined_singular(float rho, float* g, float* zeta) {
+	*g = 1;
+	*zeta = 0;
 	return;
 }
 
@@ -54,7 +54,7 @@ static float zeta_winckel(float rho) {
 	float a, b, c;
 	a = rho * rho + 1;
 	b = powf(a, 3.5);
-	c = 7.5 /b;
+	c = (float)7.5 / b;
 	return c;
 }
 
@@ -64,6 +64,19 @@ static void combined_winckel(float rho, float* g, float* zeta) {
 	return;
 }
 
+static float g_planetary(float rho) {
+	return rho < (float)1. ? rho * rho * rho : (float)1.;
+}
+
+static float zeta_planetary(float rho){
+	return rho < (float)1. ? (float)3 : (float)0;
+}
+
+static void combined_planetary(float rho, float* g, float* zeta) {
+	*g = g_planetary(rho);
+	*zeta = zeta_planetary(rho);
+	return;
+}
 
 const cvtx_VortFunc cvtx_VortFunc_singular(void)
 {
@@ -79,6 +92,15 @@ const cvtx_VortFunc cvtx_VortFunc_winckelmans(void)
 	cvtx_VortFunc ret;
 	ret.g_fn = &g_winckel;
 	ret.zeta_fn = &zeta_winckel;
+	ret.combined_fn = &combined_winckel;
+	return ret;
+}
+
+const cvtx_VortFunc cvtx_VortFunc_planetary(void)
+{
+	cvtx_VortFunc ret;
+	ret.g_fn = &g_planetary;
+	ret.zeta_fn = &zeta_planetary;
 	ret.combined_fn = &combined_winckel;
 	return ret;
 }
