@@ -1,6 +1,6 @@
 
 #include "../include/cvortex/Particle.h"
-#include "../include/cvortex/ParticleKernelFunctions.h"
+#include "../include/cvortex/VortFunc.h"
 #include "../include/cvortex/LegacyVtk.h"
 #define NUM_PER_RING 200
 #include <math.h>
@@ -44,12 +44,12 @@ int main(int argc, char* argv[])
         }
         cvtx_VortFunc vort_fn = cvtx_VortFunc_singular();
         cvtx_ParticleArr_Arr_ind_vel(
-            m_particle_ptrs, NUM_PER_RING*2,
+            (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             mes_pnts, NUM_PER_RING*2,
             vels, &vort_fn);
         cvtx_ParticleArr_Arr_ind_dvort(
-            m_particle_ptrs, NUM_PER_RING*2,
-            m_particle_ptrs, NUM_PER_RING*2,
+            (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
+            (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             dvorts, &vort_fn);
         for(int i =0; i < NUM_PER_RING*2; i++){
             m_particles[i].coord = cvtx_Vec3f_plus(
@@ -60,7 +60,9 @@ int main(int argc, char* argv[])
                 cvtx_Vec3f_mult(dvorts[i], dt));
         }
         sprintf(file_name, "./output/particles_%i.vtk", step);
-        cvtx_ParticleArr_to_vtk(file_name, m_particle_ptrs, NUM_PER_RING*2); 
+        if(cvtx_ParticleArr_to_vtk(file_name, m_particle_ptrs, NUM_PER_RING*2)){
+            break;
+        } 
     }
     return 0;
 }
