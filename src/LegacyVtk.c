@@ -34,6 +34,10 @@ int cvtx_ParticleArr_to_vtk(
 {
     FILE *file;
     file = fopen(path, "wb");
+    if(file == NULL){
+        printf("Could not open file at path :%s\n", path);
+        return 1;
+    }
     fprintf(file, "# vtk DataFile Version 2.0\n");
     fprintf(file, "Vortex particles\n");
     fprintf(file, "ASCII\n");
