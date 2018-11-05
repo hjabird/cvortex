@@ -9,7 +9,6 @@ if(USE_OPENMP)
     find_package(OpenMP)
     if (OPENMP_FOUND)
         set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
     endif()
 endif(USE_OPENMP)
@@ -22,8 +21,8 @@ source_group("include" FILES ${CVORTEX_INCLUDE})
 source_group("source" FILES ${CVORTEX_SOURCE})
 
 include_directories (include/cvortex)
-add_library(cvortex  	${CVORTEX_INCLUDE} 
-						${CVORTEX_SOURCE})
+add_library(cvortex  	${CVORTEX_INCLUDE} ${CVORTEX_SOURCE})
+link_libraries(cvortex m)
 						
 set_property(TARGET cvortex PROPERTY FOLDER "libraries")
 set_target_properties(cvortex PROPERTIES
@@ -37,3 +36,4 @@ endif(BUILD_UNIT_TESTS)
 if(BUILD_EXAMPLES)
     add_subdirectory(example)
 endif(BUILD_EXAMPLES)
+
