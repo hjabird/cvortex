@@ -22,7 +22,10 @@ source_group("source" FILES ${CVORTEX_SOURCE})
 
 include_directories (include/cvortex)
 add_library(cvortex  	${CVORTEX_INCLUDE} ${CVORTEX_SOURCE})
-link_libraries(cvortex m)
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    link_libraries(cvortex m)   # Maths std library.
+endif()
 						
 set_property(TARGET cvortex PROPERTY FOLDER "libraries")
 set_target_properties(cvortex PROPERTIES
