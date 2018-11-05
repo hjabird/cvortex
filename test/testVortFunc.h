@@ -1,7 +1,10 @@
-/*============================================================================
-testmain.c
+#ifndef CVTX_TEST_VORTFUNC_H
+#define CVTX_TEST_VORTFUNC_H
 
-A dodgy self contained test system for cvortex.
+/*============================================================================
+testparticle.h
+
+Test functionality of vortex particle & methods.
 
 Copyright(c) 2018 HJA Bird
 
@@ -23,43 +26,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
+#include "../include/cvortex/VortFunc.h"
 
-#define TEST(X) test(__FILE__, __LINE__, X)
+#include <math.h>
 
-#define SECTION(X) section(X)
 
-int tests_passed = 0;
-char working_section_name[512] = "";
+int testVortFunc(){
+    SECTION("VortFunc");
+    /* Singular kernel */
+    cvtx_VortFunc vfs = cvtx_VortFunc_singular();
+    TEST(vfs.g_fn(0.1) == 1.);
+    TEST(vfs.g_fn(3) == 1.);
+    TEST(vfs.zeta_fn(0.1) == 0.);
+    TEST(vfs.zeta_fn(10) == 0.);
 
-void test(char* file_name, int line_no, int passed){
-    if(!passed){
-        printf("Test failed:\n\t%s\n\tLine %i\n", file_name, line_no);
-        assert(0);
-    }
-    tests_passed += 1;
-    return;
+    cvtx_VortFunc vfw = cvtx_VortFunc_winckelmans();
+    TEST(vfw.g_fn(0.) == 0.);
+    TEST(fabsf(vfw.g_fn(1.) - 0.61872) < 0.00001);
+    TEST(fabsf(vfw.g_fn(10.) - 0.9998168) < 0.0000001);
+    TEST(vfw.zeta_fn(0) == 7.5);
+    TEST(fabs(vfw.zeta_fn(10) - 7.2433e-7) < 1e-11);
+
+    return 0;
 }
 
-void section(char section_name[]){
-    if(tests_passed > 0){
-        printf("Completed %i tests in section %s.\n", 
-            tests_passed, working_section_name);
-    }
-    tests_passed = 0;
-    strcpy(working_section_name, section_name);
-    return;
-}
-
-#include "testvec3f.h"
-#include "testparticle.h"
-#include "testVortFunc.h"
-
-int main(int argc, char* argv[]){
-    testVec3f();
-    testVortFunc();
-    testParticle();
-    SECTION("Ending!");
-}
+#endif /* CVTX_TEST_VORTFUNC_H */
