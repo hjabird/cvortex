@@ -94,20 +94,21 @@ int testParticle(){
         cvtx_Particle_ind_vel(&p1, vzbig, &vfs).x[1]);
 
     /* Test induced vorticity */
+    cvtx_Particle p2 =  {0,0,0, 0,0,1, 1};
     cvtx_Particle pxz = {0,0,1, 1,0,0, 1};
     cvtx_Particle pyz = {0,0,1, 0,1,0, 1};
     cvtx_Particle pzz = {0,0,1, 0,0,1, 1};
-    TEST(cvtx_Particle_ind_dvort(&p1, &pxz, &vfs).x[0] == 0);
-    TEST(cvtx_Particle_ind_dvort(&p1, &pxz, &vfs).x[1] == 0);
-    TEST(cvtx_Particle_ind_dvort(&p1, &pxz, &vfs).x[2] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pxz, &vfs).x[0] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pxz, &vfs).x[1] > 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pxz, &vfs).x[2] == 0);
 
-    TEST(cvtx_Particle_ind_dvort(&p1, &pyz, &vfs).x[0] == 0);
-    TEST(cvtx_Particle_ind_dvort(&p1, &pyz, &vfs).x[1] < 0);
-    TEST(cvtx_Particle_ind_dvort(&p1, &pyz, &vfs).x[2] == 0);
-    /* Work me out... */
-    //TEST(cvtx_Particle_ind_dvort(&p1, &pzz, &vfs).x[0] == 0);
-    //TEST(cvtx_Particle_ind_dvort(&p1, &pzz, &vfs).x[1] == 0);
-    //TEST(cvtx_Particle_ind_dvort(&p1, &pzz, &vfs).x[2] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pyz, &vfs).x[0] < 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pyz, &vfs).x[1] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pyz, &vfs).x[2] == 0);
+
+    TEST(cvtx_Particle_ind_dvort(&p2, &pzz, &vfs).x[0] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pzz, &vfs).x[1] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pzz, &vfs).x[2] == 0);
     
     return 0;
 }
