@@ -1,6 +1,7 @@
-#include "ParticleKernelFunctions.h"
+#ifndef CVTX_VORT_FUNC_H
+#define CVTX_VORT_FUNC_H
 /*============================================================================
-ParticleKernelFunctions.c
+VortFunc.h
 
 Common functions used to regularise vortex particles.
 
@@ -25,60 +26,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 
-#include <math.h>
+typedef struct {
+	float(*g_fn)(float rho);
+	float(*zeta_fn)(float rho);
+	void(*combined_fn)(float rho, float* reduction, float* vort_frac);
+} cvtx_VortFunc;
 
-static float vort_red_singular(float rho) {
-	return 1;
-}
+const cvtx_VortFunc cvtx_VortFunc_singular(void);
+const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
 
-static float vort_frac_singular(float rho) {
-	return 0;
-}
-
-static void combined_singular(float rho, float* reduction, float* vort_frac) {
-	*reduction = 1;
-	*vort_frac = 0;
-	return;
-}
-
-static float vort_red_winckel(float rho) {
-	float a, b, c, d;
-	a = rho * rho + (float)2.5;
-	b = a * rho * rho * rho;
-	c = rho + 1;
-	d = (b / powf(c, 2.5));
-	return d;
-}
-
-static float vort_frac_winckel(float rho) {
-	float a, b, c;
-	a = rho * rho + 1;
-	b = powf(a, 3.5);
-	c = a / b;
-	return c;
-}
-
-static void combined_winckel(float rho, float* reduction, float* vort_frac) {
-	*reduction = vort_red_winckel(rho);
-	*vort_frac = vort_frac_winckel(rho);
-	return;
-}
-
-
-const cvtx_VortFunc cvtx_VortFunc_singular(void)
-{
-	cvtx_VortFunc ret;
-	ret.reduction_factor_fn = &vort_red_singular;
-	ret.vorticity_fraction_fn = &vort_frac_singular;
-	ret.combined_fn = &combined_singular;
-	return ret;
-}
-
-const cvtx_VortFunc cvtx_VortFunc_winckelmans(void)
-{
-	cvtx_VortFunc ret;
-	ret.reduction_factor_fn = &vort_red_winckel;
-	ret.vorticity_fraction_fn = &vort_frac_winckel;
-	ret.combined_fn = &combined_winckel;
-	return ret;
-}
+#endif /* CVTX_CVTX_VORT_FUNC_H */

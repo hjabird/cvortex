@@ -1,7 +1,6 @@
-#ifndef CVTX_VORT_FUNC_H
-#define CVTX_VORT_FUNC_H
+#include "VortFunc.h"
 /*============================================================================
-VortFunc.h
+VortFunc.c
 
 Common functions used to regularise vortex particles.
 
@@ -26,13 +25,60 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 
-typedef struct {
-	float(*reduction_factor_fn)(float rho);
-	float(*vorticity_fraction_fn)(float rho);
-	void(*combined_fn)(float rho, float* reduction, float* vort_frac);
-} cvtx_VortFunc;
+#include <math.h>
 
-const cvtx_VortFunc cvtx_VortFunc_singular(void);
-const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
+static float g_singular(float rho) {
+	return 1;
+}
 
-#endif /* CVTX_CVTX_VORT_FUNC_H */
+static float zeta_singular(float rho) {
+	return 0;
+}
+
+static void combined_singular(float rho, float* reduction, float* vort_frac) {
+	*reduction = 1;
+	*vort_frac = 0;
+	return;
+}
+
+static float g_winckel(float rho) {
+	float a, b, c, d;
+	a = rho * rho + (float)2.5;
+	b = a * rho * rho * rho;
+	c = rho * rho + 1;
+	d = (b / powf(c, 2.5));
+	return d;
+}
+
+static float zeta_winckel(float rho) {
+	float a, b, c;
+	a = rho * rho + 1;
+	b = powf(a, 3.5);
+	c = 7.5 /b;
+	return c;
+}
+
+static void combined_winckel(float rho, float* g, float* zeta) {
+	*g = g_winckel(rho);
+	*zeta = zeta_winckel(rho);
+	return;
+}
+
+
+const cvtx_VortFunc cvtx_VortFunc_singular(void)
+{
+	cvtx_VortFunc ret;
+	ret.g_fn = &g_singular;
+	ret.zeta_fn = &zeta_singular;
+	ret.combined_fn = &combined_singular;
+	return ret;
+}
+
+const cvtx_VortFunc cvtx_VortFunc_winckelmans(void)
+{
+	cvtx_VortFunc ret;
+	ret.g_fn = &g_winckel;
+	ret.zeta_fn = &zeta_winckel;
+	ret.combined_fn = &combined_winckel;
+	return ret;
+}
