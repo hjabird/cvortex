@@ -84,15 +84,18 @@ cvtx_Vec3f cvtx_ParticleArr_ind_vel(
 	const cvtx_Vec3f mes_point,
 	const cvtx_VortFunc *kernel)
 {
-	cvtx_Vec3f vel, ret;
+	cvtx_Vec3f vel;
+	double rx = 0, ry = 0, rz = 0;
 	int i;
 	assert(num_particles >= 0);
-	ret = cvtx_Vec3f_zero();
 	for (i = 0; i < num_particles; ++i) {
 		vel = cvtx_Particle_ind_vel(array_start[i],
 			mes_point, kernel);
-		ret = cvtx_Vec3f_plus(ret, vel);
+		rx += vel.x[0];
+		ry += vel.x[1];
+		rz += vel.x[2];
 	}
+	cvtx_Vec3f ret = {(float)rx, (float)ry, (float)rz};
 	return ret;
 }
 
@@ -102,15 +105,18 @@ cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
 	const cvtx_Particle *induced_particle,
 	const cvtx_VortFunc *kernel)
 {
-	cvtx_Vec3f dvort, ret;
+	cvtx_Vec3f dvort;
+	double rx = 0, ry = 0, rz = 0;
 	int i;
 	assert(num_particles >= 0);
-	ret = cvtx_Vec3f_zero();
 	for (i = 0; i < num_particles; ++i) {
 		dvort = cvtx_Particle_ind_dvort(array_start[i],
 			induced_particle, kernel);
-		ret = cvtx_Vec3f_plus(ret, dvort);
+		rx += dvort.x[0];
+		ry += dvort.x[1];
+		rz += dvort.x[2];
 	}
+	cvtx_Vec3f ret = {(float)rx, (float)ry, (float)rz};
 	return ret;
 }
 
