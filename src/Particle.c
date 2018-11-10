@@ -28,6 +28,8 @@ SOFTWARE.
 #include <math.h>
 #include <assert.h>
 
+inline float sphere_volume(float radius);
+
 cvtx_Vec3f cvtx_Particle_ind_vel(
 	const cvtx_Particle * self,
 	const cvtx_Vec3f mes_point,
@@ -78,6 +80,40 @@ cvtx_Vec3f cvtx_Particle_ind_dvort(
 	return ret;
 }
 
+float sphere_volume(float radius){
+	return 4 * (float)acos(-1) * radius * radius * radius / (float) 3.;
+}
+
+cvtx_Vec3f cvtx_Particle_visc_ind_dvort(
+	const cvtx_Particle * self,
+	const cvtx_Particle * induced_particle,
+	const cvtx_VortFunc * kernel,
+	const float kinematic_visc)
+{	
+	cvtx_Vec3f ret, rad, t211, t212, t21, t2;
+	float radd, rho, t1, t22;
+	assert(kernel->eta_fn != NULL && "Used vortex regularisation"
+		"that did have a defined eta function");
+	if(cvtx_Vec3f_isequal(self->coord, induced_particle->coord)){
+		ret = cvtx_Vec3f_zero();
+		
+	} else {
+		rad = cvtx_Vec3f_minus(induced_particle->coord, self->coord);
+		radd = cvtx_Vec3f_abs(rad);
+		rho = fabsf(radd / self->radius);
+		t1 =  2 * kinematic_visc / powf(induced_particle->radius, 2);
+		t211 = cvtx_Vec3f_mult(self->vorticity, 
+			sphere_volume(induced_particle->radius));
+		t212 = cvtx_Vec3f_mult(induced_particle->vorticity, 
+			-1 * sphere_volume(self->radius));
+		t21 = cvtx_Vec3f_plus(t211, t212);
+		t22 = kernel->eta_fn(rho);
+		t2 = cvtx_Vec3f_mult(t21, t22);
+		ret = cvtx_Vec3f_mult(t2, t1);
+	}
+	return ret;
+}
+
 cvtx_Vec3f cvtx_ParticleArr_ind_vel(
 	const cvtx_Particle **array_start,
 	const int num_particles,
@@ -120,6 +156,28 @@ cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
 	return ret;
 }
 
+cvtx_Vec3f cvtx_ParticleArr_visc_ind_dvort(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Particle *induced_particle,
+	const cvtx_VortFunc *kernel,
+	const float kinematic_visc)
+{
+	cvtx_Vec3f dvort;
+	double rx = 0, ry = 0, rz = 0;
+	int i;
+	assert(num_particles >= 0);
+	for (i = 0; i < num_particles; ++i) {
+		dvort = cvtx_Particle_visc_ind_dvort(array_start[i],
+			induced_particle, kernel, kinematic_visc);
+		rx += dvort.x[0];
+		ry += dvort.x[1];
+		rz += dvort.x[2];
+	}
+	cvtx_Vec3f ret = {(float)rx, (float)ry, (float)rz};
+	return ret;
+}
+
 void cvtx_ParticleArr_Arr_ind_vel(
 	const cvtx_Particle **array_start,
 	const int num_particles,
@@ -150,6 +208,25 @@ void cvtx_ParticleArr_Arr_ind_dvort(
 	for(i = 0; i < num_induced; ++i){
 		result_array[i] = cvtx_ParticleArr_ind_dvort(
 			array_start, num_particles, induced_start[i], kernel);
+	}
+	return;
+}
+
+void cvtx_ParticleArr_Arr_visc_ind_dvort(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Particle **induced_start,
+	const int num_induced,
+	cvtx_Vec3f *result_array,
+	const cvtx_VortFunc *kernel,
+	const float kinematic_visc)
+{
+	int i;
+#pragma omp parallel for schedule(static)
+	for(i = 0; i < num_induced; ++i){
+		result_array[i] = cvtx_ParticleArr_visc_ind_dvort(
+			array_start, num_particles, induced_start[i], 
+			kernel, kinematic_visc);
 	}
 	return;
 }
