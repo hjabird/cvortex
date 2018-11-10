@@ -30,10 +30,12 @@ typedef struct {
 	float(*g_fn)(float rho);
 	float(*zeta_fn)(float rho);
 	void(*combined_fn)(float rho, float* g, float* zeta);
+	float(*eta_fn)(float rho);
 } cvtx_VortFunc;
 
 const cvtx_VortFunc cvtx_VortFunc_singular(void);
 const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
 const cvtx_VortFunc cvtx_VortFunc_planetary(void);
+const cvtx_VortFunc cvtx_VortFunc_gaussian(void);
 
 #endif /* CVTX_CVTX_VORT_FUNC_H */
