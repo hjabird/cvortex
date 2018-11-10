@@ -2,13 +2,13 @@
 #include "../include/cvortex/Particle.h"
 #include "../include/cvortex/VortFunc.h"
 #include "../include/cvortex/LegacyVtk.h"
-#define NUM_PER_RING 200
+#define NUM_PER_RING 15
 #include <math.h>
 #include <stdio.h>
 
 int main(int argc, char* argv[])
 {
-    float dt = (float)0.1;
+    float dt = (float)0.5;
     cvtx_Particle m_particles[NUM_PER_RING * 2];
     cvtx_Particle *m_particle_ptrs[NUM_PER_RING * 2];
     float z = 0;
@@ -37,12 +37,13 @@ int main(int argc, char* argv[])
     cvtx_Vec3f mes_pnts[NUM_PER_RING*2];
     cvtx_Vec3f vels[NUM_PER_RING*2];
     cvtx_Vec3f dvorts[NUM_PER_RING*2];
+    cvtx_Vec3f dvorts_visc[NUM_PER_RING*2];
     char file_name[128];
     for(int step = 0; step < 300; ++step){
         for(int i =0; i < NUM_PER_RING*2; i++){
             mes_pnts[i] = m_particles[i].coord;
         }
-        cvtx_VortFunc vort_fn = cvtx_VortFunc_singular();
+        cvtx_VortFunc vort_fn = cvtx_VortFunc_gaussian();
         cvtx_ParticleArr_Arr_ind_vel(
             (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             mes_pnts, NUM_PER_RING*2,
@@ -51,6 +52,10 @@ int main(int argc, char* argv[])
             (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             dvorts, &vort_fn);
+        cvtx_ParticleArr_Arr_visc_ind_dvort(
+            (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
+            (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
+            dvorts_visc, &vort_fn, 0.01f);
         for(int i =0; i < NUM_PER_RING*2; i++){
             m_particles[i].coord = cvtx_Vec3f_plus(
                 m_particles[i].coord, 
@@ -58,9 +63,13 @@ int main(int argc, char* argv[])
             m_particles[i].vorticity = cvtx_Vec3f_plus(
                 m_particles[i].vorticity, 
                 cvtx_Vec3f_mult(dvorts[i], dt));
+            m_particles[i].vorticity = cvtx_Vec3f_plus(
+                m_particles[i].vorticity, 
+                cvtx_Vec3f_mult(dvorts_visc[i], dt));
         }
         sprintf(file_name, "./output/particles_%i.vtk", step);
         if(cvtx_ParticleArr_to_vtk(file_name, m_particle_ptrs, NUM_PER_RING*2)){
+            printf("Failed to write to file.\n");
             break;
         } 
     }
