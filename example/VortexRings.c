@@ -45,16 +45,16 @@ int main(int argc, char* argv[])
         }
         cvtx_VortFunc vort_fn = cvtx_VortFunc_gaussian();
         cvtx_ParticleArr_Arr_ind_vel(
-            (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
+            (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             mes_pnts, NUM_PER_RING*2,
             vels, &vort_fn);
         cvtx_ParticleArr_Arr_ind_dvort(
-            (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
-            (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
+            (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
+            (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             dvorts, &vort_fn);
         cvtx_ParticleArr_Arr_visc_ind_dvort(
-            (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
-            (cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
+            (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
+            (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             dvorts_visc, &vort_fn, 0.01f);
         for(int i =0; i < NUM_PER_RING*2; i++){
             m_particles[i].coord = cvtx_Vec3f_plus(
