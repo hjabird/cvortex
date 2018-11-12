@@ -33,6 +33,7 @@ int cvtx_ParticleArr_to_vtk(
     int num_particles)
 {
     FILE *file;
+	int i;
     file = fopen(path, "wb");
     if(file == NULL){
         printf("Could not open file at path :%s\n", path);
@@ -42,23 +43,23 @@ int cvtx_ParticleArr_to_vtk(
     fprintf(file, "Vortex particles\n");
     fprintf(file, "ASCII\n");
     fprintf(file, "DATASET UNSTRUCTURED_GRID\nPOINTS %i float\n", num_particles);
-    for(int i = 0; i < num_particles; ++i){
+    for(i = 0; i < num_particles; ++i){
         fprintf(file, "%f %f %f\n", 
             particles[i]->coord.x[0],
             particles[i]->coord.x[1],
             particles[i]->coord.x[2]);
     }
     fprintf(file, "\nCELLS %i %i\n", num_particles, 2 * num_particles);
-    for(int i = 0; i < num_particles; ++i){
+    for(i = 0; i < num_particles; ++i){
         fprintf(file, "1 %i\n", i);
     }
     fprintf(file, "\nCELL_TYPES %i\n", num_particles);
-    for(int i = 0; i < num_particles; ++i){
+    for(i = 0; i < num_particles; ++i){
         fprintf(file, "1\n");
     }
     fprintf(file, "\nCELL_DATA %i\n", num_particles);
     fprintf(file, "VECTORS Vorticity float\n");
-    for(int i = 0; i < num_particles; ++i){
+    for(i = 0; i < num_particles; ++i){
         fprintf(file, "%f %f %f\n", 
             particles[i]->vorticity.x[0],
             particles[i]->vorticity.x[1],
