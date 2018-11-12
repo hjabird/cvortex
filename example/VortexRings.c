@@ -9,10 +9,11 @@
 int main(int argc, char* argv[])
 {
     float dt = (float)0.5;
+	int i, step;
     cvtx_Particle m_particles[NUM_PER_RING * 2];
     cvtx_Particle *m_particle_ptrs[NUM_PER_RING * 2];
     float z = 0;
-    for(int i = 0; i < NUM_PER_RING; i++){
+    for(i = 0; i < NUM_PER_RING; i++){
         m_particle_ptrs[i] = &m_particles[i];
         m_particles[i].coord.x[2] = z;
         m_particles[i].coord.x[0] = cosf((float)(2 * 3.141592 * (float) i / NUM_PER_RING));
@@ -23,7 +24,7 @@ int main(int argc, char* argv[])
         m_particles[i].radius = (float) (1.5 * 3.141592 / NUM_PER_RING);
     }
     z = 1;
-    for(int i = NUM_PER_RING; i < NUM_PER_RING * 2; i++){
+    for(i = NUM_PER_RING; i < NUM_PER_RING * 2; i++){
         m_particle_ptrs[i] = &m_particles[i];
         m_particles[i].coord.x[2] = z;
         m_particles[i].coord.x[0] = cosf((float)(2 * 3.141592 * (float) i / NUM_PER_RING));
@@ -39,8 +40,8 @@ int main(int argc, char* argv[])
     cvtx_Vec3f dvorts[NUM_PER_RING*2];
     cvtx_Vec3f dvorts_visc[NUM_PER_RING*2];
     char file_name[128];
-    for(int step = 0; step < 300; ++step){
-        for(int i =0; i < NUM_PER_RING*2; i++){
+    for(step = 0; step < 300; ++step){
+        for(i =0; i < NUM_PER_RING*2; i++){
             mes_pnts[i] = m_particles[i].coord;
         }
         cvtx_VortFunc vort_fn = cvtx_VortFunc_gaussian();
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
             (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             dvorts_visc, &vort_fn, 0.01f);
-        for(int i =0; i < NUM_PER_RING*2; i++){
+        for(i =0; i < NUM_PER_RING*2; i++){
             m_particles[i].coord = cvtx_Vec3f_plus(
                 m_particles[i].coord, 
                 cvtx_Vec3f_mult(vels[i], dt));
