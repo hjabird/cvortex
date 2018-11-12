@@ -14,6 +14,7 @@ int main(int argc, char* argv[])
     float dt = (float)0.025;
 	float adj;
 	const float pi = 3.14159265359;
+	int i, step;
     cvtx_Particle m_particles[TOTAL_PARTICLES];
     cvtx_Particle *m_particle_ptrs[TOTAL_PARTICLES];
     for(int i = 0; i < TOTAL_PARTICLES; i++){
@@ -34,8 +35,8 @@ int main(int argc, char* argv[])
     cvtx_Vec3f dvorts[TOTAL_PARTICLES];
     cvtx_Vec3f dvorts_visc[TOTAL_PARTICLES];
     char file_name[128];
-    for(int step = 0; step < num_steps; ++step){
-        for(int i =0; i < TOTAL_PARTICLES; i++){
+    for(step = 0; step < num_steps; ++step){
+        for(i =0; i < TOTAL_PARTICLES; i++){
             mes_pnts[i] = m_particles[i].coord;
         }
         cvtx_VortFunc vort_fn = cvtx_VortFunc_gaussian();
@@ -51,7 +52,7 @@ int main(int argc, char* argv[])
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
             dvorts_visc, &vort_fn, 1.f);
-        for(int i =0; i < TOTAL_PARTICLES; i++){
+        for(i =0; i < TOTAL_PARTICLES; i++){
             m_particles[i].coord = cvtx_Vec3f_plus(
                 m_particles[i].coord, 
                 cvtx_Vec3f_mult(vels[i], dt));
