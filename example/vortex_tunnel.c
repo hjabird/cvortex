@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 	int i, step;
     cvtx_Particle m_particles[TOTAL_PARTICLES];
     cvtx_Particle *m_particle_ptrs[TOTAL_PARTICLES];
-    for(int i = 0; i < TOTAL_PARTICLES; i++){
+    for(i = 0; i < TOTAL_PARTICLES; i++){
         m_particle_ptrs[i] = &m_particles[i];
         m_particles[i].coord.x[2] = floorf((float)i / NUM_PER_RING) * 1.5 * pi / NUM_PER_RING / 4;
         m_particles[i].coord.x[0] = cosf((float)(2 * pi * (float) i / NUM_PER_RING));
