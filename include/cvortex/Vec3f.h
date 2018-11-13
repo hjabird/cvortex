@@ -31,16 +31,111 @@ typedef struct cvtx_Vec3f{
 	float x[3];
 } cvtx_Vec3f;
 
-float cvtx_Vec3f_abs(const cvtx_Vec3f self);
-float cvtx_Vec3f_dot(const cvtx_Vec3f self, const cvtx_Vec3f other);
-cvtx_Vec3f cvtx_Vec3f_cross(const cvtx_Vec3f self, const cvtx_Vec3f other);
-cvtx_Vec3f cvtx_Vec3f_plus(const cvtx_Vec3f self, const cvtx_Vec3f other);
-cvtx_Vec3f cvtx_Vec3f_minus(const cvtx_Vec3f self, const cvtx_Vec3f other);
-cvtx_Vec3f cvtx_Vec3f_uminus(const cvtx_Vec3f self);
-cvtx_Vec3f cvtx_Vec3f_mult(const cvtx_Vec3f self, const float multiplier);
-cvtx_Vec3f cvtx_Vec3f_div(const cvtx_Vec3f self, const float div);
-cvtx_Vec3f cvtx_Vec3f_zero(void);
-bool cvtx_Vec3f_isequal(const cvtx_Vec3f self, const cvtx_Vec3f other);
-bool cvtx_Vec3f_isnequal(const cvtx_Vec3f self, const cvtx_Vec3f other);
+inline float cvtx_Vec3f_abs(const cvtx_Vec3f self);
+inline float cvtx_Vec3f_dot(const cvtx_Vec3f self, const cvtx_Vec3f other);
+inline cvtx_Vec3f cvtx_Vec3f_cross(const cvtx_Vec3f self, const cvtx_Vec3f other);
+inline cvtx_Vec3f cvtx_Vec3f_plus(const cvtx_Vec3f self, const cvtx_Vec3f other);
+inline cvtx_Vec3f cvtx_Vec3f_minus(const cvtx_Vec3f self, const cvtx_Vec3f other);
+inline cvtx_Vec3f cvtx_Vec3f_uminus(const cvtx_Vec3f self);
+inline cvtx_Vec3f cvtx_Vec3f_mult(const cvtx_Vec3f self, const float multiplier);
+inline cvtx_Vec3f cvtx_Vec3f_div(const cvtx_Vec3f self, const float div);
+inline cvtx_Vec3f cvtx_Vec3f_zero(void);
+inline bool cvtx_Vec3f_isequal(const cvtx_Vec3f self, const cvtx_Vec3f other);
+inline bool cvtx_Vec3f_isnequal(const cvtx_Vec3f self, const cvtx_Vec3f other);
+
+#include <math.h>
+
+float cvtx_Vec3f_abs(const cvtx_Vec3f self) {
+	float a, b, c;
+	a = powf(self.x[0], 2);
+	b = powf(self.x[1], 2);
+	c = powf(self.x[2], 2);
+	return sqrtf(a + b + c);
+}
+
+float cvtx_Vec3f_dot(const cvtx_Vec3f self, const cvtx_Vec3f other) {
+	float a, b, c;
+	a = self.x[0] * other.x[0];
+	b = self.x[1] * other.x[1];
+	c = self.x[2] * other.x[2];
+	return a + b + c;
+}
+
+cvtx_Vec3f cvtx_Vec3f_zero(void) {
+	cvtx_Vec3f ret;
+	ret.x[0] = 0.0;
+	ret.x[1] = 0.0;
+	ret.x[2] = 0.0;
+	return ret;
+}
+
+cvtx_Vec3f cvtx_Vec3f_cross(const cvtx_Vec3f self, const cvtx_Vec3f other) {
+	cvtx_Vec3f ret;
+	ret.x[0] = self.x[1] * other.x[2] -
+		self.x[2] * other.x[1];
+	ret.x[1] = self.x[2] * other.x[0] -
+		self.x[0] * other.x[2];
+	ret.x[2] = self.x[0] * other.x[1] -
+		self.x[1] * other.x[0];
+	return ret;
+}
+
+cvtx_Vec3f cvtx_Vec3f_plus(const cvtx_Vec3f self, const cvtx_Vec3f other) {
+	cvtx_Vec3f ret;
+	ret.x[0] = self.x[0] + other.x[0];
+	ret.x[1] = self.x[1] + other.x[1];
+	ret.x[2] = self.x[2] + other.x[2];
+	return ret;
+}
+
+cvtx_Vec3f cvtx_Vec3f_minus(const cvtx_Vec3f self, const cvtx_Vec3f other) {
+	cvtx_Vec3f ret;
+	ret.x[0] = self.x[0] - other.x[0];
+	ret.x[1] = self.x[1] - other.x[1];
+	ret.x[2] = self.x[2] - other.x[2];
+	return ret;
+}
+
+cvtx_Vec3f cvtx_Vec3f_uminus(const cvtx_Vec3f self) {
+	cvtx_Vec3f ret;
+	ret.x[0] = -self.x[0];
+	ret.x[1] = -self.x[1];
+	ret.x[2] = -self.x[2];
+	return ret;
+}
+
+cvtx_Vec3f cvtx_Vec3f_mult(const cvtx_Vec3f self, const float multiplier) {
+	cvtx_Vec3f ret;
+	ret.x[0] = self.x[0] * multiplier;
+	ret.x[1] = self.x[1] * multiplier;
+	ret.x[2] = self.x[2] * multiplier;
+	return ret;
+}
+
+cvtx_Vec3f cvtx_Vec3f_div(const cvtx_Vec3f self, const float div) {
+	cvtx_Vec3f ret;
+	ret.x[0] = self.x[0] / div;
+	ret.x[1] = self.x[1] / div;
+	ret.x[2] = self.x[2] / div;
+	return ret;
+}
+
+bool cvtx_Vec3f_isequal(const cvtx_Vec3f self, const cvtx_Vec3f other) {
+	bool retv;
+	if ((self.x[0] == other.x[0]) &&
+		(self.x[1] == other.x[1]) &&
+		(self.x[2] == other.x[2])) {
+
+		retv = true;
+	}
+	else {
+		retv = false;
+	}
+	return retv;
+}
+
+bool cvtx_Vec3f_isnequal(const cvtx_Vec3f self, const cvtx_Vec3f other) {
+	return !cvtx_Vec3f_isequal(self, other);
+}
 
 #endif /* CVTX_VEC3F_H */
