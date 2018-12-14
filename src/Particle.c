@@ -31,7 +31,7 @@ SOFTWARE.
 
 inline float sphere_volume(float radius);
 
-EXPORT cvtx_Vec3f cvtx_Particle_ind_vel(
+CVTX_EXPORT cvtx_Vec3f cvtx_Particle_ind_vel(
 	const cvtx_Particle * self,
 	const cvtx_Vec3f mes_point,
 	const cvtx_VortFunc * kernel)
@@ -51,7 +51,7 @@ EXPORT cvtx_Vec3f cvtx_Particle_ind_vel(
 	return ret;
 }
 
-EXPORT cvtx_Vec3f cvtx_Particle_ind_dvort(
+CVTX_EXPORT cvtx_Vec3f cvtx_Particle_ind_dvort(
 	const cvtx_Particle * self,
 	const cvtx_Particle * induced_particle,
 	const cvtx_VortFunc * kernel)
@@ -85,7 +85,7 @@ float sphere_volume(float radius){
 	return 4 * (float)acos(-1) * radius * radius * radius / (float) 3.;
 }
 
-EXPORT cvtx_Vec3f cvtx_Particle_visc_ind_dvort(
+CVTX_EXPORT cvtx_Vec3f cvtx_Particle_visc_ind_dvort(
 	const cvtx_Particle * self,
 	const cvtx_Particle * induced_particle,
 	const cvtx_VortFunc * kernel,
@@ -115,7 +115,7 @@ EXPORT cvtx_Vec3f cvtx_Particle_visc_ind_dvort(
 	return ret;
 }
 
-EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_vel(
+CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_vel(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Vec3f mes_point,
@@ -136,7 +136,7 @@ EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_vel(
 	return ret;
 }
 
-EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
+CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Particle *induced_particle,
@@ -157,7 +157,7 @@ EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
 	return ret;
 }
 
-EXPORT cvtx_Vec3f cvtx_ParticleArr_visc_ind_dvort(
+CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Particle *induced_particle,
@@ -179,7 +179,7 @@ EXPORT cvtx_Vec3f cvtx_ParticleArr_visc_ind_dvort(
 	return ret;
 }
 
-EXPORT void cvtx_ParticleArr_Arr_ind_vel(
+CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Vec3f *mes_start,
@@ -196,7 +196,7 @@ EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 	return;
 }
 
-EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
+CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Particle **induced_start,
@@ -213,7 +213,7 @@ EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
 	return;
 }
 
-EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
+CVTX_EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Particle **induced_start,

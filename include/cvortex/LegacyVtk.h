@@ -25,17 +25,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#ifndef EXPORT
+#ifndef CVTX_EXPORT
 # ifdef _WIN32
-#  define EXPORT __declspec( dllimport )
+#  define CVTX_EXPORT __declspec(dllimport)
 # else
-#  define EXPORT
+#  define CVTX_EXPORT
 # endif
 #endif 
 
 #include "Particle.h"
 
-EXPORT int cvtx_ParticleArr_to_vtk(
+CVTX_EXPORT int cvtx_ParticleArr_to_vtk(
     char* path, 
     cvtx_Particle **particles, 
     int num_particles);

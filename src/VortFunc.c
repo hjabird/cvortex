@@ -137,7 +137,7 @@ static void combined_gaussian(float rho, float* g, float* zeta) {
 	return;
 }
 
-EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void)
+CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void)
 {
 	cvtx_VortFunc ret;
 	ret.g_fn = &g_singular;
@@ -147,7 +147,7 @@ EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void)
 	return ret;
 }
 
-EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void)
+CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void)
 {
 	cvtx_VortFunc ret;
 	ret.g_fn = &g_winckel;
@@ -157,7 +157,7 @@ EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void)
 	return ret;
 }
 
-EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void)
+CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void)
 {
 	cvtx_VortFunc ret;
 	ret.g_fn = &g_planetary;
@@ -167,7 +167,7 @@ EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void)
 	return ret;
 }
 
-EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void){
+CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void){
 	cvtx_VortFunc ret;
 	ret.g_fn = &g_gaussian;
 	ret.zeta_fn = &zeta_gaussian;
