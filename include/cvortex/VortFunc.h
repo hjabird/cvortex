@@ -25,11 +25,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#ifdef BUILD_CVTX_DLL
-#define EXPORT __declspec(dllexport)
-#else ifndef CVTX_STATIC
-#define EXPORT __declspec(dllimport)
-#endif
+#ifndef EXPORT
+# ifdef _WIN32
+#  define EXPORT __declspec( dllimport )
+# else
+#  define EXPORT
+# endif
+#endif 
 
 typedef struct {
 	float(*g_fn)(float rho);
@@ -38,9 +40,9 @@ typedef struct {
 	float(*eta_fn)(float rho);
 } cvtx_VortFunc;
 
-const cvtx_VortFunc EXPORT cvtx_VortFunc_singular(void);
-const cvtx_VortFunc EXPORT cvtx_VortFunc_winckelmans(void);
-const cvtx_VortFunc EXPORT cvtx_VortFunc_planetary(void);
-const cvtx_VortFunc EXPORT cvtx_VortFunc_gaussian(void);
+EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void);
+EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
+EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void);
+EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void);
 
 #endif /* CVTX_CVTX_VORT_FUNC_H */
