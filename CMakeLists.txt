@@ -4,6 +4,12 @@ project(cvortex)
 option(BUILD_UNIT_TESTS "Builds tests" OFF)
 option(BUILD_EXAMPLES "Builds examples" OFF)
 option(USE_OPENMP "Use the OpenMP multithreading" ON)
+option(BUILD_STATIC_LIBRARY "Builds static library instead of shared" OFF)
+
+# Everything is placed in the one dictionary. Life is easier.
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 if(USE_OPENMP)
     find_package(OpenMP)
@@ -14,16 +20,22 @@ if(USE_OPENMP)
 endif(USE_OPENMP)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-file (GLOB CVORTEX_INCLUDE "include/cvortex/*.h")
+file (GLOB CVORTEX_INCLUDE "include/cvortex/*.h") # So shoot me for GLOBing.
 file (GLOB CVORTEX_SOURCE  "src/*.c")
 source_group("" FILES ${cvortex})
 source_group("include" FILES ${CVORTEX_INCLUDE})
 source_group("source" FILES ${CVORTEX_SOURCE})
 
 include_directories (include/cvortex)
-add_library(cvortex  	${CVORTEX_INCLUDE} ${CVORTEX_SOURCE})
+if(BUILD_STATIC_LIBRARY)
+	add_library(cvortex ${CVORTEX_INCLUDE} ${CVORTEX_SOURCE})
+	target_compile_definitions(cvortex PRIVATE CVTX_STATIC)
+else()
+	add_library(cvortex SHARED ${CVORTEX_INCLUDE} ${CVORTEX_SOURCE})
+	target_compile_definitions(cvortex PRIVATE BUILD_CVTX_DLL)
+endif(BUILD_STATIC_LIBRARY)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     link_libraries(cvortex m)   # Maths std library.
 endif()
 						
