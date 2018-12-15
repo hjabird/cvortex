@@ -31,6 +31,7 @@ typedef struct {
 	float(*zeta_fn)(float rho);
 	void(*combined_fn)(float rho, float* g, float* zeta);
 	float(*eta_fn)(float rho);
+	char cl_kernel_name_ext[32];
 } cvtx_VortFunc;
 
 const cvtx_VortFunc cvtx_VortFunc_singular(void);
