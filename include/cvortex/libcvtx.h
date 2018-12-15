@@ -1,9 +1,9 @@
-#ifndef CVTX_LEGACYVTK_H
-#define CVTX_LEGACYVTK_H
+#ifndef CVTX_LIBCVTX_H
+#define CVTX_LIBCVTX_H
 /*============================================================================
-LegacyVtk.h
+libcvtx.h
 
-Make a vtk legacy file from a collection of vortex particles.
+An all inclusive header file for the cvortex library.
 
 Copyright(c) 2018 HJA Bird
 
@@ -25,19 +25,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#ifndef CVTX_EXPORT
-# ifdef _WIN32
-#  define CVTX_EXPORT __declspec(dllimport)
-# else
-#  define CVTX_EXPORT
-# endif
-#endif 
-
+#include "Vec3f.h"
 #include "Particle.h"
+#include "VortFunc.h"
+#include "LegacyVtk.h"
 
-CVTX_EXPORT int cvtx_ParticleArr_to_vtk(
-    char* path, 
-    cvtx_Particle **particles, 
-    int num_particles);
-
-#endif /* CVTX_LEGACYVTK_H */
+#endif /* CVTX_LIBCVTX_H */

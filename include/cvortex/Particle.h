@@ -25,6 +25,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
+#ifndef CVTX_EXPORT
+# ifdef _WIN32
+#  define CVTX_EXPORT __declspec(dllimport)
+# else
+#  define CVTX_EXPORT
+# endif
+#endif 
 
 #include "Vec3f.h"
 #include "VortFunc.h"
@@ -35,42 +42,42 @@ typedef struct {
 	float radius;
 } cvtx_Particle;
 
-cvtx_Vec3f cvtx_Particle_ind_vel(
+CVTX_EXPORT cvtx_Vec3f cvtx_Particle_ind_vel(
 	const cvtx_Particle *self, 
 	const cvtx_Vec3f mes_point, 
 	const cvtx_VortFunc *kernel);
 
-cvtx_Vec3f cvtx_Particle_ind_dvort(
+CVTX_EXPORT cvtx_Vec3f cvtx_Particle_ind_dvort(
 	const cvtx_Particle *self, 
 	const cvtx_Particle *induced_particle,
 	const cvtx_VortFunc *kernel);
 
-cvtx_Vec3f cvtx_Particle_visc_ind_dvort(
+CVTX_EXPORT cvtx_Vec3f cvtx_Particle_visc_ind_dvort(
 	const cvtx_Particle *self,
 	const cvtx_Particle *induced_particle,
 	const cvtx_VortFunc *kernel,
 	const float kinematic_visc);
 
-cvtx_Vec3f cvtx_ParticleArr_ind_vel(
+CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_vel(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Vec3f mes_point,
 	const cvtx_VortFunc *kernel);
 
-cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
+CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Particle *induced_particle,
 	const cvtx_VortFunc *kernel);
 
-cvtx_Vec3f cvtx_ParticleArr_visc_ind_dvort(
+CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Particle *induced_particle,
 	const cvtx_VortFunc *kernel,
 	const float kinematic_visc);
 
-void cvtx_ParticleArr_Arr_ind_vel(
+CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Vec3f *mes_start,
@@ -78,7 +85,7 @@ void cvtx_ParticleArr_Arr_ind_vel(
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel);
 
-void cvtx_ParticleArr_Arr_ind_dvort(
+CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Particle **induced_start,
@@ -86,7 +93,7 @@ void cvtx_ParticleArr_Arr_ind_dvort(
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel);
 
-void cvtx_ParticleArr_Arr_visc_ind_dvort(
+CVTX_EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Particle **induced_start,

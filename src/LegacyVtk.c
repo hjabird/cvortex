@@ -27,7 +27,7 @@ SOFTWARE.
 
 #include <stdio.h>
 
-int cvtx_ParticleArr_to_vtk(
+CVTX_EXPORT int cvtx_ParticleArr_to_vtk(
     char* path, 
     cvtx_Particle **particles, 
     int num_particles)

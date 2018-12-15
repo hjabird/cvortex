@@ -31,17 +31,17 @@ typedef struct cvtx_Vec3f{
 	float x[3];
 } cvtx_Vec3f;
 
-inline float cvtx_Vec3f_abs(const cvtx_Vec3f self);
-inline float cvtx_Vec3f_dot(const cvtx_Vec3f self, const cvtx_Vec3f other);
-inline cvtx_Vec3f cvtx_Vec3f_cross(const cvtx_Vec3f self, const cvtx_Vec3f other);
-inline cvtx_Vec3f cvtx_Vec3f_plus(const cvtx_Vec3f self, const cvtx_Vec3f other);
-inline cvtx_Vec3f cvtx_Vec3f_minus(const cvtx_Vec3f self, const cvtx_Vec3f other);
-inline cvtx_Vec3f cvtx_Vec3f_uminus(const cvtx_Vec3f self);
-inline cvtx_Vec3f cvtx_Vec3f_mult(const cvtx_Vec3f self, const float multiplier);
-inline cvtx_Vec3f cvtx_Vec3f_div(const cvtx_Vec3f self, const float div);
-inline cvtx_Vec3f cvtx_Vec3f_zero(void);
-inline bool cvtx_Vec3f_isequal(const cvtx_Vec3f self, const cvtx_Vec3f other);
-inline bool cvtx_Vec3f_isnequal(const cvtx_Vec3f self, const cvtx_Vec3f other);
+static inline float cvtx_Vec3f_abs(const cvtx_Vec3f self);
+static inline float cvtx_Vec3f_dot(const cvtx_Vec3f self, const cvtx_Vec3f other);
+static inline cvtx_Vec3f cvtx_Vec3f_cross(const cvtx_Vec3f self, const cvtx_Vec3f other);
+static inline cvtx_Vec3f cvtx_Vec3f_plus(const cvtx_Vec3f self, const cvtx_Vec3f other);
+static inline cvtx_Vec3f cvtx_Vec3f_minus(const cvtx_Vec3f self, const cvtx_Vec3f other);
+static inline cvtx_Vec3f cvtx_Vec3f_uminus(const cvtx_Vec3f self);
+static inline cvtx_Vec3f cvtx_Vec3f_mult(const cvtx_Vec3f self, const float multiplier);
+static inline cvtx_Vec3f cvtx_Vec3f_div(const cvtx_Vec3f self, const float div);
+static inline cvtx_Vec3f cvtx_Vec3f_zero(void);
+static inline bool cvtx_Vec3f_isequal(const cvtx_Vec3f self, const cvtx_Vec3f other);
+static inline bool cvtx_Vec3f_isnequal(const cvtx_Vec3f self, const cvtx_Vec3f other);
 
 #include <math.h>
 
