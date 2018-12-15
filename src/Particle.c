@@ -179,7 +179,7 @@ CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_visc_ind_dvort(
 	return ret;
 }
 
-CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
+static cpu_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Vec3f *mes_start,
@@ -194,6 +194,43 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 			array_start, num_particles, mes_start[i], kernel);
 	}
 	return;
+}
+
+static opencl_brute_force_ParticleArr_Arr_ind_vel(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Vec3f *mes_start,
+	const int num_mes,
+	cvtx_Vec3f *result_array,
+	const cvtx_VortFunc *kernel)
+{
+	cl_int status;
+	cl_uint num_platforms, num_devices;
+	cl_platform_id *platforms;
+    status = clGetPlatformIDs(0, platforms, &numPlatforms);
+}
+
+CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Vec3f *mes_start,
+	const int num_mes,
+	cvtx_Vec3f *result_array,
+	const cvtx_VortFunc *kernel)
+{
+	if(	num_particles < 1024 
+		|| num_particles * num_mes < 1024*1024 
+		|| kernel.cl_kernel_name_ext != ""){
+		cpu_brute_force_ParticleArr_Arr_ind_vel(
+			array_start, num_particles, mes_start,
+			num_mes, result_array, kernel);
+	}
+	else
+	{
+		opencl_brute_force_ParticleArr_Arr_ind_vel(
+			array_start, num_particles, mes_start,
+			num_mes, result_array, kernel);
+	}
 }
 
 CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
