@@ -28,6 +28,7 @@ SOFTWARE.
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 static float warn_bad_eta_fn(float rho){
 	static int warned = 0;
@@ -144,7 +145,7 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void)
 	ret.zeta_fn = &zeta_singular;
 	ret.eta_fn = &warn_bad_eta_fn;	/* Not possible for singular vortex */
 	ret.combined_fn = &combined_singular;
-	re.cl_kernel_name_ext = "singular";
+	strcpy(ret.cl_kernel_name_ext, "singular");
 	return ret;
 }
 
@@ -155,7 +156,7 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void)
 	ret.zeta_fn = &zeta_winckel;
 	ret.eta_fn = eta_winckel;
 	ret.combined_fn = &combined_winckel;
-	re.cl_kernel_name_ext = "";	/* Not written yet */
+	strcpy(ret.cl_kernel_name_ext, "");	/* Not written yet */
 	return ret;
 }
 
@@ -166,7 +167,7 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void)
 	ret.zeta_fn = &zeta_planetary;
 	ret.eta_fn = &warn_bad_eta_fn; /* Not possible for planetary vortex */
 	ret.combined_fn = &combined_winckel;
-	re.cl_kernel_name_ext = "";	/* Not written yet */
+	strcpy(ret.cl_kernel_name_ext, "");	/* Not written yet */
 	return ret;
 }
 
@@ -177,6 +178,6 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void){
 	ret.eta_fn = &zeta_gaussian; 
 	/* See Winckelmans et al., C. R. Physique 6 (2005), around eq (28) */
 	ret.combined_fn = &combined_winckel;
-	re.cl_kernel_name_ext = "";	/* Not written yet */
+	strcpy(ret.cl_kernel_name_ext, "");	/* Not written yet */
 	return ret;
 }

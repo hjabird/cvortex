@@ -4,6 +4,7 @@ project(cvortex)
 option(BUILD_UNIT_TESTS "Builds tests" OFF)
 option(BUILD_EXAMPLES "Builds examples" OFF)
 option(USE_OPENMP "Use the OpenMP multithreading" ON)
+option(USE_OPENCL "Use OpenCL gpgpu computing" OFF)
 option(BUILD_STATIC_LIBRARY "Builds static library instead of shared" OFF)
 
 # Everything is placed in the one dictionary. Life is easier.
@@ -39,6 +40,12 @@ else()
 	endif()
 endif(BUILD_STATIC_LIBRARY)
 
+if(USE_OPENCL)
+    find_package(OpenCL REQUIRED)
+    target_link_libraries(cvortex PRIVATE ${OpenCL_LIBRARIES})
+    target_include_directories(cvortex PRIVATE ${OpenCL_INCLUDE_DIRS})
+	target_compile_definitions(cvortex PRIVATE CVTX_USING_OPENCL)
+endif(USE_OPENCL)
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     link_libraries(cvortex m)   # Maths std library.
