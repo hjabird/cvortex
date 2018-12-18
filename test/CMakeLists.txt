@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 # Add HBTK library ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-link_libraries (cvortex)
+link_libraries (cvortex m)
 
 # Find all of our tests sources
 file (GLOB TESTCVTX_SOURCE  "*.c")
