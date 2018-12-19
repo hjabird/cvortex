@@ -33,7 +33,7 @@ CVTX_EXPORT int cvtx_ParticleArr_to_vtk(
     int num_particles)
 {
     FILE *file;
-	int i;
+	int i, ret;
     file = fopen(path, "wb");
     if(file == NULL){
         printf("Could not open file at path :%s\n", path);
@@ -51,19 +51,24 @@ CVTX_EXPORT int cvtx_ParticleArr_to_vtk(
     }
     fprintf(file, "\nCELLS %i %i\n", num_particles, 2 * num_particles);
     for(i = 0; i < num_particles; ++i){
-        fprintf(file, "1 %i\n", i);
+        ret = fprintf(file, "1 %i\n", i);
     }
     fprintf(file, "\nCELL_TYPES %i\n", num_particles);
     for(i = 0; i < num_particles; ++i){
-        fprintf(file, "1\n");
+		ret = fprintf(file, "1\n");
     }
     fprintf(file, "\nCELL_DATA %i\n", num_particles);
     fprintf(file, "VECTORS Vorticity float\n");
     for(i = 0; i < num_particles; ++i){
-        fprintf(file, "%f %f %f\n", 
+		ret = fprintf(file, "%.5f %.5f %.5f\n",
             particles[i]->vorticity.x[0],
             particles[i]->vorticity.x[1],
             particles[i]->vorticity.x[2]);
+		if (ret < 0) {
+			printf("Failure during file writing.");
+			break;
+		}
     }
+	fclose(file);
     return 0;
 }
