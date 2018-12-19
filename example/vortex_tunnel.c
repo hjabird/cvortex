@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
         for(i =0; i < TOTAL_PARTICLES; i++){
             mes_pnts[i] = m_particles[i].coord;
         }
-        cvtx_VortFunc vort_fn = cvtx_VortFunc_gaussian();
+        cvtx_VortFunc vort_fn = cvtx_VortFunc_singular();
         cvtx_ParticleArr_Arr_ind_vel(
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
             mes_pnts, TOTAL_PARTICLES,
@@ -48,10 +48,10 @@ int main(int argc, char* argv[])
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
             dvorts, &vort_fn);
-        cvtx_ParticleArr_Arr_visc_ind_dvort(
+       /* cvtx_ParticleArr_Arr_visc_ind_dvort(
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
-            dvorts_visc, &vort_fn, 1.f);
+            dvorts_visc, &vort_fn, 1.f);*/
         for(i =0; i < TOTAL_PARTICLES; i++){
             m_particles[i].coord = cvtx_Vec3f_plus(
                 m_particles[i].coord, 
@@ -59,15 +59,15 @@ int main(int argc, char* argv[])
             m_particles[i].vorticity = cvtx_Vec3f_plus(
                 m_particles[i].vorticity, 
                 cvtx_Vec3f_mult(dvorts[i], dt));
-            m_particles[i].vorticity = cvtx_Vec3f_plus(
+            /*m_particles[i].vorticity = cvtx_Vec3f_plus(
                 m_particles[i].vorticity, 
-                cvtx_Vec3f_mult(dvorts_visc[i], dt));
+                cvtx_Vec3f_mult(dvorts_visc[i], dt));*/
         }
-        sprintf(file_name, "./output/particles_%i.vtk", step);
+        sprintf(file_name, "./particles_%i.vtk", step);
         if(cvtx_ParticleArr_to_vtk(file_name, m_particle_ptrs, TOTAL_PARTICLES)){
             printf("Failed to write to file.\n");
             break;
-        } 
+        }
     }
     printf("%d interactions computed.\n", TOTAL_PARTICLES * TOTAL_PARTICLES * num_steps );
     return 0;
