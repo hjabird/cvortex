@@ -212,9 +212,9 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 	if(	num_particles < 1024 
 		|| num_particles * num_mes < 1024*1024 
 		|| kernel->cl_kernel_name_ext == ""
-		|| !opencl_brute_force_ParticleArr_Arr_ind_vel(
+		|| opencl_brute_force_ParticleArr_Arr_ind_vel(
 			array_start, num_particles, mes_start,
-			num_mes, result_array, kernel))
+			num_mes, result_array, kernel) != 0)
 #endif
 	{
 		cpu_brute_force_ParticleArr_Arr_ind_vel(
