@@ -103,9 +103,9 @@ CVTX_EXPORT cvtx_Vec3f cvtx_Particle_visc_ind_dvort(
 		ret = cvtx_Vec3f_zero();
 		
 	} else {
-		rad = cvtx_Vec3f_minus(induced_particle->coord, self->coord);
+		rad = cvtx_Vec3f_minus(self->coord, induced_particle->coord);
 		radd = cvtx_Vec3f_abs(rad);
-		rho = fabsf(radd / self->radius);
+		rho = fabsf(radd / induced_particle->radius);
 		t1 =  2 * kinematic_visc / powf(induced_particle->radius, 2);
 		t211 = cvtx_Vec3f_mult(self->vorticity, 
 			sphere_volume(induced_particle->radius));
@@ -265,7 +265,7 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
 	return;
 }
 
-CVTX_EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
+void cpu_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
 	const int num_particles,
 	const cvtx_Particle **induced_start,
@@ -276,10 +276,36 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
 {
 	int i;
 #pragma omp parallel for schedule(static)
-	for(i = 0; i < num_induced; ++i){
+	for (i = 0; i < num_induced; ++i) {
 		result_array[i] = cvtx_ParticleArr_visc_ind_dvort(
-			array_start, num_particles, induced_start[i], 
+			array_start, num_particles, induced_start[i],
 			kernel, kinematic_visc);
 	}
 	return;
+}
+
+CVTX_EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Particle **induced_start,
+	const int num_induced,
+	cvtx_Vec3f *result_array,
+	const cvtx_VortFunc *kernel,
+	const float kinematic_visc)
+{
+#ifdef CVTX_USING_OPENCL
+	if (num_particles < 1024
+		|| num_particles * num_induced < 1024 * 1024
+		|| kernel->cl_kernel_name_ext == ""
+		|| opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
+			array_start, num_particles, induced_start,
+			num_induced, result_array, kernel, kinematic_visc) != 0)
+#endif
+	{
+		cpu_brute_force_ParticleArr_Arr_visc_ind_dvort(
+			array_start, num_particles, induced_start,
+			num_induced, result_array, kernel, kinematic_visc);
+	}
+	return;
+
 }
