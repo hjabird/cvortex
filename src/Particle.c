@@ -221,7 +221,24 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 			array_start, num_particles, mes_start,
 			num_mes, result_array, kernel);
 	}
-	
+	return;
+}
+
+void cpu_brute_force_ParticleArr_Arr_ind_dvort(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Particle **induced_start,
+	const int num_induced,
+	cvtx_Vec3f *result_array,
+	const cvtx_VortFunc *kernel)
+{
+	int i;
+#pragma omp parallel for schedule(static)
+	for (i = 0; i < num_induced; ++i) {
+		result_array[i] = cvtx_ParticleArr_ind_dvort(
+			array_start, num_particles, induced_start[i], kernel);
+	}
+	return;
 }
 
 CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
@@ -232,11 +249,18 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel)
 {
-	int i;
-#pragma omp parallel for schedule(static)
-	for(i = 0; i < num_induced; ++i){
-		result_array[i] = cvtx_ParticleArr_ind_dvort(
-			array_start, num_particles, induced_start[i], kernel);
+#ifdef CVTX_USING_OPENCL
+	if (num_particles < 1024
+		|| num_particles * num_induced < 1024 * 1024
+		|| kernel->cl_kernel_name_ext == ""
+		|| opencl_brute_force_ParticleArr_Arr_ind_dvort(
+			array_start, num_particles, induced_start,
+			num_induced, result_array, kernel) != 0)
+#endif
+	{
+		cpu_brute_force_ParticleArr_Arr_ind_dvort(
+			array_start, num_particles, induced_start,
+			num_induced, result_array, kernel);
 	}
 	return;
 }
