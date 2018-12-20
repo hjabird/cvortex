@@ -38,6 +38,13 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel);
 
+int opencl_brute_force_ParticleArr_Arr_ind_dvort(
+	const cvtx_Particle **array_start,
+	const int num_particles,
+	const cvtx_Particle **induced_start,
+	const int num_induced,
+	cvtx_Vec3f *result_array,
+	const cvtx_VortFunc *kernel);
 
 #endif CVTX_OPENCL_ACC_H
 #endif CVTX_USING_OPENCL
