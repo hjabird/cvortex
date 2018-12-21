@@ -121,13 +121,13 @@ CVTX_EXPORT cvtx_Vec3f cvtx_Particle_visc_ind_dvort(
 
 CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_vel(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Vec3f mes_point,
 	const cvtx_VortFunc *kernel)
 {
 	cvtx_Vec3f vel;
 	double rx = 0, ry = 0, rz = 0;
-	int i;
+	long i;
 	assert(num_particles >= 0);
 	for (i = 0; i < num_particles; ++i) {
 		vel = cvtx_Particle_ind_vel(array_start[i],
@@ -142,13 +142,13 @@ CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_vel(
 
 CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Particle *induced_particle,
 	const cvtx_VortFunc *kernel)
 {
 	cvtx_Vec3f dvort;
 	double rx = 0, ry = 0, rz = 0;
-	int i;
+	long i;
 	assert(num_particles >= 0);
 	for (i = 0; i < num_particles; ++i) {
 		dvort = cvtx_Particle_ind_dvort(array_start[i],
@@ -163,14 +163,14 @@ CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_ind_dvort(
 
 CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Particle *induced_particle,
 	const cvtx_VortFunc *kernel,
 	const float kinematic_visc)
 {
 	cvtx_Vec3f dvort;
 	double rx = 0, ry = 0, rz = 0;
-	int i;
+	long i;
 	assert(num_particles >= 0);
 	for (i = 0; i < num_particles; ++i) {
 		dvort = cvtx_Particle_visc_ind_dvort(array_start[i],
@@ -185,13 +185,13 @@ CVTX_EXPORT cvtx_Vec3f cvtx_ParticleArr_visc_ind_dvort(
 
 static void cpu_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Vec3f *mes_start,
-	const int num_mes,
+	const long num_mes,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel)
 {
-	int i;
+	long i;
 #pragma omp parallel for schedule(static)
 	for(i = 0; i < num_mes; ++i){
 		result_array[i] = cvtx_ParticleArr_ind_vel(
@@ -202,15 +202,32 @@ static void cpu_brute_force_ParticleArr_Arr_ind_vel(
 
 CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Vec3f *mes_start,
-	const int num_mes,
+	const long num_mes,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel)
 {
+	/*
 #ifdef CVTX_USING_OPENCL
-	if(	num_particles < 1024 
-		|| num_particles * num_mes < 1024*1024 
+	if(		(num_particles < 1024 )
+		||	((long)num_particles * (long)num_mes < (long) 1024*1024)
+		||	printf("Hi there"), false
+		||	(kernel->cl_kernel_name_ext == "")
+		|| (opencl_brute_force_ParticleArr_Arr_ind_vel(
+			array_start, num_particles, mes_start,
+			num_mes, result_array, kernel) != 0))
+#endif
+	{
+		cpu_brute_force_ParticleArr_Arr_ind_vel(
+			array_start, num_particles, mes_start,
+			num_mes, result_array, kernel);
+	}
+	*/
+
+#ifdef CVTX_USING_OPENCL
+	if (num_particles < 1024
+		|| num_mes < 512
 		|| kernel->cl_kernel_name_ext == ""
 		|| opencl_brute_force_ParticleArr_Arr_ind_vel(
 			array_start, num_particles, mes_start,
@@ -226,13 +243,13 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 
 void cpu_brute_force_ParticleArr_Arr_ind_dvort(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Particle **induced_start,
-	const int num_induced,
+	const long num_induced,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel)
 {
-	int i;
+	long i;
 #pragma omp parallel for schedule(static)
 	for (i = 0; i < num_induced; ++i) {
 		result_array[i] = cvtx_ParticleArr_ind_dvort(
@@ -243,19 +260,19 @@ void cpu_brute_force_ParticleArr_Arr_ind_dvort(
 
 CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Particle **induced_start,
-	const int num_induced,
+	const long num_induced,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel)
 {
 #ifdef CVTX_USING_OPENCL
-	if (num_particles < 1024
-		|| num_particles * num_induced < 1024 * 1024
-		|| kernel->cl_kernel_name_ext == ""
-		|| opencl_brute_force_ParticleArr_Arr_ind_dvort(
-			array_start, num_particles, induced_start,
-			num_induced, result_array, kernel) != 0)
+	if (	num_particles < 1024
+		||	num_induced < 512
+		||	kernel->cl_kernel_name_ext == ""
+		||	opencl_brute_force_ParticleArr_Arr_ind_dvort(
+				array_start, num_particles, induced_start,
+				num_induced, result_array, kernel) != 0)
 #endif
 	{
 		cpu_brute_force_ParticleArr_Arr_ind_dvort(
@@ -267,14 +284,14 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
 
 void cpu_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Particle **induced_start,
-	const int num_induced,
+	const long num_induced,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel,
 	const float kinematic_visc)
 {
-	int i;
+	long i;
 #pragma omp parallel for schedule(static)
 	for (i = 0; i < num_induced; ++i) {
 		result_array[i] = cvtx_ParticleArr_visc_ind_dvort(
@@ -286,20 +303,20 @@ void cpu_brute_force_ParticleArr_Arr_visc_ind_dvort(
 
 CVTX_EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Particle **induced_start,
-	const int num_induced,
+	const long num_induced,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel,
 	const float kinematic_visc)
 {
 #ifdef CVTX_USING_OPENCL
-	if (num_particles < 1024
-		|| num_particles * num_induced < 1024 * 1024
-		|| kernel->cl_kernel_name_ext == ""
-		|| opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
-			array_start, num_particles, induced_start,
-			num_induced, result_array, kernel, kinematic_visc) != 0)
+	if (	num_particles < 1024
+		||	num_induced < 512
+		||	kernel->cl_kernel_name_ext == ""
+		||	opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
+				array_start, num_particles, induced_start,
+				num_induced, result_array, kernel, kinematic_visc) != 0)
 #endif
 	{
 		cpu_brute_force_ParticleArr_Arr_visc_ind_dvort(

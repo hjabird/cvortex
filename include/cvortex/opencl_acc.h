@@ -32,25 +32,25 @@ SOFTWARE.
 
 int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Vec3f *mes_start,
-	const int num_mes,
+	const long num_mes,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel);
 
 int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Particle **induced_start,
-	const int num_induced,
+	const long num_induced,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel);
 
 int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
-	const int num_particles,
+	const long num_particles,
 	const cvtx_Particle **induced_start,
-	const int num_induced,
+	const long num_induced,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel,
 	const float kinematic_visc);
