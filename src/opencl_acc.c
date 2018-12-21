@@ -25,8 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 #ifdef CVTX_USING_OPENCL
-/* This must match the OpenCL kernel definition. */
-#define CVTX_WORKGROUP_SIZE 64
+#define CVTX_WORKGROUP_SIZE 256
 
 #include <CL/cl.h>
 #include <assert.h>
@@ -109,10 +108,15 @@ static int opencl_print_platform_info() {
 
 int opencl_initialise() {
 	static int tried_initialised = 0;
-	static int opencl_working = -1;	/* meaning no */
+	static int opencl_working = -1;	/* meaning no, 0 meaning yes */
 	int good = 1;
 	cl_int status;
 	cl_uint num_platforms, num_devices;
+	char compile_options[1024] = "";
+	char tmp[128];
+	sprintf(tmp, "%i", CVTX_WORKGROUP_SIZE);
+	strcat(compile_options, " -cl-fast-relaxed-math -D CVTX_CL_WORKGROUP_SIZE=");
+	strcat(compile_options, tmp);
 	if (!tried_initialised) {
 		nbody_ocl_state.devices = NULL;
 		nbody_ocl_state.platforms = NULL;
@@ -155,14 +159,17 @@ int opencl_initialise() {
 			;	/* Including in source makes it easier to distribute a shared lib. */
 		nbody_ocl_state.program = clCreateProgramWithSource(nbody_ocl_state.context, 1, (const char**)&program_source, NULL, &status);
 		assert(status == CL_SUCCESS);
-		status = clBuildProgram(nbody_ocl_state.program, num_devices, nbody_ocl_state.devices, NULL, NULL, NULL);
+		status = clBuildProgram(nbody_ocl_state.program, num_devices, nbody_ocl_state.devices, compile_options, NULL, NULL);
 		if (status != CL_SUCCESS) {
 			printf("OPENCL:\tFailed to build opencl program!\n");
 			printf("OPENCL:\tBuild log:");
-			char buffer[1048 * 16];
+			char *buffer;
 			size_t length;
 			status = clGetProgramBuildInfo(
-				nbody_ocl_state.program, nbody_ocl_state.devices[0], CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &length);
+				nbody_ocl_state.program, nbody_ocl_state.devices[0], CL_PROGRAM_BUILD_LOG, NULL, NULL, &length);
+			buffer = malloc(length);
+			status = clGetProgramBuildInfo(
+				nbody_ocl_state.program, nbody_ocl_state.devices[0], CL_PROGRAM_BUILD_LOG, length, buffer, &length);
 			printf(buffer);
 		}
 		opencl_working = 0;
@@ -291,7 +298,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 		part_pos_buff  = malloc(n_particle_groups * sizeof(cl_mem));
 		part_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		part_rad_buff  = malloc(n_particle_groups * sizeof(cl_mem));
-		clFlush(nbody_ocl_state.queue);
+		clFinish(nbody_ocl_state.queue);
 		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 4);
 		for (i = 0; i < n_particle_groups; ++i) {
 			part_pos_buff[i] = clCreateBuffer(nbody_ocl_state.context,
@@ -340,10 +347,10 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 		}
 
 		/* Read back our results! */
-		clFlush(nbody_ocl_state.queue);
-		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
-			sizeof(cl_double3) * num_mes, res_buff_data, 0, NULL, NULL);
+			sizeof(cl_double3) * num_mes, res_buff_data, 1,
+			event_chain + 4 * n_particle_groups - 1, NULL);
+		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_mes; ++i) {
 			result_array[i].x[0] = res_buff_data[i].x;
 			result_array[i].x[1] = res_buff_data[i].y;
@@ -487,7 +494,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 		part1_pos_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		part1_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		part1_rad_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		clFlush(nbody_ocl_state.queue);
+		clFinish(nbody_ocl_state.queue);
 		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 4);
 		for (i = 0; i < n_particle_groups; ++i) {
 			part1_pos_buff[i] = clCreateBuffer(nbody_ocl_state.context,
@@ -535,10 +542,10 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 		}
 
 		/* Read back our results! */
-		clFlush(nbody_ocl_state.queue);
-		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
-			sizeof(cl_double3) * num_induced, res_buff_data, 0, NULL, NULL);
+			sizeof(cl_double3) * num_induced, res_buff_data, 1,
+			event_chain + 4 * n_particle_groups - 1, NULL);
+		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_induced; ++i) {
 			result_array[i].x[0] = res_buff_data[i].x;
 			result_array[i].x[1] = res_buff_data[i].y;
@@ -747,10 +754,10 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 		}
 
 		/* Read back our results! */
-		clFlush(nbody_ocl_state.queue);
-		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
-			sizeof(cl_double3) * num_induced, res_buff_data, 0, NULL, NULL);
+			sizeof(cl_double3) * num_induced, res_buff_data, 1, 
+			event_chain + 4 * n_particle_groups - 1, NULL);
+		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_induced; ++i) {
 			result_array[i].x[0] = res_buff_data[i].x;
 			result_array[i].x[1] = res_buff_data[i].y;
