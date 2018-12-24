@@ -150,7 +150,7 @@ int opencl_initialise() {
 		nbody_ocl_state.context = clCreateContext(NULL, num_devices, nbody_ocl_state.devices, NULL, NULL, &status);
 		assert(status == CL_SUCCESS);
 		nbody_ocl_state.queue = clCreateCommandQueue(nbody_ocl_state.context, nbody_ocl_state.devices[0], 
-			CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, &status);
+			NULL , &status);
 		if (status != CL_SUCCESS) {
 			printf("OPENCL:\tCould not create context or command queue.\n");
 		}
@@ -203,8 +203,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	char kernel_name[128] = "cvtx_nb_Particle_ind_vel_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
 	size_t global_work_size[2], workgroup_size[2];
-	cl_float3 *mes_pos_buff_data, *part_pos_buff_data, *part_vort_buff_data;
-	cl_double3 *res_buff_data;
+	cl_float3 *mes_pos_buff_data, *part_pos_buff_data, *part_vort_buff_data, *res_buff_data;
 	cl_float *part_rad_buff_data;
 	cl_mem mes_pos_buff, res_buff, *part_pos_buff, *part_vort_buff, *part_rad_buff;
 	cl_int status;
@@ -247,9 +246,9 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 		}
 
 		/* Generate a results buffer */
-		res_buff_data = malloc(num_mes * sizeof(cl_double3));
+		res_buff_data = malloc(num_mes * sizeof(cl_float3));
 		res_buff = clCreateBuffer(nbody_ocl_state.context, CL_MEM_READ_WRITE,
-			sizeof(cl_double3) * num_mes, NULL, &status);
+			sizeof(cl_float3) * num_mes, NULL, &status);
 		for (i = 0; i < num_mes; ++i) {
 			res_buff_data[i].x = 0;
 			res_buff_data[i].y = 0;
@@ -257,7 +256,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 		}
 		status = clEnqueueWriteBuffer(
 			nbody_ocl_state.queue, res_buff, CL_FALSE,
-			0, num_mes * sizeof(cl_double3), res_buff_data, 0, NULL, NULL);
+			0, num_mes * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
 		if (status != CL_SUCCESS) {
 			assert(false);
 			printf("OPENCL:\tFailed to enqueue write buffer.");
@@ -348,7 +347,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 
 		/* Read back our results! */
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
-			sizeof(cl_double3) * num_mes, res_buff_data, 1,
+			sizeof(cl_float3) * num_mes, res_buff_data, 1,
 			event_chain + 4 * n_particle_groups - 1, NULL);
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_mes; ++i) {
@@ -388,8 +387,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 	char kernel_name[128] = "cvtx_nb_Particle_ind_dvort_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
 	size_t global_work_size[2], workgroup_size[2];
-	cl_float3 *part1_pos_buff_data, *part1_vort_buff_data, *part2_pos_buff_data, *part2_vort_buff_data;
-	cl_double3 *res_buff_data;
+	cl_float3 *part1_pos_buff_data, *part1_vort_buff_data, *part2_pos_buff_data, *part2_vort_buff_data, *res_buff_data;
 	cl_float *part1_rad_buff_data;
 	cl_mem res_buff, *part1_pos_buff, *part1_vort_buff, *part1_rad_buff, 
 		part2_pos_buff, part2_vort_buff;
@@ -441,9 +439,9 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 		assert(status == CL_SUCCESS);
 			   		
 		/* Generate a results buffer										*/
-		res_buff_data = malloc(num_induced * sizeof(cl_double3));
+		res_buff_data = malloc(num_induced * sizeof(cl_float3));
 		res_buff = clCreateBuffer(nbody_ocl_state.context, CL_MEM_READ_WRITE,
-			sizeof(cl_double3) * num_induced, NULL, &status);
+			sizeof(cl_float3) * num_induced, NULL, &status);
 		for (i = 0; i < num_induced; ++i) {
 			res_buff_data[i].x = 0;
 			res_buff_data[i].y = 0;
@@ -451,7 +449,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 		}
 		status = clEnqueueWriteBuffer(
 			nbody_ocl_state.queue, res_buff, CL_TRUE,
-			0, num_induced * sizeof(cl_double3), res_buff_data, 0, NULL, NULL);
+			0, num_induced * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
 		if (status != CL_SUCCESS) {
 			assert(false);
 			printf("OPENCL:\tFailed to enqueue write buffer.");
@@ -543,7 +541,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 
 		/* Read back our results! */
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
-			sizeof(cl_double3) * num_induced, res_buff_data, 1,
+			sizeof(cl_float3) * num_induced, res_buff_data, 1,
 			event_chain + 4 * n_particle_groups - 1, NULL);
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_induced; ++i) {
@@ -585,8 +583,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	char kernel_name[128] = "cvtx_nb_Particle_visc_ind_dvort_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
 	size_t global_work_size[2], workgroup_size[2];
-	cl_float3 *part1_pos_buff_data, *part1_vort_buff_data, *part2_pos_buff_data, *part2_vort_buff_data;
-	cl_double3 *res_buff_data;
+	cl_float3 *part1_pos_buff_data, *part1_vort_buff_data, *part2_pos_buff_data, *part2_vort_buff_data, *res_buff_data;
 	cl_float *part1_rad_buff_data, *part2_rad_buff_data;
 	cl_mem res_buff, *part1_pos_buff, *part1_vort_buff, *part1_rad_buff,
 		part2_pos_buff, part2_vort_buff, part2_rad_buff;
@@ -648,9 +645,9 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 		assert(status == CL_SUCCESS);
 
 		/* Generate a results buffer										*/
-		res_buff_data = malloc(num_induced * sizeof(cl_double3));
+		res_buff_data = malloc(num_induced * sizeof(cl_float3));
 		res_buff = clCreateBuffer(nbody_ocl_state.context, CL_MEM_READ_WRITE,
-			sizeof(cl_double3) * num_induced, NULL, &status);
+			sizeof(cl_float3) * num_induced, NULL, &status);
 		for (i = 0; i < num_induced; ++i) {
 			res_buff_data[i].x = 0;
 			res_buff_data[i].y = 0;
@@ -658,7 +655,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 		}
 		status = clEnqueueWriteBuffer(
 			nbody_ocl_state.queue, res_buff, CL_TRUE,
-			0, num_induced * sizeof(cl_double3), res_buff_data, 0, NULL, NULL);
+			0, num_induced * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
 		if (status != CL_SUCCESS) {
 			assert(false);
 			printf("OPENCL:\tFailed to enqueue write buffer.");
@@ -755,7 +752,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 
 		/* Read back our results! */
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
-			sizeof(cl_double3) * num_induced, res_buff_data, 1, 
+			sizeof(cl_float3) * num_induced, res_buff_data, 1, 
 			event_chain + 4 * n_particle_groups - 1, NULL);
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_induced; ++i) {
