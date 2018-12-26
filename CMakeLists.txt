@@ -39,6 +39,8 @@ else()
 		target_compile_definitions(cvortex PRIVATE CVTX_EXPORT)
 	endif()
 endif(BUILD_STATIC_LIBRARY)
+# We don't want warnings...
+target_compile_definitions(cvortex PRIVATE _CRT_SECURE_NO_WARNINGS)
 
 if(USE_OPENCL)
     find_package(OpenCL REQUIRED)
