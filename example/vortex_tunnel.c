@@ -13,20 +13,21 @@ int main(int argc, char* argv[])
 {
     float dt = (float)0.025;
 	float adj;
-	const float pi = 3.14159265359;
+	const float pi = (float) 3.14159265359;
 	int i, step;
+	float regularisation_rad = (float)(1.5 * pi / NUM_PER_RING);
     cvtx_Particle m_particles[TOTAL_PARTICLES];
     cvtx_Particle *m_particle_ptrs[TOTAL_PARTICLES];
     for(i = 0; i < TOTAL_PARTICLES; i++){
         m_particle_ptrs[i] = &m_particles[i];
-        m_particles[i].coord.x[2] = floorf((float)i / NUM_PER_RING) * 1.5 * pi / NUM_PER_RING / 4;
+        m_particles[i].coord.x[2] = (float) (floorf((float)i / NUM_PER_RING) * 1.5 * pi / NUM_PER_RING / 4);
         m_particles[i].coord.x[0] = cosf((float)(2 * pi * (float) i / NUM_PER_RING));
         m_particles[i].coord.x[1] = sinf((float)(2 * pi * (float) i / NUM_PER_RING));
 		adj = 2 * (float)(i / NUM_PER_RING) / (TOTAL_PARTICLES / NUM_PER_RING) - 1;
         m_particles[i].vorticity.x[2] = 0;
         m_particles[i].vorticity.x[0] = adj * -sinf((float)(2 * pi * (float) i / NUM_PER_RING)) / NUM_PER_RING;
         m_particles[i].vorticity.x[1] = adj * cosf((float)(2 * pi * (float) i / NUM_PER_RING)) / NUM_PER_RING;
-        m_particles[i].radius = (float) (1.5 * pi / NUM_PER_RING);
+        m_particles[i].volume = (2 * pi / NUM_PER_RING) * (1 / TOTAL_PARTICLES);
     }
 
 
@@ -36,22 +37,23 @@ int main(int argc, char* argv[])
     cvtx_Vec3f dvorts_visc[TOTAL_PARTICLES];
     char file_name[128];
     for(step = 0; step < num_steps; ++step){
+		printf("Step %i\n", step + 1);
         for(i =0; i < TOTAL_PARTICLES; i++){
             mes_pnts[i] = m_particles[i].coord;
         }
-        cvtx_VortFunc vort_fn = cvtx_VortFunc_singular();
+        cvtx_VortFunc vort_fn = cvtx_VortFunc_gaussian();
         cvtx_ParticleArr_Arr_ind_vel(
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
             mes_pnts, TOTAL_PARTICLES,
-            vels, &vort_fn);
+            vels, &vort_fn, regularisation_rad);
         cvtx_ParticleArr_Arr_ind_dvort(
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
-            dvorts, &vort_fn);
-       /* cvtx_ParticleArr_Arr_visc_ind_dvort(
+            dvorts, &vort_fn, regularisation_rad);
+       /*cvtx_ParticleArr_Arr_visc_ind_dvort(
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
-            dvorts_visc, &vort_fn, 1.f);*/
+            dvorts_visc, &vort_fn, regularisation_rad, 0.0f);*/
         for(i =0; i < TOTAL_PARTICLES; i++){
             m_particles[i].coord = cvtx_Vec3f_plus(
                 m_particles[i].coord, 

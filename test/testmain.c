@@ -27,7 +27,6 @@ SOFTWARE.
 #include <string.h>
 #include <assert.h>
 
-#define _CRT_SECURE_NO_WARNINGS
 #define TEST(X) test(__FILE__, __LINE__, X)
 
 #define SECTION(X) section(X)
