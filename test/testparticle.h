@@ -48,67 +48,67 @@ int testParticle(){
     /* Test velocity is induced in the correct places */
     /* Winckelmans */
     TEST(cvtx_Vec3f_isequal(
-        cvtx_Particle_ind_vel(&p1, v0, &vfw),
+        cvtx_Particle_ind_vel(&p1, v0, &vfw, 1),
         v0));
     TEST(cvtx_Vec3f_isequal(
-        cvtx_Particle_ind_vel(&p1, vx, &vfw),
+        cvtx_Particle_ind_vel(&p1, vx, &vfw, 1),
         v0));
     TEST(!cvtx_Vec3f_isequal(
-        cvtx_Particle_ind_vel(&p1, vy, &vfw),
+        cvtx_Particle_ind_vel(&p1, vy, &vfw, 1),
         v0));
     TEST(!cvtx_Vec3f_isequal(
-        cvtx_Particle_ind_vel(&p1, vz, &vfw),
+        cvtx_Particle_ind_vel(&p1, vz, &vfw, 1),
         v0));
     /* Singular */
     TEST(cvtx_Vec3f_isequal(
-        cvtx_Particle_ind_vel(&p1, v0, &vfs),
+        cvtx_Particle_ind_vel(&p1, v0, &vfs, 1),
         v0));
     TEST(cvtx_Vec3f_isequal(
-        cvtx_Particle_ind_vel(&p1, vx, &vfs),
+        cvtx_Particle_ind_vel(&p1, vx, &vfs, 1),
         v0));
     TEST(!cvtx_Vec3f_isequal(
-        cvtx_Particle_ind_vel(&p1, vy, &vfs),
+        cvtx_Particle_ind_vel(&p1, vy, &vfs, 1),
         v0));
     TEST(!cvtx_Vec3f_isequal(
-        cvtx_Particle_ind_vel(&p1, vz, &vfs),
+        cvtx_Particle_ind_vel(&p1, vz, &vfs, 1),
         v0));
 
     /* Test induced in the correct direction */
-    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfw).x[0] == 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfw).x[1] == 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfw).x[2] > 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfw).x[0] == 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfw).x[1] < 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfw).x[2] == 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfs).x[0] == 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfs).x[1] == 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfs).x[2] > 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfs).x[0] == 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfs).x[1] < 0. );
-    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfs).x[2] == 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfw, 1).x[0] == 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfw, 1).x[1] == 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfw, 1).x[2] > 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfw, 1).x[0] == 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfw, 1).x[1] < 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfw, 1).x[2] == 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfs, 1).x[0] == 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfs, 1).x[1] == 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vy, &vfs, 1).x[2] > 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfs, 1).x[0] == 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfs, 1).x[1] < 0. );
+    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfs, 1).x[2] == 0. );
 
     /* Test induced velocity is smaller at large distances */
-    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfw).x[1] < 
-        cvtx_Particle_ind_vel(&p1, vzbig, &vfw).x[1]);
-    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfs).x[1] < 
-        cvtx_Particle_ind_vel(&p1, vzbig, &vfs).x[1]);
+    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfw, 1).x[1] <
+        cvtx_Particle_ind_vel(&p1, vzbig, &vfw, 1).x[1]);
+    TEST(cvtx_Particle_ind_vel(&p1, vz, &vfs, 1).x[1] <
+        cvtx_Particle_ind_vel(&p1, vzbig, &vfs, 1).x[1]);
 
     /* Test induced vorticity */
     cvtx_Particle p2 =  {0,0,0, 0,0,1, 1};
     cvtx_Particle pxz = {0,0,1, 1,0,0, 1};
     cvtx_Particle pyz = {0,0,1, 0,1,0, 1};
     cvtx_Particle pzz = {0,0,1, 0,0,1, 1};
-    TEST(cvtx_Particle_ind_dvort(&p2, &pxz, &vfs).x[0] == 0);
-    TEST(cvtx_Particle_ind_dvort(&p2, &pxz, &vfs).x[1] > 0);
-    TEST(cvtx_Particle_ind_dvort(&p2, &pxz, &vfs).x[2] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pxz, &vfs, 1).x[0] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pxz, &vfs, 1).x[1] > 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pxz, &vfs, 1).x[2] == 0);
 
-    TEST(cvtx_Particle_ind_dvort(&p2, &pyz, &vfs).x[0] < 0);
-    TEST(cvtx_Particle_ind_dvort(&p2, &pyz, &vfs).x[1] == 0);
-    TEST(cvtx_Particle_ind_dvort(&p2, &pyz, &vfs).x[2] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pyz, &vfs, 1).x[0] < 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pyz, &vfs, 1).x[1] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pyz, &vfs, 1).x[2] == 0);
 
-    TEST(cvtx_Particle_ind_dvort(&p2, &pzz, &vfs).x[0] == 0);
-    TEST(cvtx_Particle_ind_dvort(&p2, &pzz, &vfs).x[1] == 0);
-    TEST(cvtx_Particle_ind_dvort(&p2, &pzz, &vfs).x[2] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pzz, &vfs, 1).x[0] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pzz, &vfs, 1).x[1] == 0);
+    TEST(cvtx_Particle_ind_dvort(&p2, &pzz, &vfs, 1).x[2] == 0);
     
     return 0;
 }

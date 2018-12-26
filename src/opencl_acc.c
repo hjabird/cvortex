@@ -150,7 +150,7 @@ int opencl_initialise() {
 		nbody_ocl_state.context = clCreateContext(NULL, num_devices, nbody_ocl_state.devices, NULL, NULL, &status);
 		assert(status == CL_SUCCESS);
 		nbody_ocl_state.queue = clCreateCommandQueue(nbody_ocl_state.context, nbody_ocl_state.devices[0], 
-			NULL , &status);
+			NULL, &status);
 		if (status != CL_SUCCESS) {
 			printf("OPENCL:\tCould not create context or command queue.\n");
 		}
@@ -198,14 +198,14 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_Vec3f *mes_start,
 	const long num_mes,
 	cvtx_Vec3f *result_array,
-	const cvtx_VortFunc *kernel)
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius)
 {
 	char kernel_name[128] = "cvtx_nb_Particle_ind_vel_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
 	size_t global_work_size[2], workgroup_size[2];
 	cl_float3 *mes_pos_buff_data, *part_pos_buff_data, *part_vort_buff_data, *res_buff_data;
-	cl_float *part_rad_buff_data;
-	cl_mem mes_pos_buff, res_buff, *part_pos_buff, *part_vort_buff, *part_rad_buff;
+	cl_mem mes_pos_buff, res_buff, *part_pos_buff, *part_vort_buff;
 	cl_int status;
 	cl_kernel cl_kernel;
 	cl_event *event_chain;
@@ -245,6 +245,10 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 			return -1;
 		}
 
+		cl_float cl_regularisation_radius = regularisation_radius;
+		status = clSetKernelArg(cl_kernel, 2, sizeof(cl_float), &cl_regularisation_radius);
+		assert(status == CL_SUCCESS);
+
 		/* Generate a results buffer */
 		res_buff_data = malloc(num_mes * sizeof(cl_float3));
 		res_buff = clCreateBuffer(nbody_ocl_state.context, CL_MEM_READ_WRITE,
@@ -274,7 +278,6 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 		n_modelled_particles = CVTX_WORKGROUP_SIZE * n_particle_groups;
 		part_pos_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
 		part_vort_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
-		part_rad_buff_data = malloc(n_modelled_particles * sizeof(cl_float));
 		for (i = 0; i < num_particles; ++i) {
 			part_pos_buff_data[i].x = array_start[i]->coord.x[0];
 			part_pos_buff_data[i].y = array_start[i]->coord.x[1];
@@ -282,7 +285,6 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 			part_vort_buff_data[i].x = array_start[i]->vorticity.x[0];
 			part_vort_buff_data[i].y = array_start[i]->vorticity.x[1];
 			part_vort_buff_data[i].z = array_start[i]->vorticity.x[2];
-			part_rad_buff_data[i] = array_start[i]->radius;
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_particles; i < n_modelled_particles; ++i) {
@@ -292,13 +294,11 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 			part_vort_buff_data[i].x = 0;
 			part_vort_buff_data[i].y = 0;
 			part_vort_buff_data[i].z = 0;
-			part_rad_buff_data[i] = 1;
 		}
 		part_pos_buff  = malloc(n_particle_groups * sizeof(cl_mem));
 		part_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		part_rad_buff  = malloc(n_particle_groups * sizeof(cl_mem));
 		clFinish(nbody_ocl_state.queue);
-		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 4);
+		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 3);
 		for (i = 0; i < n_particle_groups; ++i) {
 			part_pos_buff[i] = clCreateBuffer(nbody_ocl_state.context,
 				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
@@ -306,7 +306,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 			status = clEnqueueWriteBuffer(
 				nbody_ocl_state.queue, part_pos_buff[i], CL_FALSE,
 				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), 
-				part_pos_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i);
+				part_pos_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 3 * i);
 			assert(status == CL_SUCCESS);
 			part_vort_buff[i] = clCreateBuffer(nbody_ocl_state.context,
 				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
@@ -314,41 +314,28 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 			status = clEnqueueWriteBuffer(
 				nbody_ocl_state.queue, part_vort_buff[i], CL_FALSE,
 				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3),
-				part_vort_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4*i + 1);
-			assert(status == CL_SUCCESS);
-			part_rad_buff[i] = clCreateBuffer(nbody_ocl_state.context,
-				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float), NULL, &status);
-			assert(status == CL_SUCCESS);
-			status = clEnqueueWriteBuffer(
-				nbody_ocl_state.queue, part_rad_buff[i], CL_FALSE,
-				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float),
-				part_rad_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4*i + 2);
+				part_vort_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 3*i + 1);
 			assert(status == CL_SUCCESS);
 			status = clSetKernelArg(cl_kernel, 0, sizeof(cl_mem), part_pos_buff + i);
 			assert(status == CL_SUCCESS);
 			status = clSetKernelArg(cl_kernel, 1, sizeof(cl_mem), part_vort_buff + i);
 			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 2, sizeof(cl_mem), part_rad_buff + i);
-			assert(status == CL_SUCCESS);
 			if (i == 0) {
 				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 3, event_chain, event_chain + 4 * i + 3);
+					NULL, global_work_size, workgroup_size, 2, event_chain, event_chain + 3 * i + 2);
 			} else {
 				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 4, event_chain + 4*i - 1, event_chain + 4 * i + 3);
+					NULL, global_work_size, workgroup_size, 3, event_chain + 3*i - 1, event_chain + 3 * i + 2);
 			}
-			if (status != CL_SUCCESS) {
-				assert(false);
-			}
+			assert(status == CL_SUCCESS);
 			clReleaseMemObject(part_pos_buff[i]);
 			clReleaseMemObject(part_vort_buff[i]);
-			clReleaseMemObject(part_rad_buff[i]);
 		}
 
 		/* Read back our results! */
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
 			sizeof(cl_float3) * num_mes, res_buff_data, 1,
-			event_chain + 4 * n_particle_groups - 1, NULL);
+			event_chain + 3 * n_particle_groups - 1, NULL);
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_mes; ++i) {
 			result_array[i].x[0] = res_buff_data[i].x;
@@ -359,10 +346,8 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 
 		free(part_pos_buff);
 		free(part_vort_buff);
-		free(part_rad_buff);
 		free(part_pos_buff_data);
 		free(part_vort_buff_data);
-		free(part_rad_buff_data);
 		free(mes_pos_buff_data);
 		clReleaseMemObject(res_buff);
 		clReleaseMemObject(mes_pos_buff);
@@ -382,15 +367,14 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 	const cvtx_Particle **induced_start,
 	const long num_induced,
 	cvtx_Vec3f *result_array,
-	const cvtx_VortFunc *kernel) 
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius)
 {
 	char kernel_name[128] = "cvtx_nb_Particle_ind_dvort_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
 	size_t global_work_size[2], workgroup_size[2];
 	cl_float3 *part1_pos_buff_data, *part1_vort_buff_data, *part2_pos_buff_data, *part2_vort_buff_data, *res_buff_data;
-	cl_float *part1_rad_buff_data;
-	cl_mem res_buff, *part1_pos_buff, *part1_vort_buff, *part1_rad_buff, 
-		part2_pos_buff, part2_vort_buff;
+	cl_mem res_buff, *part1_pos_buff, *part1_vort_buff, part2_pos_buff, part2_vort_buff;
 	cl_int status;
 	cl_kernel cl_kernel;
 	cl_event *event_chain;
@@ -424,7 +408,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 		part2_pos_buff = clCreateBuffer(nbody_ocl_state.context,
 			CL_MEM_READ_ONLY, num_induced * sizeof(cl_float3), NULL, &status);
 		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, part2_pos_buff, CL_TRUE,
+			nbody_ocl_state.queue, part2_pos_buff, CL_FALSE,
 			0, num_induced * sizeof(cl_float3), part2_pos_buff_data, 0, NULL, NULL);
 		assert(status == CL_SUCCESS);
 		status = clSetKernelArg(cl_kernel, 3, sizeof(cl_mem), &part2_pos_buff);
@@ -432,7 +416,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 		part2_vort_buff = clCreateBuffer(nbody_ocl_state.context,
 			CL_MEM_READ_ONLY, num_induced * sizeof(cl_float3), NULL, &status);
 		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, part2_vort_buff, CL_TRUE,
+			nbody_ocl_state.queue, part2_vort_buff, CL_FALSE,
 			0, num_induced * sizeof(cl_float3), part2_vort_buff_data, 0, NULL, NULL);
 		assert(status == CL_SUCCESS);
 		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &part2_vort_buff);
@@ -448,13 +432,17 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 			res_buff_data[i].z = 0;
 		}
 		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, res_buff, CL_TRUE,
+			nbody_ocl_state.queue, res_buff, CL_FALSE,
 			0, num_induced * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
 		if (status != CL_SUCCESS) {
 			assert(false);
 			printf("OPENCL:\tFailed to enqueue write buffer.");
 		}
 		status = clSetKernelArg(cl_kernel, 5, sizeof(cl_mem), &res_buff);
+		assert(status == CL_SUCCESS);
+
+		cl_float cl_regularisation_radius = regularisation_radius;
+		status = clSetKernelArg(cl_kernel, 2, sizeof(cl_float), &cl_regularisation_radius);
 		assert(status == CL_SUCCESS);
 
 		/* Now create & dispatch particle buffers and kernel. 
@@ -469,7 +457,6 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 		n_modelled_particles = CVTX_WORKGROUP_SIZE * n_particle_groups;
 		part1_pos_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
 		part1_vort_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
-		part1_rad_buff_data = malloc(n_modelled_particles * sizeof(cl_float));
 		for (i = 0; i < num_particles; ++i) {
 			part1_pos_buff_data[i].x = array_start[i]->coord.x[0];
 			part1_pos_buff_data[i].y = array_start[i]->coord.x[1];
@@ -477,7 +464,6 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 			part1_vort_buff_data[i].x = array_start[i]->vorticity.x[0];
 			part1_vort_buff_data[i].y = array_start[i]->vorticity.x[1];
 			part1_vort_buff_data[i].z = array_start[i]->vorticity.x[2];
-			part1_rad_buff_data[i] = array_start[i]->radius;
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_particles; i < n_modelled_particles; ++i) {
@@ -487,13 +473,11 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 			part1_vort_buff_data[i].x = 0;
 			part1_vort_buff_data[i].y = 0;
 			part1_vort_buff_data[i].z = 0;
-			part1_rad_buff_data[i] = 1;
 		}
 		part1_pos_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		part1_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		part1_rad_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		clFinish(nbody_ocl_state.queue);
-		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 4);
+		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 3);
 		for (i = 0; i < n_particle_groups; ++i) {
 			part1_pos_buff[i] = clCreateBuffer(nbody_ocl_state.context,
 				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
@@ -501,7 +485,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 			status = clEnqueueWriteBuffer(
 				nbody_ocl_state.queue, part1_pos_buff[i], CL_FALSE,
 				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3),
-				part1_pos_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i);
+				part1_pos_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 3 * i);
 			assert(status == CL_SUCCESS);
 			part1_vort_buff[i] = clCreateBuffer(nbody_ocl_state.context,
 				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
@@ -509,40 +493,29 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 			status = clEnqueueWriteBuffer(
 				nbody_ocl_state.queue, part1_vort_buff[i], CL_FALSE,
 				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3),
-				part1_vort_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i + 1);
-			assert(status == CL_SUCCESS);
-			part1_rad_buff[i] = clCreateBuffer(nbody_ocl_state.context,
-				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float), NULL, &status);
-			assert(status == CL_SUCCESS);
-			status = clEnqueueWriteBuffer(
-				nbody_ocl_state.queue, part1_rad_buff[i], CL_FALSE,
-				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float),
-				part1_rad_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i + 2);
+				part1_vort_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 3 * i + 1);
 			assert(status == CL_SUCCESS);
 			status = clSetKernelArg(cl_kernel, 0, sizeof(cl_mem), part1_pos_buff + i);
 			assert(status == CL_SUCCESS);
 			status = clSetKernelArg(cl_kernel, 1, sizeof(cl_mem), part1_vort_buff + i);
 			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 2, sizeof(cl_mem), part1_rad_buff + i);
-			assert(status == CL_SUCCESS);
 			if (i == 0) {
 				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 3, event_chain + 4 * i, event_chain + 4 * i + 3);
+					NULL, global_work_size, workgroup_size, 2, event_chain + 3 * i, event_chain + 3 * i + 2);
 			}
 			else {
 				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 4, event_chain + 4 * i - 1, event_chain + 4 * i + 3);
+					NULL, global_work_size, workgroup_size, 3, event_chain + 3 * i - 1, event_chain + 3 * i + 2);
 			}
 			assert(status == CL_SUCCESS);
 			clReleaseMemObject(part1_pos_buff[i]);
 			clReleaseMemObject(part1_vort_buff[i]);
-			clReleaseMemObject(part1_rad_buff[i]);
 		}
 
 		/* Read back our results! */
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
 			sizeof(cl_float3) * num_induced, res_buff_data, 1,
-			event_chain + 4 * n_particle_groups - 1, NULL);
+			event_chain + 3 * n_particle_groups - 1, NULL);
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_induced; ++i) {
 			result_array[i].x[0] = res_buff_data[i].x;
@@ -553,12 +526,10 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 
 		free(part1_pos_buff);
 		free(part1_vort_buff);
-		free(part1_rad_buff);
 		free(part2_pos_buff_data);
 		free(part2_vort_buff_data);
 		free(part1_pos_buff_data);
 		free(part1_vort_buff_data);
-		free(part1_rad_buff_data);
 		clReleaseMemObject(res_buff);
 		clReleaseMemObject(part2_pos_buff);
 		clReleaseMemObject(part2_vort_buff);
@@ -578,15 +549,16 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	const long num_induced,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel,
-	const float kinematic_visc)
+	float regularisation_radius,
+	float kinematic_visc)
 {
 	char kernel_name[128] = "cvtx_nb_Particle_visc_ind_dvort_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
 	size_t global_work_size[2], workgroup_size[2];
 	cl_float3 *part1_pos_buff_data, *part1_vort_buff_data, *part2_pos_buff_data, *part2_vort_buff_data, *res_buff_data;
-	cl_float *part1_rad_buff_data, *part2_rad_buff_data;
-	cl_mem res_buff, *part1_pos_buff, *part1_vort_buff, *part1_rad_buff,
-		part2_pos_buff, part2_vort_buff, part2_rad_buff;
+	cl_float *part1_vol_buff_data, *part2_vol_buff_data;
+	cl_mem res_buff, *part1_pos_buff, *part1_vort_buff, *part1_vol_buff,
+		part2_pos_buff, part2_vort_buff, part2_vol_buff;
 	cl_int status;
 	cl_kernel cl_kernel;
 	cl_event *event_chain;
@@ -608,7 +580,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 		/* Generate buffers for induced particle data  */
 		part2_pos_buff_data = malloc(num_induced * sizeof(cl_float3));
 		part2_vort_buff_data = malloc(num_induced * sizeof(cl_float3));
-		part2_rad_buff_data = malloc(num_induced * sizeof(cl_float));
+		part2_vol_buff_data = malloc(num_induced * sizeof(cl_float));
 		for (i = 0; i < num_induced; ++i) {
 			part2_pos_buff_data[i].x = induced_start[i]->coord.x[0];
 			part2_pos_buff_data[i].y = induced_start[i]->coord.x[1];
@@ -616,7 +588,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 			part2_vort_buff_data[i].x = induced_start[i]->vorticity.x[0];
 			part2_vort_buff_data[i].y = induced_start[i]->vorticity.x[1];
 			part2_vort_buff_data[i].z = induced_start[i]->vorticity.x[2];
-			part2_rad_buff_data[i] = induced_start[i]->radius;
+			part2_vol_buff_data[i] = induced_start[i]->volume;
 		}
 		/* Induced particle Create buffer, enqueue write and set kernel arg. */
 		part2_pos_buff = clCreateBuffer(nbody_ocl_state.context,
@@ -635,13 +607,13 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 		assert(status == CL_SUCCESS);
 		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &part2_vort_buff);
 		assert(status == CL_SUCCESS);
-		part2_rad_buff = clCreateBuffer(nbody_ocl_state.context,
+		part2_vol_buff = clCreateBuffer(nbody_ocl_state.context,
 			CL_MEM_READ_ONLY, num_induced * sizeof(cl_float), NULL, &status);
 		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, part2_rad_buff, CL_TRUE,
-			0, num_induced * sizeof(cl_float), part2_rad_buff_data, 0, NULL, NULL);
+			nbody_ocl_state.queue, part2_vol_buff, CL_TRUE,
+			0, num_induced * sizeof(cl_float), part2_vol_buff_data, 0, NULL, NULL);
 		assert(status == CL_SUCCESS);
-		status = clSetKernelArg(cl_kernel, 5, sizeof(cl_mem), &part2_rad_buff);
+		status = clSetKernelArg(cl_kernel, 5, sizeof(cl_mem), &part2_vol_buff);
 		assert(status == CL_SUCCESS);
 
 		/* Generate a results buffer										*/
@@ -664,8 +636,11 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 		assert(status == CL_SUCCESS);
 
 		/* Setup the kinematic viscocity argument */
+		cl_float cl_regularisation_rad = regularisation_radius;
+		status = clSetKernelArg(cl_kernel, 8, sizeof(cl_float), &cl_regularisation_rad);
+		assert(status == CL_SUCCESS);
 		cl_float cl_kinem_visc = kinematic_visc;
-		status = clSetKernelArg(cl_kernel, 7, sizeof(cl_float), &cl_kinem_visc);
+		status = clSetKernelArg(cl_kernel, 8, sizeof(cl_float), &cl_kinem_visc);
 		assert(status == CL_SUCCESS);
 
 		/* Now create & dispatch particle buffers and kernel.
@@ -680,7 +655,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 		n_modelled_particles = CVTX_WORKGROUP_SIZE * n_particle_groups;
 		part1_pos_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
 		part1_vort_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
-		part1_rad_buff_data = malloc(n_modelled_particles * sizeof(cl_float));
+		part1_vol_buff_data = malloc(n_modelled_particles * sizeof(cl_float));
 		for (i = 0; i < num_particles; ++i) {
 			part1_pos_buff_data[i].x = array_start[i]->coord.x[0];
 			part1_pos_buff_data[i].y = array_start[i]->coord.x[1];
@@ -688,7 +663,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 			part1_vort_buff_data[i].x = array_start[i]->vorticity.x[0];
 			part1_vort_buff_data[i].y = array_start[i]->vorticity.x[1];
 			part1_vort_buff_data[i].z = array_start[i]->vorticity.x[2];
-			part1_rad_buff_data[i] = array_start[i]->radius;
+			part1_vol_buff_data[i] = array_start[i]->volume;
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_particles; i < n_modelled_particles; ++i) {
@@ -698,11 +673,11 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 			part1_vort_buff_data[i].x = 0;
 			part1_vort_buff_data[i].y = 0;
 			part1_vort_buff_data[i].z = 0;
-			part1_rad_buff_data[i] = 1;
+			part1_vol_buff_data[i] = 0;
 		}
 		part1_pos_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		part1_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		part1_rad_buff = malloc(n_particle_groups * sizeof(cl_mem));
+		part1_vol_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		clFlush(nbody_ocl_state.queue);
 		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 4);
 		for (i = 0; i < n_particle_groups; ++i) {
@@ -722,19 +697,19 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3),
 				part1_vort_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i + 1);
 			assert(status == CL_SUCCESS);
-			part1_rad_buff[i] = clCreateBuffer(nbody_ocl_state.context,
+			part1_vol_buff[i] = clCreateBuffer(nbody_ocl_state.context,
 				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float), NULL, &status);
 			assert(status == CL_SUCCESS);
 			status = clEnqueueWriteBuffer(
-				nbody_ocl_state.queue, part1_rad_buff[i], CL_FALSE,
+				nbody_ocl_state.queue, part1_vol_buff[i], CL_FALSE,
 				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float),
-				part1_rad_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i + 2);
+				part1_vol_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i + 2);
 			assert(status == CL_SUCCESS);
 			status = clSetKernelArg(cl_kernel, 0, sizeof(cl_mem), part1_pos_buff + i);
 			assert(status == CL_SUCCESS);
 			status = clSetKernelArg(cl_kernel, 1, sizeof(cl_mem), part1_vort_buff + i);
 			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 2, sizeof(cl_mem), part1_rad_buff + i);
+			status = clSetKernelArg(cl_kernel, 2, sizeof(cl_mem), part1_vol_buff + i);
 			assert(status == CL_SUCCESS);
 			if (i == 0) {
 				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
@@ -747,7 +722,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 			assert(status == CL_SUCCESS);
 			clReleaseMemObject(part1_pos_buff[i]);
 			clReleaseMemObject(part1_vort_buff[i]);
-			clReleaseMemObject(part1_rad_buff[i]);
+			clReleaseMemObject(part1_vol_buff[i]);
 		}
 
 		/* Read back our results! */
@@ -764,17 +739,17 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 
 		free(part1_pos_buff);
 		free(part1_vort_buff);
-		free(part1_rad_buff);
+		free(part1_vol_buff);
 		free(part2_pos_buff_data);
 		free(part2_vort_buff_data);
-		free(part2_rad_buff_data);
+		free(part2_vol_buff_data);
 		free(part1_pos_buff_data);
 		free(part1_vort_buff_data);
-		free(part1_rad_buff_data);
+		free(part1_vol_buff_data);
 		clReleaseMemObject(res_buff);
 		clReleaseMemObject(part2_pos_buff);
 		clReleaseMemObject(part2_vort_buff);
-		clReleaseMemObject(part2_rad_buff);
+		clReleaseMemObject(part2_vol_buff);
 		clReleaseKernel(cl_kernel);
 		return 0;
 	}

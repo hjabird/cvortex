@@ -2,6 +2,7 @@
 #include "../include/cvortex/Particle.h"
 #include "../include/cvortex/VortFunc.h"
 #include "../include/cvortex/LegacyVtk.h"
+
 #define NUM_PER_RING 15
 #include <math.h>
 #include <stdio.h>
@@ -13,6 +14,7 @@ int main(int argc, char* argv[])
     cvtx_Particle m_particles[NUM_PER_RING * 2];
     cvtx_Particle *m_particle_ptrs[NUM_PER_RING * 2];
     float z = 0;
+	float regularisation_radius = (float)(1.5 * 3.141592 / NUM_PER_RING);
     for(i = 0; i < NUM_PER_RING; i++){
         m_particle_ptrs[i] = &m_particles[i];
         m_particles[i].coord.x[2] = z;
@@ -21,7 +23,7 @@ int main(int argc, char* argv[])
         m_particles[i].vorticity.x[2] = 0;
         m_particles[i].vorticity.x[0] = -sinf((float)(2 * 3.141592 * (float) i / NUM_PER_RING)) / NUM_PER_RING;
         m_particles[i].vorticity.x[1] = cosf((float)(2 * 3.141592 * (float) i / NUM_PER_RING)) / NUM_PER_RING;
-        m_particles[i].radius = (float) (1.5 * 3.141592 / NUM_PER_RING);
+        m_particles[i].volume = (float) (1.5 * 3.141592 / (NUM_PER_RING * NUM_PER_RING));
     }
     z = 1;
     for(i = NUM_PER_RING; i < NUM_PER_RING * 2; i++){
@@ -32,7 +34,7 @@ int main(int argc, char* argv[])
         m_particles[i].vorticity.x[2] = 0;
         m_particles[i].vorticity.x[0] = -sinf((float)(2 * 3.141592 * (float) i / NUM_PER_RING)) / NUM_PER_RING;
         m_particles[i].vorticity.x[1] = cosf((float)(2 * 3.141592 * (float) i / NUM_PER_RING)) / NUM_PER_RING;
-        m_particles[i].radius = (float) (1.5 * 3.141592 / NUM_PER_RING);
+        m_particles[i].volume = (float)(1.5 * 3.141592 / (NUM_PER_RING * NUM_PER_RING));
     }
 
     cvtx_Vec3f mes_pnts[NUM_PER_RING*2];
@@ -48,15 +50,15 @@ int main(int argc, char* argv[])
         cvtx_ParticleArr_Arr_ind_vel(
             (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             mes_pnts, NUM_PER_RING*2,
-            vels, &vort_fn);
+            vels, &vort_fn, regularisation_radius);
         cvtx_ParticleArr_Arr_ind_dvort(
             (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
-            dvorts, &vort_fn);
+            dvorts, &vort_fn, regularisation_radius);
         cvtx_ParticleArr_Arr_visc_ind_dvort(
             (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
             (const cvtx_Particle**)m_particle_ptrs, NUM_PER_RING*2,
-            dvorts_visc, &vort_fn, 0.01f);
+            dvorts_visc, &vort_fn, regularisation_radius, 0.01f);
         for(i =0; i < NUM_PER_RING*2; i++){
             m_particles[i].coord = cvtx_Vec3f_plus(
                 m_particles[i].coord, 

@@ -36,7 +36,8 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_Vec3f *mes_start,
 	const long num_mes,
 	cvtx_Vec3f *result_array,
-	const cvtx_VortFunc *kernel);
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius);
 
 int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 	const cvtx_Particle **array_start,
@@ -44,7 +45,8 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 	const cvtx_Particle **induced_start,
 	const long num_induced,
 	cvtx_Vec3f *result_array,
-	const cvtx_VortFunc *kernel);
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius);
 
 int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
@@ -53,7 +55,8 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	const long num_induced,
 	cvtx_Vec3f *result_array,
 	const cvtx_VortFunc *kernel,
-	const float kinematic_visc);
+	float regularisation_radius,
+	float kinematic_visc);
 
 #endif CVTX_OPENCL_ACC_H
 #endif CVTX_USING_OPENCL
