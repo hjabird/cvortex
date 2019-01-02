@@ -25,6 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 #ifdef CVTX_USING_OPENCL
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #define CVTX_WORKGROUP_SIZE 256
 
 #include <CL/cl.h>
@@ -166,7 +167,7 @@ int opencl_initialise() {
 			char *buffer;
 			size_t length;
 			status = clGetProgramBuildInfo(
-				nbody_ocl_state.program, nbody_ocl_state.devices[0], CL_PROGRAM_BUILD_LOG, NULL, NULL, &length);
+				nbody_ocl_state.program, nbody_ocl_state.devices[0], CL_PROGRAM_BUILD_LOG, 0, NULL, &length);
 			buffer = malloc(length);
 			status = clGetProgramBuildInfo(
 				nbody_ocl_state.program, nbody_ocl_state.devices[0], CL_PROGRAM_BUILD_LOG, length, buffer, &length);
@@ -637,7 +638,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 
 		/* Setup the kinematic viscocity argument */
 		cl_float cl_regularisation_rad = regularisation_radius;
-		status = clSetKernelArg(cl_kernel, 8, sizeof(cl_float), &cl_regularisation_rad);
+		status = clSetKernelArg(cl_kernel, 7, sizeof(cl_float), &cl_regularisation_rad);
 		assert(status == CL_SUCCESS);
 		cl_float cl_kinem_visc = kinematic_visc;
 		status = clSetKernelArg(cl_kernel, 8, sizeof(cl_float), &cl_kinem_visc);
@@ -711,6 +712,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 			assert(status == CL_SUCCESS);
 			status = clSetKernelArg(cl_kernel, 2, sizeof(cl_mem), part1_vol_buff + i);
 			assert(status == CL_SUCCESS);
+			clFinish(nbody_ocl_state.queue);
 			if (i == 0) {
 				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
 					NULL, global_work_size, workgroup_size, 3, event_chain + 4 * i, event_chain + 4 * i + 3);
