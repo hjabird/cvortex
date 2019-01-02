@@ -298,7 +298,6 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 		}
 		part_pos_buff  = malloc(n_particle_groups * sizeof(cl_mem));
 		part_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		clFinish(nbody_ocl_state.queue);
 		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 3);
 		for (i = 0; i < n_particle_groups; ++i) {
 			part_pos_buff[i] = clCreateBuffer(nbody_ocl_state.context,
@@ -337,6 +336,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
 			sizeof(cl_float3) * num_mes, res_buff_data, 1,
 			event_chain + 3 * n_particle_groups - 1, NULL);
+		for (i = 0; i < n_particle_groups * 3; ++i) { clReleaseEvent(event_chain[i]); }
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_mes; ++i) {
 			result_array[i].x[0] = res_buff_data[i].x;
@@ -477,7 +477,6 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 		}
 		part1_pos_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		part1_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		clFinish(nbody_ocl_state.queue);
 		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 3);
 		for (i = 0; i < n_particle_groups; ++i) {
 			part1_pos_buff[i] = clCreateBuffer(nbody_ocl_state.context,
@@ -517,6 +516,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
 			sizeof(cl_float3) * num_induced, res_buff_data, 1,
 			event_chain + 3 * n_particle_groups - 1, NULL);
+		for (i = 0; i < n_particle_groups * 3; ++i) { clReleaseEvent(event_chain[i]); }
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_induced; ++i) {
 			result_array[i].x[0] = res_buff_data[i].x;
@@ -679,7 +679,6 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 		part1_pos_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		part1_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		part1_vol_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		clFlush(nbody_ocl_state.queue);
 		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 4);
 		for (i = 0; i < n_particle_groups; ++i) {
 			part1_pos_buff[i] = clCreateBuffer(nbody_ocl_state.context,
@@ -712,7 +711,6 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 			assert(status == CL_SUCCESS);
 			status = clSetKernelArg(cl_kernel, 2, sizeof(cl_mem), part1_vol_buff + i);
 			assert(status == CL_SUCCESS);
-			clFinish(nbody_ocl_state.queue);
 			if (i == 0) {
 				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
 					NULL, global_work_size, workgroup_size, 3, event_chain + 4 * i, event_chain + 4 * i + 3);
@@ -731,6 +729,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
 			sizeof(cl_float3) * num_induced, res_buff_data, 1, 
 			event_chain + 4 * n_particle_groups - 1, NULL);
+		for (i = 0; i < n_particle_groups * 4; ++i) { clReleaseEvent(event_chain[i]); }
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_induced; ++i) {
 			result_array[i].x[0] = res_buff_data[i].x;
