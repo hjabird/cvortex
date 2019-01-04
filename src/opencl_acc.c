@@ -151,7 +151,7 @@ int opencl_initialise() {
 		nbody_ocl_state.context = clCreateContext(NULL, num_devices, nbody_ocl_state.devices, NULL, NULL, &status);
 		assert(status == CL_SUCCESS);
 		nbody_ocl_state.queue = clCreateCommandQueue(nbody_ocl_state.context, nbody_ocl_state.devices[0], 
-			NULL, &status);
+			(cl_command_queue_properties)NULL, &status);
 		if (status != CL_SUCCESS) {
 			printf("OPENCL:\tCould not create context or command queue.\n");
 		}
