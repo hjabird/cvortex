@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 	dvorts_visc = malloc(sizeof(cvtx_Vec3f) * TOTAL_PARTICLES);
 	cvtx_VortFunc vort_fn = cvtx_VortFunc_gaussian();
 	printf("Benchmarking with Gaussian Kernel.\n");
-	printf("\t\tMilliseconds\t\t\tNormalised\n", TOTAL_PARTICLES);
+	printf("\t\tMilliseconds\t\t\tNormalised (Time per interaction)\n");
 	printf("Particles\tvel\tdvort\tvisc dvort\n");
 	for (power = 0; testsize * pow(factor, power) < TOTAL_PARTICLES; ++power) {
 		this_testsize = (long)(testsize * pow(factor, power));
@@ -75,9 +75,9 @@ int main(int argc, char* argv[])
 			e = clock();
 			tvdvort = e - s < tvdvort ? e - s : tvdvort;
 		}
-		printf("%i:\t\t%li\t%li\t%li\t\t%f\t%f\t%f\n", this_testsize, tvel, tdvort, tvdvort,
-				(double)sqrt(tvel) / this_testsize, (double)sqrt(tdvort) / this_testsize, 
-				(double)sqrt(tvdvort) / this_testsize);
+		printf("%i:\t\t%li\t%li\t%li\t\t%.4e\t%.4e\t%.4e\n", this_testsize, tvel, tdvort, tvdvort,
+				pow((double)sqrt(tvel) / this_testsize, 2), pow((double)sqrt(tdvort) / this_testsize, 2),
+				pow((double)sqrt(tvdvort) / this_testsize, 2));
 		tvel = 99999999;
 		tdvort = tvel;
 		tvdvort = tvel;
