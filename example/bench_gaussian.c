@@ -12,7 +12,11 @@
 
 int main(int argc, char* argv[])
 {
+<<<<<<< HEAD
 	double factor = sqrt(2.), ms_correction = 1000. / (double)CLOCKS_PER_SEC;
+=======
+	double factor = sqrt(2.);
+>>>>>>> 6177bccbffac77218d9ccb40c27c72d4b16709ef
 	long testsize = 8, this_testsize, repeats = 3, i, power;
 	clock_t s, e, tvel, tdvort, tvdvort;
 	tvel = 99999999;
@@ -75,9 +79,10 @@ int main(int argc, char* argv[])
 			e = clock();
 			tvdvort = e - s < tvdvort ? e - s : tvdvort;
 		}
-		printf("%li:\t\t%.2e\t%.2e\t%.2e\t\t%.2e\t%.2e\t%.2e\n", this_testsize, tvel*ms_correction, tdvort*ms_correction, tvdvort*ms_correction,
+		printf("%i:\t\t%.2e\t%.2e\t%.2e\t\t%.2e\t%.2e\t%.2e\n", this_testsize, tvel*ms_correction, tdvort*ms_correction, tvdvort*ms_correction,
 				pow((double)sqrt(tvel)*ms_correction / this_testsize, 2), pow((double)sqrt(tdvort)*ms_correction / this_testsize, 2),
 				pow((double)sqrt(tvdvort)*ms_correction / this_testsize, 2));
+
 		tvel = 99999999;
 		tdvort = tvel;
 		tvdvort = tvel;
