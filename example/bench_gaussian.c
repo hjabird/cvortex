@@ -12,11 +12,7 @@
 
 int main(int argc, char* argv[])
 {
-<<<<<<< HEAD
 	double factor = sqrt(2.), ms_correction = 1000. / (double)CLOCKS_PER_SEC;
-=======
-	double factor = sqrt(2.);
->>>>>>> 6177bccbffac77218d9ccb40c27c72d4b16709ef
 	long testsize = 8, this_testsize, repeats = 3, i, power;
 	clock_t s, e, tvel, tdvort, tvdvort;
 	tvel = 99999999;
