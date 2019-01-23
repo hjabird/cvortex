@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 
-link_libraries (cvortex m)
+link_libraries(cvortex)
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+    link_libraries(m)   # Maths std library.
+endif()
 
 add_executable (VortexRings VortexRings.c)
 target_compile_definitions(VortexRings PRIVATE _CRT_SECURE_NO_WARNINGS)

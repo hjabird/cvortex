@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 
-# Add HBTK library ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-link_libraries (cvortex m)
+link_libraries(cvortex)
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+    link_libraries(m)   # Maths std library.
+endif()
 
 # Find all of our tests sources
 file (GLOB TESTCVTX_SOURCE  "*.c")
