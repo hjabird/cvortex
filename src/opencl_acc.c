@@ -112,7 +112,7 @@ int opencl_initialise() {
 	static int opencl_working = -1;	/* meaning no, 0 meaning yes */
 	int good = 1;
 	cl_int status;
-	cl_uint num_platforms, num_devices;
+	cl_uint num_platforms, num_devices, platform_idx;
 	char compile_options[1024] = "";
 	char tmp[128];
 	sprintf(tmp, "%i", CVTX_WORKGROUP_SIZE);
@@ -134,9 +134,12 @@ int opencl_initialise() {
 		}
 	}
 	if (!tried_initialised && good) {
-		status = clGetDeviceIDs(nbody_ocl_state.platforms[0], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
+		for (platform_idx = 0; platform_idx < num_platforms; ++platform_idx) {
+			status = clGetDeviceIDs(nbody_ocl_state.platforms[platform_idx], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
+			if (num_devices > 0) { break; }
+		}	
 		nbody_ocl_state.devices = (cl_device_id*)malloc(num_devices * sizeof(cl_device_id));
-		status = clGetDeviceIDs(nbody_ocl_state.platforms[0], CL_DEVICE_TYPE_GPU, num_devices, nbody_ocl_state.devices, NULL);
+		status = clGetDeviceIDs(nbody_ocl_state.platforms[platform_idx], CL_DEVICE_TYPE_GPU, num_devices, nbody_ocl_state.devices, NULL);
 		if (status != CL_SUCCESS) {
 			printf("OPENCL:\tFailed to find OpenCl GPU device.\n");
 			good = 0;
