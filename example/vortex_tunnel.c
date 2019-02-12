@@ -1,6 +1,4 @@
-#include "../include/cvortex/Particle.h"
-#include "../include/cvortex/VortFunc.h"
-#include "../include/cvortex/LegacyVtk.h"
+#include "../include/cvortex/libcvtx.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -31,10 +29,10 @@ int main(int argc, char* argv[])
     }
 
 
-    cvtx_Vec3f mes_pnts[TOTAL_PARTICLES];
-    cvtx_Vec3f vels[TOTAL_PARTICLES];
-    cvtx_Vec3f dvorts[TOTAL_PARTICLES];
-    cvtx_Vec3f dvorts_visc[TOTAL_PARTICLES];
+    bsv_V3f mes_pnts[TOTAL_PARTICLES];
+    bsv_V3f vels[TOTAL_PARTICLES];
+    bsv_V3f dvorts[TOTAL_PARTICLES];
+    bsv_V3f dvorts_visc[TOTAL_PARTICLES];
     char file_name[128];
     for(step = 0; step < num_steps; ++step){
 		printf("Step %i\n", step + 1);
@@ -55,15 +53,15 @@ int main(int argc, char* argv[])
             (cvtx_Particle**)m_particle_ptrs, TOTAL_PARTICLES,
             dvorts_visc, &vort_fn, regularisation_rad, 0.0f);*/
         for(i =0; i < TOTAL_PARTICLES; i++){
-            m_particles[i].coord = cvtx_Vec3f_plus(
+            m_particles[i].coord = bsv_V3f_plus(
                 m_particles[i].coord, 
-                cvtx_Vec3f_mult(vels[i], dt));
-            m_particles[i].vorticity = cvtx_Vec3f_plus(
+                bsv_V3f_mult(vels[i], dt));
+            m_particles[i].vorticity = bsv_V3f_plus(
                 m_particles[i].vorticity, 
-                cvtx_Vec3f_mult(dvorts[i], dt));
-            /*m_particles[i].vorticity = cvtx_Vec3f_plus(
+                bsv_V3f_mult(dvorts[i], dt));
+            /*m_particles[i].vorticity = bsv_V3f_plus(
                 m_particles[i].vorticity, 
-                cvtx_Vec3f_mult(dvorts_visc[i], dt));*/
+                bsv_V3f_mult(dvorts_visc[i], dt));*/
         }
         sprintf(file_name, "./particles_%i.vtk", step);
         if(cvtx_ParticleArr_to_vtk(file_name, m_particle_ptrs, TOTAL_PARTICLES)){

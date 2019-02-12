@@ -57,12 +57,10 @@ void section(char section_name[]){
     return;
 }
 
-#include "testvec3f.h"
 #include "testparticle.h"
 #include "testvortfunc.h"
 
 int main(int argc, char* argv[]){
-    testVec3f();
     testVortFunc();
     testParticle();
     SECTION("Ending!");

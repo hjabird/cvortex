@@ -1,4 +1,4 @@
-#include "../include/cvortex/LegacyVtk.h"
+#include "LegacyVtk.h"
 /*============================================================================
 LegacyVtk.c
 

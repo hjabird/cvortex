@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
-link_libraries(cvortex)
+find_package(bsv CONFIG REQUIRED)
+link_libraries(cvortex bsv)
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     link_libraries(m)   # Maths std library.
 endif()

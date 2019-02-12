@@ -1,6 +1,4 @@
-#include "../include/cvortex/Particle.h"
-#include "../include/cvortex/VortFunc.h"
-#include "../include/cvortex/LegacyVtk.h"
+#include "../include/cvortex/libcvtx.h"
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
@@ -37,11 +35,11 @@ int main(int argc, char* argv[])
 	}
 
 
-	cvtx_Vec3f *mes_pnts, *vels, *dvorts, *dvorts_visc;
-	mes_pnts = malloc(sizeof(cvtx_Vec3f) * TOTAL_PARTICLES);
-	vels = malloc(sizeof(cvtx_Vec3f) * TOTAL_PARTICLES);
-	dvorts = malloc(sizeof(cvtx_Vec3f) * TOTAL_PARTICLES);
-	dvorts_visc = malloc(sizeof(cvtx_Vec3f) * TOTAL_PARTICLES);
+	bsv_V3f *mes_pnts, *vels, *dvorts, *dvorts_visc;
+	mes_pnts = malloc(sizeof(bsv_V3f) * TOTAL_PARTICLES);
+	vels = malloc(sizeof(bsv_V3f) * TOTAL_PARTICLES);
+	dvorts = malloc(sizeof(bsv_V3f) * TOTAL_PARTICLES);
+	dvorts_visc = malloc(sizeof(bsv_V3f) * TOTAL_PARTICLES);
 	cvtx_VortFunc vort_fn = cvtx_VortFunc_gaussian();
 	printf("Benchmarking with Gaussian Kernel.\n");
 	printf("\t\tMilliseconds\t\t\tNormalised (Time per interaction)\n");

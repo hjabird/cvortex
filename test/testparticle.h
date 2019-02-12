@@ -26,9 +26,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#include "../include/cvortex/Particle.h"
-#include "../include/cvortex/VortFunc.h"
-#include "../include/cvortex/Vec3f.h"
+#include "../include/cvortex/libcvtx.h"
 
 #include <math.h>
 
@@ -36,40 +34,40 @@ int testParticle(){
     SECTION("Particle");
     /*                  Pos    Vort   rad   */
     cvtx_Particle p1 = {0,0,0, 1,0,0, 1};
-    cvtx_Vec3f v0 = {0,0,0};
-    cvtx_Vec3f vx = {1,0,0};
-    cvtx_Vec3f vy = {0,1,0};
-    cvtx_Vec3f vz = {0,0,1};
-    cvtx_Vec3f vzbig = {0,0,100};
+	bsv_V3f v0 = {0,0,0};
+	bsv_V3f vx = {1,0,0};
+	bsv_V3f vy = {0,1,0};
+	bsv_V3f vz = {0,0,1};
+	bsv_V3f vzbig = {0,0,100};
 
     cvtx_VortFunc vfw = cvtx_VortFunc_winckelmans();
     cvtx_VortFunc vfs = cvtx_VortFunc_singular();
 
     /* Test velocity is induced in the correct places */
     /* Winckelmans */
-    TEST(cvtx_Vec3f_isequal(
+    TEST(bsv_V3f_isequal(
         cvtx_Particle_ind_vel(&p1, v0, &vfw, 1),
         v0));
-    TEST(cvtx_Vec3f_isequal(
+    TEST(bsv_V3f_isequal(
         cvtx_Particle_ind_vel(&p1, vx, &vfw, 1),
         v0));
-    TEST(!cvtx_Vec3f_isequal(
+    TEST(!bsv_V3f_isequal(
         cvtx_Particle_ind_vel(&p1, vy, &vfw, 1),
         v0));
-    TEST(!cvtx_Vec3f_isequal(
+    TEST(!bsv_V3f_isequal(
         cvtx_Particle_ind_vel(&p1, vz, &vfw, 1),
         v0));
     /* Singular */
-    TEST(cvtx_Vec3f_isequal(
+    TEST(bsv_V3f_isequal(
         cvtx_Particle_ind_vel(&p1, v0, &vfs, 1),
         v0));
-    TEST(cvtx_Vec3f_isequal(
+    TEST(bsv_V3f_isequal(
         cvtx_Particle_ind_vel(&p1, vx, &vfs, 1),
         v0));
-    TEST(!cvtx_Vec3f_isequal(
+    TEST(!bsv_V3f_isequal(
         cvtx_Particle_ind_vel(&p1, vy, &vfs, 1),
         v0));
-    TEST(!cvtx_Vec3f_isequal(
+    TEST(!bsv_V3f_isequal(
         cvtx_Particle_ind_vel(&p1, vz, &vfs, 1),
         v0));
 

@@ -1,4 +1,4 @@
-#include "../include/cvortex/opencl_acc.h"
+#include "opencl_acc.h"
 /*============================================================================
 opencl_acc.c
 
@@ -199,9 +199,9 @@ void opencl_shutdown() {
 int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_Particle **array_start,
 	const long num_particles,
-	const cvtx_Vec3f *mes_start,
+	const bsv_V3f *mes_start,
 	const long num_mes,
-	cvtx_Vec3f *result_array,
+	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius)
 {
@@ -370,7 +370,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 	const long num_particles,
 	const cvtx_Particle **induced_start,
 	const long num_induced,
-	cvtx_Vec3f *result_array,
+	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius)
 {
@@ -551,7 +551,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	const long num_particles,
 	const cvtx_Particle **induced_start,
 	const long num_induced,
-	cvtx_Vec3f *result_array,
+	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
 	float kinematic_visc)

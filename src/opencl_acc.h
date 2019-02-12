@@ -1,9 +1,7 @@
-#ifndef CVTX_LEGACYVTK_H
-#define CVTX_LEGACYVTK_H
 /*============================================================================
-LegacyVtk.h
+opencl_acc.h
 
-Make a vtk legacy file from a collection of vortex particles.
+Acceleration of the n-body problem using OpenCL. Conditional compilation.
 
 Copyright(c) 2018 HJA Bird
 
@@ -25,19 +23,40 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#ifndef CVTX_EXPORT
-# ifdef _WIN32
-#  define CVTX_EXPORT __declspec(dllimport)
-# else
-#  define CVTX_EXPORT
-# endif
-#endif 
+#ifdef CVTX_USING_OPENCL
+#ifndef CVTX_OPENCL_ACC_H
+#define CVTX_OPENCL_ACC_H
 
-#include "Particle.h"
+#include <bsv/bsv.h>
+#include "libcvtx.h"
 
-CVTX_EXPORT int cvtx_ParticleArr_to_vtk(
-    char* path, 
-    cvtx_Particle **particles, 
-    int num_particles);
+int opencl_brute_force_ParticleArr_Arr_ind_vel(
+	const cvtx_Particle **array_start,
+	const long num_particles,
+	const bsv_V3f *mes_start,
+	const long num_mes,
+	bsv_V3f *result_array,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius);
 
-#endif /* CVTX_LEGACYVTK_H */
+int opencl_brute_force_ParticleArr_Arr_ind_dvort(
+	const cvtx_Particle **array_start,
+	const long num_particles,
+	const cvtx_Particle **induced_start,
+	const long num_induced,
+	bsv_V3f *result_array,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius);
+
+int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
+	const cvtx_Particle **array_start,
+	const long num_particles,
+	const cvtx_Particle **induced_start,
+	const long num_induced,
+	bsv_V3f *result_array,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius,
+	float kinematic_visc);
+
+#endif CVTX_OPENCL_ACC_H
+#endif CVTX_USING_OPENCL
