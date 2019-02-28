@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(cvortex)
+project(cvortex C)
 
 option(BUILD_UNIT_TESTS "Builds tests" OFF)
 option(BUILD_EXAMPLES "Builds examples" OFF)
@@ -21,8 +21,8 @@ if(USE_OPENMP)
 endif(USE_OPENMP)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-file (GLOB CVORTEX_INCLUDE "include/cvortex/*.h") # So shoot me for GLOBing.
-file (GLOB CVORTEX_SOURCE  "src/*.c")
+file (GLOB CVORTEX_INCLUDE "include/cvortex/libcvtx.h") # So shoot me for GLOBing.
+file (GLOB CVORTEX_SOURCE  "src/*.[ch]")
 source_group("" FILES ${cvortex})
 source_group("include" FILES ${CVORTEX_INCLUDE})
 source_group("source" FILES ${CVORTEX_SOURCE})
@@ -53,7 +53,7 @@ find_package(bsv CONFIG REQUIRED)
 target_link_libraries(cvortex PUBLIC bsv)
 target_include_directories(cvortex PUBLIC bsv)
 
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+if (${CMAKE_C_COMPILER_ID} STREQUAL "GNU")
     link_libraries(cvortex m)   # Maths std library.
 endif()
 						
