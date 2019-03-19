@@ -42,6 +42,11 @@ typedef struct {
 } cvtx_Particle;
 
 typedef struct {
+	bsv_V3f start, end;		/* Beginning & end coordinates of line segment */
+	float strength;			/* Vort per unit length */
+} cvtx_StraightVortFil;
+
+typedef struct {
 	float(*g_fn)(float rho);
 	float(*zeta_fn)(float rho);
 	void(*combined_fn)(float rho, float* g, float* zeta);
@@ -49,6 +54,7 @@ typedef struct {
 	char cl_kernel_name_ext[32];
 } cvtx_VortFunc;
 
+/* cvtx_Particle functions */
 CVTX_EXPORT bsv_V3f cvtx_Particle_ind_vel(
 	const cvtx_Particle *self,
 	const bsv_V3f mes_point,
@@ -118,9 +124,44 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
 	float regularisation_radius,
 	float kinematic_visc);
 
+/* cvtx_VortFunc functions */
 CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void);
 CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
 CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void);
 CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void);
+
+/* cvtx_straight vortex filament functions */
+
+CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_vel(
+	const cvtx_StraightVortFil *self,
+	const bsv_V3f mes_point);
+
+CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
+	const cvtx_StraightVortFil *self,
+	const cvtx_Particle *induced_particle);
+
+CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_vel(
+	const cvtx_StraightVortFil **array_start,
+	const long num_particles,
+	const bsv_V3f mes_point);
+
+CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_dvort(
+	const cvtx_StraightVortFil **array_start,
+	const long num_particles,
+	const cvtx_Particle *induced_particle);
+
+CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel(
+	const cvtx_StraightVortFil **array_start,
+	const long num_particles,
+	const bsv_V3f *mes_start,
+	const long num_mes,
+	bsv_V3f *result_array);
+
+CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
+	const cvtx_StraightVortFil **array_start,
+	const long num_particles,
+	const cvtx_Particle **induced_start,
+	const long num_induced,
+	bsv_V3f *result_array);
 
 #endif /* CVTX_LIBCVTX_H */
