@@ -54,7 +54,7 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
 {
 	assert(self != NULL);
 	/* HJAB, Notes 4, pg.42 - pg. 43 for general theme. */
-	bsv_V3f r0, r1, r2, t211, A, ret, tmp;
+	bsv_V3f r0, r1, r2, t211, A, ret;
 	float t1, t2121, t2122, t221, t2221, t2222, B;
 	r1 = bsv_V3f_minus(induced_particle->coord, self->start);
 	r2 = bsv_V3f_minus(induced_particle->coord, self->end);
@@ -68,12 +68,9 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
 	t2222 = -bsv_V3f_abs(bsv_V3f_cross(r0, r1)) / bsv_V3f_abs(r2);
 	A = bsv_V3f_mult(t211, t1*(t2121 + t2122));
 	B = t221 * t1 * (t2221 + t2222);
-	tmp.x[0] = B;	tmp.x[1] = -A.x[2];	tmp.x[2] = A.x[1];
-	ret.x[0] = bsv_V3f_dot(tmp, induced_particle->vorticity);
-	tmp.x[0] = A.x[2];	tmp.x[1] = B;	tmp.x[2] = -A.x[0];
-	ret.x[1] = bsv_V3f_dot(tmp, induced_particle->vorticity);
-	tmp.x[0] = -A.x[1];	tmp.x[1] = A.x[0];	tmp.x[2] = B;
-	ret.x[2] = bsv_V3f_dot(tmp, induced_particle->vorticity);
+	ret = bsv_V3f_add(
+			bsv_V3f_mult(induced_particle->vorticity),
+			bsv_V3f_cross(A, induced_particle->vorticity));
 	return ret;
 };
 
