@@ -35,18 +35,18 @@ SOFTWARE.
 
 int opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
 	const cvtx_StraightVortFil **array_start,
-	const long num_filaments,
+	const int num_filaments,
 	const bsv_V3f *mes_start,
-	const long num_mes,
+	const int num_mes,
 	bsv_V3f *result_array) {
 
 	/* Right now we just use the first active device. */
-	assert(ocl_state.initialised);
+	assert(opencl_is_init());
 	cl_program prog;
 	cl_context cont;
 	cl_command_queue queue;
 
-	if (ocl_state.num_active_devices > 0 &&
+	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
 		return opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
 			array_start, num_filaments, mes_start,
@@ -60,9 +60,9 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
 
 int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
 	const cvtx_StraightVortFil **array_start,
-	const long num_filaments,
+	const int num_filaments,
 	const bsv_V3f *mes_start,
-	const long num_mes,
+	const int num_mes,
 	bsv_V3f *result_array,
 	cl_program program,
 	cl_command_queue queue,
@@ -78,7 +78,7 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
 	cl_kernel cl_kernel;
 	cl_event *event_chain;
 
-	if (opencl_init() == 0)
+	if (opencl_init() == 1)
 	{
 		cl_kernel = clCreateKernel(program, kernel_name, &status);
 		if (status != CL_SUCCESS) {
@@ -243,18 +243,18 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
 
 int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort(
 	const cvtx_StraightVortFil **array_start,
-	const long num_fil,
+	const int num_fil,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array) {
 
 	/* Right now we just use the first active device. */
-	assert(ocl_state.initialised);
+	assert(opencl_is_init());
 	cl_program prog;
 	cl_context cont;
 	cl_command_queue queue;
 
-	if (ocl_state.num_active_devices > 0 &&
+	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
 		return opencl_brute_force_StraightVortFilArr_Arr_ind_dvort_impl(
 			array_start, num_fil, induced_start,
@@ -268,9 +268,9 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort(
 
 int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort_impl(
 	const cvtx_StraightVortFil **array_start,
-	const long num_fil,
+	const int num_fil,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array,
 	cl_program program,
 	cl_command_queue queue,
@@ -288,7 +288,7 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort_impl(
 	cl_kernel cl_kernel;
 	cl_event *event_chain;
 
-	if (opencl_init() == 0)
+	if (opencl_init() == 1)
 	{
 		cl_kernel = clCreateKernel(program, kernel_name, &status);
 		if (status != CL_SUCCESS) {

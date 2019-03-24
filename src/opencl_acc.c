@@ -31,6 +31,14 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
+static struct {
+	int initialised;						/* Indicates initialise run */
+	int num_platforms;						/* Number of OCL platforms*/
+	struct ocl_platform_state *platforms;	/* Owner of all OCL state */
+	int num_active_devices;
+	struct ocl_active_device *active_devices;	/* Devices in use. */
+} ocl_state = { 0, 0, NULL, 0, NULL };
+
 /* Returns number of platforms and loads the into the ocl_state. 
 -1 for error.*/
 static int load_platforms();
@@ -57,6 +65,10 @@ int opencl_init() {
 	return good;
 }
 
+int opencl_is_init() {
+	return ocl_state.initialised;
+}
+
 void opencl_finalise() {
 	int i;
 	if (ocl_state.initialised == 1) {
@@ -66,6 +78,7 @@ void opencl_finalise() {
 		ocl_state.num_platforms = 0;
 		ocl_state.num_active_devices = 0;
 		free(ocl_state.platforms);
+		ocl_state.platforms = NULL;
 		free(ocl_state.active_devices);
 		ocl_state.initialised = 0;
 	}
@@ -122,6 +135,13 @@ void opencl_index_device(int *index, int plat_idx, int dev_idx) {
 	}
 }
 
+int opencl_num_active_devices() {
+	int num;
+	assert(opencl_is_init() == 1);
+	num = ocl_state.num_active_devices;
+	return num;
+}
+
 int opencl_add_active_device(int plat_idx, int dev_idx){
 	int already_added = 0, retv;
 	struct ocl_active_device *td;
@@ -129,7 +149,7 @@ int opencl_add_active_device(int plat_idx, int dev_idx){
 		/* Check we haven't already added this device. */
 		already_added = opencl_device_in_active_list(plat_idx, dev_idx) >= 0 ? 1 : 0;
 		if (!already_added) {
-			realloc(
+			ocl_state.active_devices = realloc(
 				ocl_state.active_devices,
 				sizeof(struct ocl_active_device) * (ocl_state.num_active_devices + 1));
 			ocl_state.num_active_devices += 1;
@@ -237,6 +257,24 @@ int opencl_get_device_state(
 	return retv;
 }
 
+char* opencl_accelerator_name(int lindex) {
+	char *res = NULL;
+	int pidx, didx;
+	assert(opencl_is_init() == 1);
+	if (lindex > 0 && lindex < ocl_state.num_active_devices) {
+		pidx = ocl_state.active_devices[lindex].platform_idx;
+		didx = ocl_state.active_devices[lindex].device_idx;
+		assert(pidx >= 0);
+		assert(pidx < ocl_state.num_platforms);
+		assert(didx >= 0);
+		assert(didx < ocl_state.platforms[pidx].num_devices);
+		if (ocl_state.platforms[pidx].device_names != NULL) {
+			res = ocl_state.platforms[pidx].device_names[didx];
+		}
+	}
+	return res;
+}
+
 /* STATIC FUNCTIONS ---------------------------------------------------------*/
 static int load_platforms() {
 	assert(ocl_state.platforms == NULL);
@@ -293,7 +331,7 @@ static int load_platform_devices(struct ocl_platform_state *plat){
 	size_t str_len;
 	/* We're only interested in GPUs - cpus are slow in comparison and work better with OpenMP */
 	status = clGetDeviceIDs(plat->platform, CL_DEVICE_TYPE_GPU, 0, NULL, &(plat->num_devices));
-	realloc(plat->devices, sizeof(cl_device_id) * plat->num_devices);
+	plat->devices = malloc(sizeof(cl_device_id) * plat->num_devices);
 	status = clGetDeviceIDs(plat->platform, CL_DEVICE_TYPE_GPU, plat->num_devices, plat->devices, NULL);
 	if (status != CL_SUCCESS || plat->devices == NULL) {
 		free(plat->devices); plat->devices = NULL;
@@ -310,7 +348,6 @@ static int load_platform_devices(struct ocl_platform_state *plat){
 			str_len, plat->platform_name, NULL);
 		/*Loop over devices*/
 		plat->device_names = malloc( sizeof(char*) * plat->num_devices );
-		plat->queues = malloc(sizeof(cl_command_queue*) * plat->num_devices);
 		for (i = 0; i < plat->num_devices; ++i) {
 			clGetDeviceInfo(plat->devices[i], CL_DEVICE_NAME, 0, NULL, &str_len);
 			plat->device_names[i] = (char*)malloc(sizeof(char*) * str_len);
@@ -330,10 +367,10 @@ static int create_platform_context_and_program(struct ocl_platform_state *plat) 
 	assert(plat->program == NULL);
 	if (plat->num_devices <= 0) { return 0; }
 
-	cl_uint status;
+	cl_int status;
 	char compile_options[1024] = "";
 	char tmp[128];
-	const char program_source[] =
+	const char *program_source =
 #		include "nbody.cl"
 		;	/* Including in source makes it easier to distribute a shared lib. */
 	sprintf(tmp, "%i", CVTX_WORKGROUP_SIZE);

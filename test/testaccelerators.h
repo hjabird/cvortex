@@ -1,7 +1,10 @@
-/*============================================================================
-testmain.c
+#ifndef CVTX_TEST_ACCELERATORS_H
+#define CVTX_TEST_ACCELERATORS_H
 
-A dodgy self contained test system for cvortex.
+/*============================================================================
+testparticle.h
+
+Test functionality of vortex particle & methods.
 
 Copyright(c) 2018 HJA Bird
 
@@ -23,49 +26,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
+#include "../include/cvortex/libcvtx.h"
 
-#define TEST(X) test(__FILE__, __LINE__, X)
+#include <math.h>
 
-#define SECTION(X) section(X)
-
-int tests_passed = 0;
-int tests_completed = 0;
-char working_section_name[512] = "";
-
-void test(char* file_name, int line_no, int passed){
-    if(!passed){
-        printf("Test failed:\n\t%s\n\tLine %i\n", file_name, line_no);
-        assert(0);
-    } else {
-        tests_passed += 1;
-    }
-    tests_completed += 1;
-    return;
+int testAccelerators(){
+    SECTION("Accelerators");
+    
+    TEST(cvtx_num_accelerators() >= 0);
+	TEST(cvtx_num_accelerators() == 1);
+    
+    return 0;
 }
 
-void section(char section_name[]){
-    if(tests_passed > 0){
-        printf("Passed %i of %i tests in section %s.\n", 
-            tests_passed, tests_completed, working_section_name);
-    }
-    tests_passed = 0;
-    tests_completed = 0;
-    strcpy(working_section_name, section_name);
-    return;
-}
 
-#include "testaccelerators.h"
-#include "testparticle.h"
-#include "testvortfunc.h"
-
-int main(int argc, char* argv[]){
-	cvtx_initialise();
-	testAccelerators();
-    testVortFunc();
-    testParticle();
-	cvtx_finalise();
-    SECTION("Ending!");
-}
+#endif /* CVTX_TEST_ACCELERATORS_H */

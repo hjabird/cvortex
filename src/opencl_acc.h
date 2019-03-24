@@ -52,16 +52,9 @@ struct ocl_active_device {
 	int device_idx;
 };
 
-static struct {
-	int initialised;						/* Indicates initialise run */
-	int num_platforms;						/* Number of OCL platforms*/
-	struct ocl_platform_state *platforms;	/* Owner of all OCL state */
-	int num_active_devices;
-	struct ocl_active_device *active_devices;	/* Devices in use. */
-} ocl_state = { 0, 0, NULL, 0, NULL };
-
 /* Make OpenCL code ready to use. */
 int opencl_init();
+int opencl_is_init();
 
 /* Release all OpenCL resources - they can no longer be used. */
 void opencl_finalise();
@@ -76,6 +69,9 @@ void opencl_deindex_device(int index, int *plat_idx, int *dev_idx);
 /* From and platform and device index, get a linear index. -1 for 
 invalid input. */
 void opencl_index_device(int *index, int plat_idx, int dev_idx);
+
+/* The number of active devices. -1 for bad. */
+int opencl_num_active_devices();
 
 /* Add a device to the list of devices to use by linear index.
 returns -1 for invalid index or uninitialised */
@@ -99,6 +95,9 @@ int opencl_get_device_state(
 	cl_program *program,
 	cl_context *context,
 	cl_command_queue *queue);
+
+/* Get the name of an accelerator by linear index. */
+char* opencl_accelerator_name(int lindex);
 
 #endif CVTX_OPENCL_ACC_H
 #endif CVTX_USING_OPENCL

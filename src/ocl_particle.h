@@ -30,27 +30,27 @@ SOFTWARE.
 
 int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const bsv_V3f *mes_start,
-	const long num_mes,
+	const int num_mes,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
 int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
 int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
@@ -58,9 +58,9 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 
 int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const bsv_V3f *mes_start,
-	const long num_mes,
+	const int num_mes,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
@@ -70,9 +70,9 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 
 int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
@@ -82,9 +82,9 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 
 int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort_impl(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,

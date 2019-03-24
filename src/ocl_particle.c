@@ -35,20 +35,20 @@ SOFTWARE.
 
 int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const bsv_V3f *mes_start,
-	const long num_mes,
+	const int num_mes,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius) 
 {
 	/* Right now we just use the first active device. */
-	assert(ocl_state.initialised);
+	assert(opencl_is_init());
 	cl_program prog;
 	cl_context cont;
 	cl_command_queue queue;
 
-	if (ocl_state.num_active_devices > 0 &&
+	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
 		return opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 			array_start, num_particles, mes_start,
@@ -63,20 +63,20 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 
 int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius)
 {
 	/* Right now we just use the first active device. */
-	assert(ocl_state.initialised);
+	assert(opencl_is_init());
 	cl_program prog;
 	cl_context cont;
 	cl_command_queue queue;
 
-	if (ocl_state.num_active_devices > 0 &&
+	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
 		return opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 			array_start, num_particles, induced_start,
@@ -91,21 +91,21 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 
 int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
 	float kinematic_visc)
 {
 	/* Right now we just use the first active device. */
-	assert(ocl_state.initialised);
+	assert(opencl_is_init());
 	cl_program prog;
 	cl_context cont;
 	cl_command_queue queue;
 
-	if (ocl_state.num_active_devices > 0 &&
+	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
 		return opencl_brute_force_ParticleArr_Arr_visc_ind_dvort_impl(
 			array_start, num_particles, induced_start,
@@ -120,9 +120,9 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 
 int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const bsv_V3f *mes_start,
-	const long num_mes,
+	const int num_mes,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
@@ -139,7 +139,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 	cl_kernel cl_kernel;
 	cl_event *event_chain;
 
-	if (opencl_init() == 0)
+	if (opencl_init() == 1)
 	{
 		strncat(kernel_name, kernel->cl_kernel_name_ext, 32);
 		cl_kernel = clCreateKernel(program, kernel_name, &status);
@@ -291,9 +291,9 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 
 int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
@@ -310,7 +310,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 	cl_kernel cl_kernel;
 	cl_event *event_chain;
 
-	if (opencl_init() == 0)
+	if (opencl_init() == 1)
 	{
 		strncat(kernel_name, kernel->cl_kernel_name_ext, 32);
 		cl_kernel = clCreateKernel(program, kernel_name, &status);
@@ -474,9 +474,9 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 
 int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort_impl(
 	const cvtx_Particle **array_start,
-	const long num_particles,
+	const int num_particles,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
@@ -496,7 +496,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort_impl(
 	cl_kernel cl_kernel;
 	cl_event *event_chain;
 
-	if (opencl_init() == 0)
+	if (opencl_init() == 1)
 	{
 		strncat(kernel_name, kernel->cl_kernel_name_ext, 32);
 		cl_kernel = clCreateKernel(program, kernel_name, &status);

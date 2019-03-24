@@ -30,16 +30,16 @@ SOFTWARE.
 
 int opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
 	const cvtx_StraightVortFil **array_start,
-	const long num_filaments,
+	const int num_filaments,
 	const bsv_V3f *mes_start,
-	const long num_mes,
+	const int num_mes,
 	bsv_V3f *result_array);
 
 int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
 	const cvtx_StraightVortFil **array_start,
-	const long num_filaments,
+	const int num_filaments,
 	const bsv_V3f *mes_start,
-	const long num_mes,
+	const int num_mes,
 	bsv_V3f *result_array,
 	cl_program program,
 	cl_command_queue queue,
@@ -47,16 +47,16 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
 
 int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort(
 	const cvtx_StraightVortFil **array_start,
-	const long num_fil,
+	const int num_fil,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array);
 
 int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort_impl(
 	const cvtx_StraightVortFil **array_start,
-	const long num_fil,
+	const int num_fil,
 	const cvtx_Particle **induced_start,
-	const long num_induced,
+	const int num_induced,
 	bsv_V3f *result_array,
 	cl_program program,
 	cl_command_queue queue,

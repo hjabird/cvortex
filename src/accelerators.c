@@ -42,7 +42,7 @@ CVTX_EXPORT void cvtx_finalise() {
 CVTX_EXPORT int cvtx_num_accelerators() {
 	int num_accelerators = 0;
 #ifdef CVTX_USING_OPENCL
-	assert(ocl_state.initialised == 1);
+	assert(opencl_is_init() == 1);
 	num_accelerators = opencl_num_devices();
 #endif
 	return num_accelerators;
@@ -51,8 +51,7 @@ CVTX_EXPORT int cvtx_num_accelerators() {
 CVTX_EXPORT int cvtx_num_enabled_accelerators() {
 	int num = 0;
 #ifdef CVTX_USING_OPENCL
-	assert(ocl_state.initialised == 1);
-	num = ocl_state.num_active_devices;
+	num = opencl_num_active_devices();
 #endif
 	return num;
 }
@@ -60,19 +59,7 @@ CVTX_EXPORT int cvtx_num_enabled_accelerators() {
 CVTX_EXPORT char* cvtx_accelerator_name(int accelerator_id) {
 	char *res = NULL;
 #ifdef CVTX_USING_OPENCL
-	int pidx, didx;
-	assert(ocl_state.initialised == 1);
-	if (accelerator_id > 0 && accelerator_id < ocl_state.num_active_devices) {
-		pidx = ocl_state.active_devices[accelerator_id].platform_idx;
-		didx = ocl_state.active_devices[accelerator_id].device_idx;
-		assert(pidx >= 0);
-		assert(pidx < ocl_state.num_platforms);
-		assert(didx >= 0);
-		assert(didx < ocl_state.platforms[pidx].num_devices);
-		if (ocl_state.platforms[pidx].device_names != NULL) {
-			res = ocl_state.platforms[pidx].device_names[didx];
-		}
-	}
+	res = opencl_accelerator_name(accelerator_id);
 #endif
 	return res;
 }
@@ -80,7 +67,7 @@ CVTX_EXPORT char* cvtx_accelerator_name(int accelerator_id) {
 CVTX_EXPORT int cvtx_accelerator_enabled(int accelerator_id) {
 	int res = -1;
 #ifdef CVTX_USING_OPENCL
-	assert(ocl_state.initialised == 1);
+	assert(opencl_is_init() == 1);
 	int pidx, didx;
 	opencl_deindex_device(accelerator_id, &pidx, &didx);
 	res = opencl_device_in_active_list(pidx, didx);
@@ -90,7 +77,7 @@ CVTX_EXPORT int cvtx_accelerator_enabled(int accelerator_id) {
 
 CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id) {
 #ifdef CVTX_USING_OPENCL
-	assert(ocl_state.initialised == 1);
+	assert(opencl_is_init() == 1);
 	int pidx, didx;
 	opencl_deindex_device(accelerator_id, &pidx, &didx);
 	opencl_add_active_device(pidx, didx);
@@ -100,7 +87,7 @@ CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id) {
 
 CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id) {
 #ifdef CVTX_USING_OPENCL
-	assert(ocl_state.initialised == 1);
+	assert(opencl_is_init() == 1);
 	int pidx, didx;
 	opencl_deindex_device(accelerator_id, &pidx, &didx);
 	opencl_remove_active_device(pidx, didx);
