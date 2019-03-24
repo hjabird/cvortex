@@ -2,9 +2,9 @@
 /*============================================================================
 opencl_acc.c
 
-Acceleration of the n-body problem using OpenCL. Conditional compilation.
+Handles the opencl context(s).
 
-Copyright(c) 2018 HJA Bird
+Copyright(c) 2019 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -25,743 +25,418 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 #ifdef CVTX_USING_OPENCL
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-#define CVTX_WORKGROUP_SIZE 256
-
 #include <CL/cl.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static struct {
-	cl_platform_id *platforms;
-	cl_device_id *devices;
-	cl_context context;
-	cl_command_queue queue;
-	cl_program program;
-} nbody_ocl_state;
+/* Returns number of platforms and loads the into the ocl_state. 
+-1 for error.*/
+static int load_platforms();
+static int initialise_platform(struct ocl_platform_state *plat);
+static int zero_new_platform(struct ocl_platform_state *plat);
+static int load_platform_devices(struct ocl_platform_state *plat);
+static int create_platform_context_and_program(struct ocl_platform_state *plat);
+static int load_platform_device_queues(struct ocl_platform_state *plat);
+static int finalise_platform(struct ocl_platform_state *plat);
 
-/* Initialisation function - only called once. */
-static int opencl_print_platform_info() {
-	int i, j;
-	char* value;
-	size_t valueSize;
-	cl_uint platformCount;
-	cl_platform_id* platforms;
-	cl_uint deviceCount;
-	cl_device_id* devices;
-	cl_uint maxComputeUnits;
-
-	// get all platforms
-	clGetPlatformIDs(0, NULL, &platformCount);
-	platforms = (cl_platform_id*)malloc(sizeof(cl_platform_id) * platformCount);
-	clGetPlatformIDs(platformCount, platforms, NULL);
-
-	for (i = 0; (unsigned int) i < platformCount; i++) {
-		// print platform name
-		clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 0, NULL, &valueSize);
-		value = (char*)malloc(valueSize);
-		clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, valueSize, value, NULL);
-		printf("%d. Platform: %s\n", i + 1, value);
-		free(value);
-		// get all devices
-		clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, 0, NULL, &deviceCount);
-		devices = (cl_device_id*)malloc(sizeof(cl_device_id) * deviceCount);
-		clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, deviceCount, devices, NULL);
-
-		// for each device print critical attributes
-		for (j = 0; (unsigned int) j < deviceCount; j++) {
-			// print device name
-			clGetDeviceInfo(devices[j], CL_DEVICE_NAME, 0, NULL, &valueSize);
-			value = (char*)malloc(valueSize);
-			clGetDeviceInfo(devices[j], CL_DEVICE_NAME, valueSize, value, NULL);
-			printf(" %d.%d. Device: %s\n", i + 1, j + 1, value);
-			free(value);
-			// print hardware device version
-			clGetDeviceInfo(devices[j], CL_DEVICE_VERSION, 0, NULL, &valueSize);
-			value = (char*)malloc(valueSize);
-			clGetDeviceInfo(devices[j], CL_DEVICE_VERSION, valueSize, value, NULL);
-			printf("  %d.%d.%d Hardware version: %s\n", i + 1, j + 1, 1, value);
-			free(value);
-			// print software driver version
-			clGetDeviceInfo(devices[j], CL_DRIVER_VERSION, 0, NULL, &valueSize);
-			value = (char*)malloc(valueSize);
-			clGetDeviceInfo(devices[j], CL_DRIVER_VERSION, valueSize, value, NULL);
-			printf("  %d.%d.%d Software version: %s\n", i + 1, j + 1, 2, value);
-			free(value);
-			// print c version supported by compiler for device
-			clGetDeviceInfo(devices[j], CL_DEVICE_OPENCL_C_VERSION, 0, NULL, &valueSize);
-			value = (char*)malloc(valueSize);
-			clGetDeviceInfo(devices[j], CL_DEVICE_OPENCL_C_VERSION, valueSize, value, NULL);
-			printf("  %d.%d.%d OpenCL C version: %s\n", i + 1, j + 1, 3, value);
-			free(value);
-			// print parallel compute units
-			clGetDeviceInfo(devices[j], CL_DEVICE_MAX_COMPUTE_UNITS,
-				sizeof(maxComputeUnits), &maxComputeUnits, NULL);
-			printf("  %d.%d.%d Parallel compute units: %d\n", i + 1, j + 1, 4, maxComputeUnits);
-		}
-		free(devices);
+int opencl_init() {
+	static int tried_init = 0;
+	static int good = 0;
+	if (tried_init == 0) {
+		tried_init = 1;
+		ocl_state.initialised = 1;
+		ocl_state.num_platforms = 0;
+		ocl_state.platforms = NULL;
+		ocl_state.num_active_devices = 0;
+		ocl_state.active_devices = NULL;
+		good = load_platforms();
 	}
-	free(platforms);
-	return 0;
+	opencl_enable_default_accelerator();
+	return good;
 }
 
-int opencl_initialise() {
-	static int tried_initialised = 0;
-	static int opencl_working = -1;	/* meaning no, 0 meaning yes */
-	int good = 1;
-	cl_int status;
-	cl_uint num_platforms, num_devices, platform_idx;
-	char compile_options[1024] = "";
-	char tmp[128];
-	sprintf(tmp, "%i", CVTX_WORKGROUP_SIZE);
-	strcat(compile_options, " -cl-fast-relaxed-math -D CVTX_CL_WORKGROUP_SIZE=");
-	strcat(compile_options, tmp);
-	if (!tried_initialised) {
-		nbody_ocl_state.devices = NULL;
-		nbody_ocl_state.platforms = NULL;
-
-		status = clGetPlatformIDs(0, NULL, &num_platforms);
-		nbody_ocl_state.platforms = (cl_platform_id*)malloc(num_platforms * sizeof(cl_platform_id));
-		status = clGetPlatformIDs(num_platforms, nbody_ocl_state.platforms, NULL);
-		if (status != CL_SUCCESS) {
-			printf("OPENCL:\tFailed to find opencl platforms.\n");
-			good = 0;
-			tried_initialised = 1;
-			free(nbody_ocl_state.platforms);
-			nbody_ocl_state.platforms = NULL;
+void opencl_finalise() {
+	int i;
+	if (ocl_state.initialised == 1) {
+		for (i = 0; i < ocl_state.num_platforms; ++i) {
+			finalise_platform(&ocl_state.platforms[i]);
 		}
+		ocl_state.num_platforms = 0;
+		ocl_state.num_active_devices = 0;
+		free(ocl_state.platforms);
+		free(ocl_state.active_devices);
+		ocl_state.initialised = 0;
 	}
-	if (!tried_initialised && good) {
-		for (platform_idx = 0; platform_idx < num_platforms; ++platform_idx) {
-			status = clGetDeviceIDs(nbody_ocl_state.platforms[platform_idx], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
-			if (num_devices > 0) { break; }
-		}	
-		nbody_ocl_state.devices = (cl_device_id*)malloc(num_devices * sizeof(cl_device_id));
-		status = clGetDeviceIDs(nbody_ocl_state.platforms[platform_idx], CL_DEVICE_TYPE_GPU, num_devices, nbody_ocl_state.devices, NULL);
-		if (status != CL_SUCCESS) {
-			printf("OPENCL:\tFailed to find OpenCl GPU device.\n");
-			good = 0;
-			tried_initialised = 1;
-			free(nbody_ocl_state.platforms);
-			nbody_ocl_state.platforms = NULL;
-			free(nbody_ocl_state.devices);
-			nbody_ocl_state.devices = NULL;
-		}
-	}
-	if (!tried_initialised && good) {
-		nbody_ocl_state.context = clCreateContext(NULL, num_devices, nbody_ocl_state.devices, NULL, NULL, &status);
-		assert(status == CL_SUCCESS);
-		nbody_ocl_state.queue = clCreateCommandQueue(nbody_ocl_state.context, nbody_ocl_state.devices[0], 
-			(cl_command_queue_properties)NULL, &status);
-		if (status != CL_SUCCESS) {
-			printf("OPENCL:\tCould not create context or command queue.\n");
-		}
-		const char* program_source =
-#		include "nbody.cl"
-			;	/* Including in source makes it easier to distribute a shared lib. */
-		nbody_ocl_state.program = clCreateProgramWithSource(nbody_ocl_state.context, 1, (const char**)&program_source, NULL, &status);
-		assert(status == CL_SUCCESS);
-		status = clBuildProgram(nbody_ocl_state.program, num_devices, nbody_ocl_state.devices, compile_options, NULL, NULL);
-		if (status != CL_SUCCESS) {
-			printf("OPENCL:\tFailed to build opencl program!\n");
-			printf("OPENCL:\tBuild log:");
-			char *buffer;
-			size_t length;
-			status = clGetProgramBuildInfo(
-				nbody_ocl_state.program, nbody_ocl_state.devices[0], CL_PROGRAM_BUILD_LOG, 0, NULL, &length);
-			buffer = malloc(length);
-			status = clGetProgramBuildInfo(
-				nbody_ocl_state.program, nbody_ocl_state.devices[0], CL_PROGRAM_BUILD_LOG, length, buffer, &length);
-			printf(buffer);
-		}
-		opencl_working = 0;
-		tried_initialised = 1;
-	}
-	return opencl_working;
+	assert(ocl_state.platforms == NULL);
 }
 
-void opencl_shutdown() {
-	if (nbody_ocl_state.platforms != NULL) {
-		clReleaseProgram(nbody_ocl_state.program);
-		clReleaseCommandQueue(nbody_ocl_state.queue);
-		clReleaseContext(nbody_ocl_state.context);
-		free(nbody_ocl_state.devices);
-		free(nbody_ocl_state.platforms);
+int opencl_num_devices() {
+	int count = -1;
+	int n_plat, i;
+	if (ocl_state.initialised == 1) {
+		count = 0;
+		n_plat = ocl_state.num_platforms;
+		if (ocl_state.platforms != NULL) {
+			for (i = 0; i < n_plat; ++i)
+			{
+				count += ocl_state.platforms[i].num_devices;
+			}
+		}
 	}
-	else {
-		assert(nbody_ocl_state.devices == NULL);
+	return count;
+}
+
+void opencl_deindex_device(int index, int *plat_idx, int *dev_idx) {
+	*plat_idx = -1;
+	*dev_idx = -1;
+	int np, i, nd, acc;
+	if (ocl_state.initialised == 1 || index < 0) {
+		np = ocl_state.num_platforms;
+		acc = 0;
+		for (i = 0; i < np; ++i) {
+			nd = ocl_state.platforms[i].num_devices;
+			if (acc + nd > index) {
+				*plat_idx = i;
+				*dev_idx = index - acc;
+				break;
+			}
+			acc += nd;
+		}
+		/* If index > acc then index is invalid. */
 	}
 	return;
 }
 
-int opencl_brute_force_ParticleArr_Arr_ind_vel(
-	const cvtx_Particle **array_start,
-	const long num_particles,
-	const bsv_V3f *mes_start,
-	const long num_mes,
-	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
-	float regularisation_radius)
-{
-	char kernel_name[128] = "cvtx_nb_Particle_ind_vel_";
-	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
-	size_t global_work_size[2], workgroup_size[2];
-	cl_float3 *mes_pos_buff_data, *part_pos_buff_data, *part_vort_buff_data, *res_buff_data;
-	cl_mem mes_pos_buff, res_buff, *part_pos_buff, *part_vort_buff;
-	cl_int status;
-	cl_kernel cl_kernel;
-	cl_event *event_chain;
-
-	if(opencl_initialise() == 0)
-	{
-		strncat(kernel_name, kernel->cl_kernel_name_ext, 32);
-		cl_kernel = clCreateKernel(nbody_ocl_state.program, kernel_name, &status);
-		if (status != CL_SUCCESS) {
-			clReleaseKernel(cl_kernel);
-			return -1;
+void opencl_index_device(int *index, int plat_idx, int dev_idx) {
+	*index = -1;
+	int i, acc = 0;
+	if (ocl_state.initialised == 1 && plat_idx < ocl_state.num_platforms
+		&& ocl_state.platforms[plat_idx].num_devices < dev_idx) {
+		for (i = 0; i < plat_idx - 1; ++i) {
+			acc += ocl_state.platforms[i].num_devices;
 		}
-		/* This has to match the opencl kernels, so be careful with fiddling */
-		workgroup_size[0] = CVTX_WORKGROUP_SIZE;	/* Particles per group */
-		workgroup_size[1] = 1;	/* Only 1 measure pos per workgroup. */
-		global_work_size[0] = CVTX_WORKGROUP_SIZE;	/* We use multiple particle buffers */
-		global_work_size[1] = num_mes;
-
-		/* Generate an buffer for the measurement position data  */
-		mes_pos_buff_data = malloc(num_mes * sizeof(cl_float3));
-		for (i = 0; i < num_mes; ++i) {
-			mes_pos_buff_data[i].x = mes_start[i].x[0];
-			mes_pos_buff_data[i].y = mes_start[i].x[1];
-			mes_pos_buff_data[i].z = mes_start[i].x[2];
-		}
-		mes_pos_buff = clCreateBuffer(nbody_ocl_state.context, 
-			CL_MEM_READ_ONLY, num_mes * sizeof(cl_float3), NULL, &status);
-		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, mes_pos_buff, CL_FALSE,
-			0, num_mes * sizeof(cl_float3), mes_pos_buff_data, 0, NULL, NULL);
-		assert(status == CL_SUCCESS);
-		status = clSetKernelArg(cl_kernel, 3, sizeof(cl_mem), &mes_pos_buff);
-		if (status != CL_SUCCESS) {
-			free(mes_pos_buff_data);
-			clReleaseMemObject(mes_pos_buff);
-			clReleaseKernel(cl_kernel);
-			return -1;
-		}
-
-		cl_float cl_regularisation_radius = regularisation_radius;
-		status = clSetKernelArg(cl_kernel, 2, sizeof(cl_float), &cl_regularisation_radius);
-		assert(status == CL_SUCCESS);
-
-		/* Generate a results buffer */
-		res_buff_data = malloc(num_mes * sizeof(cl_float3));
-		res_buff = clCreateBuffer(nbody_ocl_state.context, CL_MEM_READ_WRITE,
-			sizeof(cl_float3) * num_mes, NULL, &status);
-		for (i = 0; i < num_mes; ++i) {
-			res_buff_data[i].x = 0;
-			res_buff_data[i].y = 0;
-			res_buff_data[i].z = 0;
-		}
-		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, res_buff, CL_FALSE,
-			0, num_mes * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
-		if (status != CL_SUCCESS) {
-			assert(false);
-			printf("OPENCL:\tFailed to enqueue write buffer.");
-		}
-		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &res_buff);
-		assert(status == CL_SUCCESS);
-
-		/* Now create & dispatch particle buffers and kernel. */
-		n_particle_groups = num_particles / CVTX_WORKGROUP_SIZE;
-		if (num_particles % CVTX_WORKGROUP_SIZE) {
-			n_zeroed_particles = CVTX_WORKGROUP_SIZE 
-				- num_particles % CVTX_WORKGROUP_SIZE;
-			n_particle_groups += 1;
-		}
-		n_modelled_particles = CVTX_WORKGROUP_SIZE * n_particle_groups;
-		part_pos_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
-		part_vort_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
-		for (i = 0; i < num_particles; ++i) {
-			part_pos_buff_data[i].x = array_start[i]->coord.x[0];
-			part_pos_buff_data[i].y = array_start[i]->coord.x[1];
-			part_pos_buff_data[i].z = array_start[i]->coord.x[2];
-			part_vort_buff_data[i].x = array_start[i]->vorticity.x[0];
-			part_vort_buff_data[i].y = array_start[i]->vorticity.x[1];
-			part_vort_buff_data[i].z = array_start[i]->vorticity.x[2];
-		}
-		/* We need this so that we always have the minimum workgroup size. */
-		for (i = num_particles; i < n_modelled_particles; ++i) {
-			part_pos_buff_data[i].x = 0;
-			part_pos_buff_data[i].y = 0;
-			part_pos_buff_data[i].z = 0;
-			part_vort_buff_data[i].x = 0;
-			part_vort_buff_data[i].y = 0;
-			part_vort_buff_data[i].z = 0;
-		}
-		part_pos_buff  = malloc(n_particle_groups * sizeof(cl_mem));
-		part_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 3);
-		for (i = 0; i < n_particle_groups; ++i) {
-			part_pos_buff[i] = clCreateBuffer(nbody_ocl_state.context,
-				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
-			assert(status == CL_SUCCESS);
-			status = clEnqueueWriteBuffer(
-				nbody_ocl_state.queue, part_pos_buff[i], CL_FALSE,
-				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), 
-				part_pos_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 3 * i);
-			assert(status == CL_SUCCESS);
-			part_vort_buff[i] = clCreateBuffer(nbody_ocl_state.context,
-				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
-			assert(status == CL_SUCCESS);
-			status = clEnqueueWriteBuffer(
-				nbody_ocl_state.queue, part_vort_buff[i], CL_FALSE,
-				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3),
-				part_vort_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 3*i + 1);
-			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 0, sizeof(cl_mem), part_pos_buff + i);
-			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 1, sizeof(cl_mem), part_vort_buff + i);
-			assert(status == CL_SUCCESS);
-			if (i == 0) {
-				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 2, event_chain, event_chain + 3 * i + 2);
-			} else {
-				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 3, event_chain + 3*i - 1, event_chain + 3 * i + 2);
-			}
-			assert(status == CL_SUCCESS);
-			clReleaseMemObject(part_pos_buff[i]);
-			clReleaseMemObject(part_vort_buff[i]);
-		}
-
-		/* Read back our results! */
-		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
-			sizeof(cl_float3) * num_mes, res_buff_data, 1,
-			event_chain + 3 * n_particle_groups - 1, NULL);
-		for (i = 0; i < n_particle_groups * 3; ++i) { clReleaseEvent(event_chain[i]); }
-		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
-		for (i = 0; i < num_mes; ++i) {
-			result_array[i].x[0] = res_buff_data[i].x;
-			result_array[i].x[1] = res_buff_data[i].y;
-			result_array[i].x[2] = res_buff_data[i].z;
-		}
-		free(res_buff_data);
-
-		free(part_pos_buff);
-		free(part_vort_buff);
-		free(part_pos_buff_data);
-		free(part_vort_buff_data);
-		free(mes_pos_buff_data);
-		clReleaseMemObject(res_buff);
-		clReleaseMemObject(mes_pos_buff);
-		clReleaseKernel(cl_kernel);
-		return 0;
-	}
-	else
-	{
-		return -1;
+		acc += dev_idx;
+		*index = acc;
 	}
 }
 
+int opencl_add_active_device(int plat_idx, int dev_idx){
+	int already_added = 0, retv;
+	struct ocl_active_device *td;
+	if (ocl_state.initialised == 1) {
+		/* Check we haven't already added this device. */
+		already_added = opencl_device_in_active_list(plat_idx, dev_idx) >= 0 ? 1 : 0;
+		if (!already_added) {
+			realloc(
+				ocl_state.active_devices,
+				sizeof(struct ocl_active_device) * (ocl_state.num_active_devices + 1));
+			ocl_state.num_active_devices += 1;
+			td = &ocl_state.active_devices[ocl_state.num_active_devices - 1];
+			td->device_idx = dev_idx;
+			td->platform_idx = plat_idx;
+			retv = ocl_state.num_active_devices;
+		}
+		else
+		{
+			retv = -1;
+		}
+	}
+	return retv;
+}
 
-int opencl_brute_force_ParticleArr_Arr_ind_dvort(
-	const cvtx_Particle **array_start,
-	const long num_particles,
-	const cvtx_Particle **induced_start,
-	const long num_induced,
-	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
-	float regularisation_radius)
+int opencl_remove_active_device(int plat_idx, int dev_idx) {
+	int lindx = 0, retv = -1;	/* linear index */
+	struct ocl_active_device *tmp_arr;
+	if (ocl_state.initialised == 1) {
+		lindx = opencl_device_in_active_list(plat_idx, dev_idx);
+		if (lindx >= 0) {
+			tmp_arr = malloc(sizeof(struct ocl_active_device) *
+				(ocl_state.num_active_devices - 1));
+			memcpy(tmp_arr, ocl_state.active_devices,
+				sizeof(struct ocl_active_device) * lindx);
+			memcpy(tmp_arr, ocl_state.active_devices + (lindx + 1),
+				sizeof(struct ocl_active_device) *
+				(ocl_state.num_active_devices - lindx - 1));
+			free(ocl_state.active_devices);
+			ocl_state.active_devices = tmp_arr;
+			ocl_state.num_active_devices -= 1;
+			retv = ocl_state.num_active_devices;
+		}
+		else
+		{
+			retv = -1;
+		}
+	}
+	return retv;
+}
+
+int opencl_device_in_active_list(int plat_idx, int dev_idx) {
+	int pos = -1, i;
+	if (ocl_state.initialised == 1) {
+		for (i = 0; i < ocl_state.num_active_devices; ++i) {
+			if (ocl_state.active_devices[i].platform_idx == plat_idx
+				&& ocl_state.active_devices[i].device_idx == dev_idx) {
+				break;
+			}
+		}
+		if (i < ocl_state.num_active_devices) {
+			pos = i;
+		}
+	}
+	return pos;
+}
+
+int opencl_enable_default_accelerator() {
+	int nd, np;
+	assert(ocl_state.initialised);
+	/* For now we just select the first working device we find. */
+	opencl_deindex_device(0, &np, &nd);
+	if (np >= 0) {
+		opencl_add_active_device(np, nd);
+	}
+	return np >= 0 ? 1 : 0;
+}
+
+int opencl_get_device_state(
+	int ad_idx,
+	cl_program *program,
+	cl_context *context,
+	cl_command_queue *queue) 
 {
-	char kernel_name[128] = "cvtx_nb_Particle_ind_dvort_";
-	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
-	size_t global_work_size[2], workgroup_size[2];
-	cl_float3 *part1_pos_buff_data, *part1_vort_buff_data, *part2_pos_buff_data, *part2_vort_buff_data, *res_buff_data;
-	cl_mem res_buff, *part1_pos_buff, *part1_vort_buff, part2_pos_buff, part2_vort_buff;
-	cl_int status;
-	cl_kernel cl_kernel;
-	cl_event *event_chain;
+	assert(program != NULL);
+	assert(context != NULL);
+	assert(queue != NULL);
+	assert(ocl_state.initialised);
 
-	if (opencl_initialise() == 0)
-	{
-		strncat(kernel_name, kernel->cl_kernel_name_ext, 32);
-		cl_kernel = clCreateKernel(nbody_ocl_state.program, kernel_name, &status);
-		if (status != CL_SUCCESS) {
-			clReleaseKernel(cl_kernel);
-			return -1;
+	int nd = ocl_state.num_active_devices;
+	int retv, didx, pidx;
+	if (ad_idx < nd && ad_idx >= 0) {
+		didx = ocl_state.active_devices[ad_idx].device_idx;
+		pidx = ocl_state.active_devices[ad_idx].platform_idx;
+		assert(pidx < ocl_state.num_platforms);
+		assert(pidx >= 0);
+		assert(didx < ocl_state.platforms[pidx].num_devices);
+		assert(didx >= 0);
+		*program = ocl_state.platforms[pidx].program;
+		*context = ocl_state.platforms[pidx].context;
+		*queue = ocl_state.platforms[pidx].queues[didx];
+		if (!ocl_state.platforms[pidx].good) {
+			retv = -1;
 		}
-		/* This has to match the opencl kernels, so be careful with fiddling */
-		workgroup_size[0] = CVTX_WORKGROUP_SIZE;	/* Particles per group */
-		workgroup_size[1] = 1;	/* Only 1 induced particle pos per workgroup. */
-		global_work_size[0] = CVTX_WORKGROUP_SIZE;	/* We use multiple inducing particle buffers */
-		global_work_size[1] = num_induced;
-
-		/* Generate buffers for induced particle data  */
-		part2_pos_buff_data = malloc(num_induced * sizeof(cl_float3));
-		part2_vort_buff_data = malloc(num_induced * sizeof(cl_float3));
-		for (i = 0; i < num_induced; ++i) {
-			part2_pos_buff_data[i].x = induced_start[i]->coord.x[0];
-			part2_pos_buff_data[i].y = induced_start[i]->coord.x[1];
-			part2_pos_buff_data[i].z = induced_start[i]->coord.x[2];
-			part2_vort_buff_data[i].x = induced_start[i]->vorticity.x[0];
-			part2_vort_buff_data[i].y = induced_start[i]->vorticity.x[1];
-			part2_vort_buff_data[i].z = induced_start[i]->vorticity.x[2];
+		else
+		{
+			retv = 0;
 		}
-		/* Induced particle Create buffer, enqueue write and set kernel arg. */
-		part2_pos_buff = clCreateBuffer(nbody_ocl_state.context,
-			CL_MEM_READ_ONLY, num_induced * sizeof(cl_float3), NULL, &status);
-		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, part2_pos_buff, CL_FALSE,
-			0, num_induced * sizeof(cl_float3), part2_pos_buff_data, 0, NULL, NULL);
-		assert(status == CL_SUCCESS);
-		status = clSetKernelArg(cl_kernel, 3, sizeof(cl_mem), &part2_pos_buff);
-		assert(status == CL_SUCCESS);
-		part2_vort_buff = clCreateBuffer(nbody_ocl_state.context,
-			CL_MEM_READ_ONLY, num_induced * sizeof(cl_float3), NULL, &status);
-		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, part2_vort_buff, CL_FALSE,
-			0, num_induced * sizeof(cl_float3), part2_vort_buff_data, 0, NULL, NULL);
-		assert(status == CL_SUCCESS);
-		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &part2_vort_buff);
-		assert(status == CL_SUCCESS);
-			   		
-		/* Generate a results buffer										*/
-		res_buff_data = malloc(num_induced * sizeof(cl_float3));
-		res_buff = clCreateBuffer(nbody_ocl_state.context, CL_MEM_READ_WRITE,
-			sizeof(cl_float3) * num_induced, NULL, &status);
-		for (i = 0; i < num_induced; ++i) {
-			res_buff_data[i].x = 0;
-			res_buff_data[i].y = 0;
-			res_buff_data[i].z = 0;
-		}
-		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, res_buff, CL_FALSE,
-			0, num_induced * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
-		if (status != CL_SUCCESS) {
-			assert(false);
-			printf("OPENCL:\tFailed to enqueue write buffer.");
-		}
-		status = clSetKernelArg(cl_kernel, 5, sizeof(cl_mem), &res_buff);
-		assert(status == CL_SUCCESS);
-
-		cl_float cl_regularisation_radius = regularisation_radius;
-		status = clSetKernelArg(cl_kernel, 2, sizeof(cl_float), &cl_regularisation_radius);
-		assert(status == CL_SUCCESS);
-
-		/* Now create & dispatch particle buffers and kernel. 
-		Inducing particle count needs to be a multiple of the CVTX_WORKGROUP_SIZE,
-		so we add some zerod particles onto the end of the array. */
-		n_particle_groups = num_particles / CVTX_WORKGROUP_SIZE;
-		if (num_particles % CVTX_WORKGROUP_SIZE) {
-			n_zeroed_particles = CVTX_WORKGROUP_SIZE
-				- num_particles % CVTX_WORKGROUP_SIZE;
-			n_particle_groups += 1;
-		}
-		n_modelled_particles = CVTX_WORKGROUP_SIZE * n_particle_groups;
-		part1_pos_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
-		part1_vort_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
-		for (i = 0; i < num_particles; ++i) {
-			part1_pos_buff_data[i].x = array_start[i]->coord.x[0];
-			part1_pos_buff_data[i].y = array_start[i]->coord.x[1];
-			part1_pos_buff_data[i].z = array_start[i]->coord.x[2];
-			part1_vort_buff_data[i].x = array_start[i]->vorticity.x[0];
-			part1_vort_buff_data[i].y = array_start[i]->vorticity.x[1];
-			part1_vort_buff_data[i].z = array_start[i]->vorticity.x[2];
-		}
-		/* We need this so that we always have the minimum workgroup size. */
-		for (i = num_particles; i < n_modelled_particles; ++i) {
-			part1_pos_buff_data[i].x = 0;
-			part1_pos_buff_data[i].y = 0;
-			part1_pos_buff_data[i].z = 0;
-			part1_vort_buff_data[i].x = 0;
-			part1_vort_buff_data[i].y = 0;
-			part1_vort_buff_data[i].z = 0;
-		}
-		part1_pos_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		part1_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 3);
-		for (i = 0; i < n_particle_groups; ++i) {
-			part1_pos_buff[i] = clCreateBuffer(nbody_ocl_state.context,
-				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
-			assert(status == CL_SUCCESS);
-			status = clEnqueueWriteBuffer(
-				nbody_ocl_state.queue, part1_pos_buff[i], CL_FALSE,
-				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3),
-				part1_pos_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 3 * i);
-			assert(status == CL_SUCCESS);
-			part1_vort_buff[i] = clCreateBuffer(nbody_ocl_state.context,
-				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
-			assert(status == CL_SUCCESS);
-			status = clEnqueueWriteBuffer(
-				nbody_ocl_state.queue, part1_vort_buff[i], CL_FALSE,
-				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3),
-				part1_vort_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 3 * i + 1);
-			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 0, sizeof(cl_mem), part1_pos_buff + i);
-			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 1, sizeof(cl_mem), part1_vort_buff + i);
-			assert(status == CL_SUCCESS);
-			if (i == 0) {
-				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 2, event_chain + 3 * i, event_chain + 3 * i + 2);
-			}
-			else {
-				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 3, event_chain + 3 * i - 1, event_chain + 3 * i + 2);
-			}
-			assert(status == CL_SUCCESS);
-			clReleaseMemObject(part1_pos_buff[i]);
-			clReleaseMemObject(part1_vort_buff[i]);
-		}
-
-		/* Read back our results! */
-		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
-			sizeof(cl_float3) * num_induced, res_buff_data, 1,
-			event_chain + 3 * n_particle_groups - 1, NULL);
-		for (i = 0; i < n_particle_groups * 3; ++i) { clReleaseEvent(event_chain[i]); }
-		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
-		for (i = 0; i < num_induced; ++i) {
-			result_array[i].x[0] = res_buff_data[i].x;
-			result_array[i].x[1] = res_buff_data[i].y;
-			result_array[i].x[2] = res_buff_data[i].z;
-		}
-		free(res_buff_data);
-
-		free(part1_pos_buff);
-		free(part1_vort_buff);
-		free(part2_pos_buff_data);
-		free(part2_vort_buff_data);
-		free(part1_pos_buff_data);
-		free(part1_vort_buff_data);
-		clReleaseMemObject(res_buff);
-		clReleaseMemObject(part2_pos_buff);
-		clReleaseMemObject(part2_vort_buff);
-		clReleaseKernel(cl_kernel);
-		return 0;
 	}
 	else
 	{
-		return -1;
+		retv = -1;
 	}
+	return retv;
 }
 
-int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
-	const cvtx_Particle **array_start,
-	const long num_particles,
-	const cvtx_Particle **induced_start,
-	const long num_induced,
-	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
-	float regularisation_radius,
-	float kinematic_visc)
-{
-	char kernel_name[128] = "cvtx_nb_Particle_visc_ind_dvort_";
-	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
-	size_t global_work_size[2], workgroup_size[2];
-	cl_float3 *part1_pos_buff_data, *part1_vort_buff_data, *part2_pos_buff_data, *part2_vort_buff_data, *res_buff_data;
-	cl_float *part1_vol_buff_data, *part2_vol_buff_data;
-	cl_mem res_buff, *part1_pos_buff, *part1_vort_buff, *part1_vol_buff,
-		part2_pos_buff, part2_vort_buff, part2_vol_buff;
+/* STATIC FUNCTIONS ---------------------------------------------------------*/
+static int load_platforms() {
+	assert(ocl_state.platforms == NULL);
+
+	int retv, i;
 	cl_int status;
-	cl_kernel cl_kernel;
-	cl_event *event_chain;
-
-	if (opencl_initialise() == 0)
-	{
-		strncat(kernel_name, kernel->cl_kernel_name_ext, 32);
-		cl_kernel = clCreateKernel(nbody_ocl_state.program, kernel_name, &status);
-		if (status != CL_SUCCESS) {
-			clReleaseKernel(cl_kernel);
-			return -1;
-		}
-		/* This has to match the opencl kernels, so be careful with fiddling */
-		workgroup_size[0] = CVTX_WORKGROUP_SIZE;	/* Particles per group */
-		workgroup_size[1] = 1;	/* Only 1 induced particle pos per workgroup. */
-		global_work_size[0] = CVTX_WORKGROUP_SIZE;	/* We use multiple inducing particle buffers */
-		global_work_size[1] = num_induced;
-
-		/* Generate buffers for induced particle data  */
-		part2_pos_buff_data = malloc(num_induced * sizeof(cl_float3));
-		part2_vort_buff_data = malloc(num_induced * sizeof(cl_float3));
-		part2_vol_buff_data = malloc(num_induced * sizeof(cl_float));
-		for (i = 0; i < num_induced; ++i) {
-			part2_pos_buff_data[i].x = induced_start[i]->coord.x[0];
-			part2_pos_buff_data[i].y = induced_start[i]->coord.x[1];
-			part2_pos_buff_data[i].z = induced_start[i]->coord.x[2];
-			part2_vort_buff_data[i].x = induced_start[i]->vorticity.x[0];
-			part2_vort_buff_data[i].y = induced_start[i]->vorticity.x[1];
-			part2_vort_buff_data[i].z = induced_start[i]->vorticity.x[2];
-			part2_vol_buff_data[i] = induced_start[i]->volume;
-		}
-		/* Induced particle Create buffer, enqueue write and set kernel arg. */
-		part2_pos_buff = clCreateBuffer(nbody_ocl_state.context,
-			CL_MEM_READ_ONLY, num_induced * sizeof(cl_float3), NULL, &status);
-		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, part2_pos_buff, CL_TRUE,
-			0, num_induced * sizeof(cl_float3), part2_pos_buff_data, 0, NULL, NULL);
-		assert(status == CL_SUCCESS);
-		status = clSetKernelArg(cl_kernel, 3, sizeof(cl_mem), &part2_pos_buff);
-		assert(status == CL_SUCCESS);
-		part2_vort_buff = clCreateBuffer(nbody_ocl_state.context,
-			CL_MEM_READ_ONLY, num_induced * sizeof(cl_float3), NULL, &status);
-		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, part2_vort_buff, CL_TRUE,
-			0, num_induced * sizeof(cl_float3), part2_vort_buff_data, 0, NULL, NULL);
-		assert(status == CL_SUCCESS);
-		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &part2_vort_buff);
-		assert(status == CL_SUCCESS);
-		part2_vol_buff = clCreateBuffer(nbody_ocl_state.context,
-			CL_MEM_READ_ONLY, num_induced * sizeof(cl_float), NULL, &status);
-		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, part2_vol_buff, CL_TRUE,
-			0, num_induced * sizeof(cl_float), part2_vol_buff_data, 0, NULL, NULL);
-		assert(status == CL_SUCCESS);
-		status = clSetKernelArg(cl_kernel, 5, sizeof(cl_mem), &part2_vol_buff);
-		assert(status == CL_SUCCESS);
-
-		/* Generate a results buffer										*/
-		res_buff_data = malloc(num_induced * sizeof(cl_float3));
-		res_buff = clCreateBuffer(nbody_ocl_state.context, CL_MEM_READ_WRITE,
-			sizeof(cl_float3) * num_induced, NULL, &status);
-		for (i = 0; i < num_induced; ++i) {
-			res_buff_data[i].x = 0;
-			res_buff_data[i].y = 0;
-			res_buff_data[i].z = 0;
-		}
-		status = clEnqueueWriteBuffer(
-			nbody_ocl_state.queue, res_buff, CL_TRUE,
-			0, num_induced * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
-		if (status != CL_SUCCESS) {
-			assert(false);
-			printf("OPENCL:\tFailed to enqueue write buffer.");
-		}
-		status = clSetKernelArg(cl_kernel, 6, sizeof(cl_mem), &res_buff);
-		assert(status == CL_SUCCESS);
-
-		/* Setup the kinematic viscocity argument */
-		cl_float cl_regularisation_rad = regularisation_radius;
-		status = clSetKernelArg(cl_kernel, 7, sizeof(cl_float), &cl_regularisation_rad);
-		assert(status == CL_SUCCESS);
-		cl_float cl_kinem_visc = kinematic_visc;
-		status = clSetKernelArg(cl_kernel, 8, sizeof(cl_float), &cl_kinem_visc);
-		assert(status == CL_SUCCESS);
-
-		/* Now create & dispatch particle buffers and kernel.
-		Inducing particle count needs to be a multiple of the CVTX_WORKGROUP_SIZE,
-		so we add some zerod particles onto the end of the array. */
-		n_particle_groups = num_particles / CVTX_WORKGROUP_SIZE;
-		if (num_particles % CVTX_WORKGROUP_SIZE) {
-			n_zeroed_particles = CVTX_WORKGROUP_SIZE
-				- num_particles % CVTX_WORKGROUP_SIZE;
-			n_particle_groups += 1;
-		}
-		n_modelled_particles = CVTX_WORKGROUP_SIZE * n_particle_groups;
-		part1_pos_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
-		part1_vort_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
-		part1_vol_buff_data = malloc(n_modelled_particles * sizeof(cl_float));
-		for (i = 0; i < num_particles; ++i) {
-			part1_pos_buff_data[i].x = array_start[i]->coord.x[0];
-			part1_pos_buff_data[i].y = array_start[i]->coord.x[1];
-			part1_pos_buff_data[i].z = array_start[i]->coord.x[2];
-			part1_vort_buff_data[i].x = array_start[i]->vorticity.x[0];
-			part1_vort_buff_data[i].y = array_start[i]->vorticity.x[1];
-			part1_vort_buff_data[i].z = array_start[i]->vorticity.x[2];
-			part1_vol_buff_data[i] = array_start[i]->volume;
-		}
-		/* We need this so that we always have the minimum workgroup size. */
-		for (i = num_particles; i < n_modelled_particles; ++i) {
-			part1_pos_buff_data[i].x = 0;
-			part1_pos_buff_data[i].y = 0;
-			part1_pos_buff_data[i].z = 0;
-			part1_vort_buff_data[i].x = 0;
-			part1_vort_buff_data[i].y = 0;
-			part1_vort_buff_data[i].z = 0;
-			part1_vol_buff_data[i] = 0;
-		}
-		part1_pos_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		part1_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		part1_vol_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 4);
-		for (i = 0; i < n_particle_groups; ++i) {
-			part1_pos_buff[i] = clCreateBuffer(nbody_ocl_state.context,
-				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
-			assert(status == CL_SUCCESS);
-			status = clEnqueueWriteBuffer(
-				nbody_ocl_state.queue, part1_pos_buff[i], CL_FALSE,
-				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3),
-				part1_pos_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i);
-			assert(status == CL_SUCCESS);
-			part1_vort_buff[i] = clCreateBuffer(nbody_ocl_state.context,
-				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
-			assert(status == CL_SUCCESS);
-			status = clEnqueueWriteBuffer(
-				nbody_ocl_state.queue, part1_vort_buff[i], CL_FALSE,
-				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3),
-				part1_vort_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i + 1);
-			assert(status == CL_SUCCESS);
-			part1_vol_buff[i] = clCreateBuffer(nbody_ocl_state.context,
-				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float), NULL, &status);
-			assert(status == CL_SUCCESS);
-			status = clEnqueueWriteBuffer(
-				nbody_ocl_state.queue, part1_vol_buff[i], CL_FALSE,
-				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float),
-				part1_vol_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i + 2);
-			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 0, sizeof(cl_mem), part1_pos_buff + i);
-			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 1, sizeof(cl_mem), part1_vort_buff + i);
-			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 2, sizeof(cl_mem), part1_vol_buff + i);
-			assert(status == CL_SUCCESS);
-			if (i == 0) {
-				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 3, event_chain + 4 * i, event_chain + 4 * i + 3);
-			}
-			else {
-				status = clEnqueueNDRangeKernel(nbody_ocl_state.queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 4, event_chain + 4 * i - 1, event_chain + 4 * i + 3);
-			}
-			assert(status == CL_SUCCESS);
-			clReleaseMemObject(part1_pos_buff[i]);
-			clReleaseMemObject(part1_vort_buff[i]);
-			clReleaseMemObject(part1_vol_buff[i]);
-		}
-
-		/* Read back our results! */
-		clEnqueueReadBuffer(nbody_ocl_state.queue, res_buff, CL_TRUE, 0,
-			sizeof(cl_float3) * num_induced, res_buff_data, 1, 
-			event_chain + 4 * n_particle_groups - 1, NULL);
-		for (i = 0; i < n_particle_groups * 4; ++i) { clReleaseEvent(event_chain[i]); }
-		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
-		for (i = 0; i < num_induced; ++i) {
-			result_array[i].x[0] = res_buff_data[i].x;
-			result_array[i].x[1] = res_buff_data[i].y;
-			result_array[i].x[2] = res_buff_data[i].z;
-		}
-		free(res_buff_data);
-
-		free(part1_pos_buff);
-		free(part1_vort_buff);
-		free(part1_vol_buff);
-		free(part2_pos_buff_data);
-		free(part2_vort_buff_data);
-		free(part2_vol_buff_data);
-		free(part1_pos_buff_data);
-		free(part1_vort_buff_data);
-		free(part1_vol_buff_data);
-		clReleaseMemObject(res_buff);
-		clReleaseMemObject(part2_pos_buff);
-		clReleaseMemObject(part2_vort_buff);
-		clReleaseMemObject(part2_vol_buff);
-		clReleaseKernel(cl_kernel);
-		return 0;
+	cl_uint num_platforms;
+	cl_platform_id *plats;	/* We can't directly load our structs */
+	status = clGetPlatformIDs(0, NULL, &num_platforms);
+	plats = (cl_platform_id*)malloc(num_platforms * sizeof(cl_platform_id));
+	status = clGetPlatformIDs(num_platforms, plats, NULL);
+	if (status != CL_SUCCESS) {
+		ocl_state.platforms = NULL;
+		retv = -1;
 	}
 	else
 	{
-		return -1;
+		retv = num_platforms;
+		ocl_state.platforms = malloc(sizeof(struct ocl_platform_state) * num_platforms);
+		for (i = 0; i < (int)num_platforms; ++i) {
+			zero_new_platform(&ocl_state.platforms[i]);
+			ocl_state.platforms[i].platform = plats[i];
+			initialise_platform(&ocl_state.platforms[i]);
+		}
 	}
+	free(plats);
+	ocl_state.num_platforms = num_platforms;
+	return retv;
 }
 
+static int initialise_platform(struct ocl_platform_state *plat) {
+	int good = 1;
+	good = load_platform_devices(plat);
+	if (good == 1) {
+		good = create_platform_context_and_program(plat);
+	}
+	if (good == 1) {
+		good = load_platform_device_queues(plat);
+	}
+	return good;
+}
+
+static int load_platform_devices(struct ocl_platform_state *plat){
+	assert(plat != NULL);			/* Its expected that the platform isn't */
+	assert(plat->platform != NULL);
+	assert(plat->num_devices == 0);	/* initialised right now. */
+	assert(plat->devices == NULL);
+	assert(plat->device_names == NULL);
+	assert(plat->platform_name == NULL);
+	assert(plat->queues == NULL);
+
+	int retv, i;
+	cl_int status;
+	size_t str_len;
+	/* We're only interested in GPUs - cpus are slow in comparison and work better with OpenMP */
+	status = clGetDeviceIDs(plat->platform, CL_DEVICE_TYPE_GPU, 0, NULL, &(plat->num_devices));
+	realloc(plat->devices, sizeof(cl_device_id) * plat->num_devices);
+	status = clGetDeviceIDs(plat->platform, CL_DEVICE_TYPE_GPU, plat->num_devices, plat->devices, NULL);
+	if (status != CL_SUCCESS || plat->devices == NULL) {
+		free(plat->devices); plat->devices = NULL;
+		plat->num_devices = 0;
+		retv = -1;
+	}
+	else
+	{
+		retv = plat->num_devices;
+		/* Platform name */
+		clGetPlatformInfo(plat->platform, CL_PLATFORM_NAME, 0, NULL, &str_len);
+		plat->platform_name = (char*) malloc(str_len);
+		clGetPlatformInfo(plat->platform, CL_PLATFORM_NAME,
+			str_len, plat->platform_name, NULL);
+		/*Loop over devices*/
+		plat->device_names = malloc( sizeof(char*) * plat->num_devices );
+		plat->queues = malloc(sizeof(cl_command_queue*) * plat->num_devices);
+		for (i = 0; i < plat->num_devices; ++i) {
+			clGetDeviceInfo(plat->devices[i], CL_DEVICE_NAME, 0, NULL, &str_len);
+			plat->device_names[i] = (char*)malloc(sizeof(char*) * str_len);
+			clGetDeviceInfo(plat->devices[i], CL_DEVICE_NAME, str_len,
+				plat->device_names[i], NULL);
+		}
+	}
+	return retv;
+}
+
+static int create_platform_context_and_program(struct ocl_platform_state *plat) {
+	assert(plat != NULL);
+	assert(plat->platform != NULL);
+	assert(plat->good = 1);
+	assert(plat->program_build_log == NULL);
+	assert(plat->context == NULL);
+	assert(plat->program == NULL);
+	if (plat->num_devices <= 0) { return 0; }
+
+	cl_uint status;
+	char compile_options[1024] = "";
+	char tmp[128];
+	const char program_source[] =
+#		include "nbody.cl"
+		;	/* Including in source makes it easier to distribute a shared lib. */
+	sprintf(tmp, "%i", CVTX_WORKGROUP_SIZE);
+	strcat(compile_options, " -cl-fast-relaxed-math -D CVTX_CL_WORKGROUP_SIZE=");
+	strcat(compile_options, tmp);
+
+	plat->context = clCreateContext(
+		NULL, plat->num_devices, plat->devices, NULL, NULL, &status);
+	if (status != CL_SUCCESS) {
+		plat->good = 0;
+		return plat->good;
+	}
+	plat->program = clCreateProgramWithSource(
+		plat->context, 1, (const char**)&program_source, NULL, &status);
+	status = clBuildProgram(plat->program, plat->num_devices, 
+		plat->devices, compile_options, NULL, NULL);
+	if (status != CL_SUCCESS) {
+		plat->good = 0;
+		size_t length;
+		status = clGetProgramBuildInfo(
+			plat->program, plat->devices[0], CL_PROGRAM_BUILD_LOG, 0, 
+			NULL, &length);
+		plat->program_build_log = malloc(length);
+		status = clGetProgramBuildInfo(
+			plat->program, plat->devices[0], CL_PROGRAM_BUILD_LOG, length, 
+			plat->program_build_log, &length);
+	}
+	return plat->good;
+}
+
+static int load_platform_device_queues(struct ocl_platform_state *plat) {
+	assert(plat != NULL);
+	assert(plat->platform != NULL);
+	assert(plat->good = 1);
+	assert(plat->program != NULL);
+	assert(plat->context != NULL);
+	assert(plat->devices != NULL);
+	assert(plat->num_devices >= 0);
+	assert(plat->queues == NULL);
+
+	int i;
+	cl_uint status;
+
+	plat->queues = malloc(sizeof(cl_command_queue) * plat->num_devices);
+	for (i = 0; i < plat->num_devices; ++i) {
+		plat->queues[i] = clCreateCommandQueue(
+			plat->context, plat->devices[i],
+			(cl_command_queue_properties)NULL, &status);
+		if (status != CL_SUCCESS) {
+			plat->good = 0;
+		}
+	}
+	return plat->good;
+}
+
+static int finalise_platform(struct ocl_platform_state *plat) {
+	assert(plat != NULL);
+	assert(plat->num_devices >= 0);
+
+	int i;
+	if (plat->program != NULL) {
+		clReleaseProgram(plat->program);
+	}
+	if (plat->queues != NULL) {
+		for (i = 0; i < plat->num_devices; ++i) {
+			clReleaseCommandQueue(plat->queues[i]);
+		}
+		free(plat->queues);
+	}
+	if (plat->devices != NULL){
+		for (i = 0; i < plat->num_devices; ++i) {
+			clReleaseDevice(plat->devices[i]);
+		}
+		free(plat->devices);
+	}
+	if (plat->device_names != NULL) {
+		for (i = 0; i < plat->num_devices; ++i) {
+			free(plat->device_names[i]);
+		}
+		free(plat->device_names);
+	}
+	plat->num_devices = 0;
+	if (plat->context != NULL) { clReleaseContext(plat->context); }
+	/* if (plat->platform != NULL) { clReleasePlatform(plat->platform); } */
+	free(plat->platform_name);
+	free(plat->program_build_log);
+	return 1;
+}
+
+static int zero_new_platform(struct ocl_platform_state *plat) {
+	assert(plat != NULL);
+	if (plat != NULL) {
+		plat->good = 1;
+		plat->platform = NULL;
+		plat->num_devices = 0;
+		plat->devices = NULL;
+		plat->queues = NULL;
+		plat->program = NULL;
+		plat->context = NULL;
+		plat->platform_name = NULL;
+		plat->device_names = NULL;
+		plat->program_build_log = NULL;
+	}
+	return 0;
+}
 #endif
-

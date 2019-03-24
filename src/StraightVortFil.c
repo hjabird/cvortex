@@ -26,6 +26,7 @@ SOFTWARE.
 ============================================================================*/
 #include <assert.h>
 #include <math.h>
+#include "ocl_filament.h"
 
 static const float pi_f = (float) 3.14159265359;
 
@@ -68,8 +69,8 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
 	t2222 = -bsv_V3f_abs(bsv_V3f_cross(r0, r1)) / bsv_V3f_abs(r2);
 	A = bsv_V3f_mult(t211, t1*(t2121 + t2122));
 	B = t221 * t1 * (t2221 + t2222);
-	ret = bsv_V3f_add(
-			bsv_V3f_mult(induced_particle->vorticity),
+	ret = bsv_V3f_plus(
+			bsv_V3f_mult(induced_particle->vorticity, B),
 			bsv_V3f_cross(A, induced_particle->vorticity));
 	return ret;
 };
@@ -116,7 +117,7 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_dvort(
 	return ret;
 }
 
-CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel(
+void cpu_brute_force_StraightVortFilArr_Arr_ind_vel(
 	const cvtx_StraightVortFil **array_start,
 	const long num_particles,
 	const bsv_V3f *mes_start,
@@ -132,7 +133,7 @@ CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel(
 	return;
 }
 
-CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
+void cpu_brute_force_StraightVortFilArr_Arr_ind_dvort(
 	const cvtx_StraightVortFil **array_start,
 	const long num_particles,
 	const cvtx_Particle **induced_start,
@@ -144,6 +145,50 @@ CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
 	for (i = 0; i < num_induced; ++i) {
 		result_array[i] = cvtx_StraightVortFilArr_ind_dvort(
 			array_start, num_particles, induced_start[i]);
+	}
+	return;
+}
+
+CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel(
+	const cvtx_StraightVortFil **array_start,
+	const long num_filaments,
+	const bsv_V3f *mes_start,
+	const long num_mes,
+	bsv_V3f *result_array)
+{
+#ifdef CVTX_USING_OPENCL
+	if (num_filaments < 1024
+		|| num_mes < 512
+		|| opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
+			array_start, num_filaments, mes_start,
+			num_mes, result_array) != 0)
+#endif
+	{
+		cpu_brute_force_StraightVortFilArr_Arr_ind_vel(
+			array_start, num_filaments, mes_start,
+			num_mes, result_array);
+	}
+	return;
+}
+
+CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
+	const cvtx_StraightVortFil **array_start,
+	const long num_fil,
+	const cvtx_Particle **induced_start,
+	const long num_induced,
+	bsv_V3f *result_array)
+{
+#ifdef CVTX_USING_OPENCL
+	if (num_fil < 1024
+		|| num_induced < 512
+		|| opencl_brute_force_StraightVortFilArr_Arr_ind_dvort(
+			array_start, num_fil, induced_start,
+			num_induced, result_array) != 0)
+#endif
+	{
+		cpu_brute_force_StraightVortFilArr_Arr_ind_dvort(
+			array_start, num_fil, induced_start,
+			num_induced, result_array);
 	}
 	return;
 }

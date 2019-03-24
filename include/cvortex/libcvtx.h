@@ -54,6 +54,16 @@ typedef struct {
 	char cl_kernel_name_ext[32];
 } cvtx_VortFunc;
 
+/* cvtx_libary controls */
+CVTX_EXPORT void cvtx_initialise();
+CVTX_EXPORT void cvtx_finalise();
+CVTX_EXPORT int cvtx_num_accelerators();
+CVTX_EXPORT int cvtx_num_enabled_accelerators();
+CVTX_EXPORT char* cvtx_accelerator_name(int accelerator_id);
+CVTX_EXPORT int cvtx_accelerator_enabled(int accelerator_id);
+CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id);
+CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id);
+
 /* cvtx_Particle functions */
 CVTX_EXPORT bsv_V3f cvtx_Particle_ind_vel(
 	const cvtx_Particle *self,
@@ -152,14 +162,14 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_dvort(
 
 CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel(
 	const cvtx_StraightVortFil **array_start,
-	const long num_particles,
+	const long num_filaments,
 	const bsv_V3f *mes_start,
 	const long num_mes,
 	bsv_V3f *result_array);
 
 CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
 	const cvtx_StraightVortFil **array_start,
-	const long num_particles,
+	const long num_filaments,
 	const cvtx_Particle **induced_start,
 	const long num_induced,
 	bsv_V3f *result_array);

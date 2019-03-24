@@ -30,7 +30,7 @@ SOFTWARE.
 #include <stddef.h>
 
 #ifdef CVTX_USING_OPENCL
-#	include "opencl_acc.h"
+#	include "ocl_particle.h"
 #endif
 
 CVTX_EXPORT bsv_V3f cvtx_Particle_ind_vel(

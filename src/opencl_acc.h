@@ -1,9 +1,10 @@
+#include "libcvtx.h"
 /*============================================================================
 opencl_acc.h
 
-Acceleration of the n-body problem using OpenCL. Conditional compilation.
+Handles the opencl context(s).
 
-Copyright(c) 2018 HJA Bird
+Copyright(c) 2019 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -27,36 +28,77 @@ SOFTWARE.
 #ifndef CVTX_OPENCL_ACC_H
 #define CVTX_OPENCL_ACC_H
 
+#include <CL/cl.h>
 #include <bsv/bsv.h>
-#include "libcvtx.h"
 
-int opencl_brute_force_ParticleArr_Arr_ind_vel(
-	const cvtx_Particle **array_start,
-	const long num_particles,
-	const bsv_V3f *mes_start,
-	const long num_mes,
-	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
-	float regularisation_radius);
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+#define CVTX_WORKGROUP_SIZE 256
 
-int opencl_brute_force_ParticleArr_Arr_ind_dvort(
-	const cvtx_Particle **array_start,
-	const long num_particles,
-	const cvtx_Particle **induced_start,
-	const long num_induced,
-	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
-	float regularisation_radius);
+struct ocl_platform_state{
+	int good;
+	cl_platform_id platform;
+	int num_devices;
+	cl_device_id *devices;
+	cl_command_queue *queues;
+	cl_program program;
+	cl_context context;
+	char *platform_name;
+	char **device_names;
+	char *program_build_log;
+};
 
-int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
-	const cvtx_Particle **array_start,
-	const long num_particles,
-	const cvtx_Particle **induced_start,
-	const long num_induced,
-	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
-	float regularisation_radius,
-	float kinematic_visc);
+struct ocl_active_device {
+	int platform_idx;
+	int device_idx;
+};
+
+static struct {
+	int initialised;						/* Indicates initialise run */
+	int num_platforms;						/* Number of OCL platforms*/
+	struct ocl_platform_state *platforms;	/* Owner of all OCL state */
+	int num_active_devices;
+	struct ocl_active_device *active_devices;	/* Devices in use. */
+} ocl_state = { 0, 0, NULL, 0, NULL };
+
+/* Make OpenCL code ready to use. */
+int opencl_init();
+
+/* Release all OpenCL resources - they can no longer be used. */
+void opencl_finalise();
+
+/* The total number of devices that are registered. */
+int opencl_num_devices();
+
+/* From a linear index get the index of the platform and that devices
+on the platform. Returns -1 for both fields if invalid. */
+void opencl_deindex_device(int index, int *plat_idx, int *dev_idx);
+
+/* From and platform and device index, get a linear index. -1 for 
+invalid input. */
+void opencl_index_device(int *index, int plat_idx, int dev_idx);
+
+/* Add a device to the list of devices to use by linear index.
+returns -1 for invalid index or uninitialised */
+int opencl_add_active_device(int plat_idx, int dev_idx);
+
+/* Remove a device from the list of devices to use by linear index.
+returns -1 for invalid index or device not used or uninitialised  */
+int opencl_remove_active_device(int plat_idx, int dev_idx);
+
+/* Returns the index of a device in the active devices list,
+or -1 if it isn't in the list. */
+int opencl_device_in_active_list(int plat_idx, int dev_idx);
+
+/* Enable a `default' accelerator on the user's behalf. */
+int opencl_enable_default_accelerator(); 
+
+/* Get the program, context and queue for a device
+by its active device index. */
+int opencl_get_device_state(
+	int ad_idx,
+	cl_program *program,
+	cl_context *context,
+	cl_command_queue *queue);
 
 #endif CVTX_OPENCL_ACC_H
 #endif CVTX_USING_OPENCL
