@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.0)
 project(cvortex C)
 
 option(BUILD_UNIT_TESTS "Builds tests" OFF)
-option(BUILD_EXAMPLES "Builds examples" OFF)
 option(USE_OPENMP "Use the OpenMP multithreading" ON)
 option(USE_OPENCL "Use OpenCL gpgpu computing" ON)
 option(BUILD_STATIC_LIBRARY "Builds static library instead of shared" OFF)
@@ -65,8 +64,4 @@ set_target_properties(cvortex PROPERTIES
 if(BUILD_UNIT_TESTS)
     add_subdirectory(test)
 endif(BUILD_UNIT_TESTS)
-
-if(BUILD_EXAMPLES)
-    add_subdirectory(example)
-endif(BUILD_EXAMPLES)
 
