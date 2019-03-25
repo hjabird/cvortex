@@ -261,7 +261,7 @@ char* opencl_accelerator_name(int lindex) {
 	char *res = NULL;
 	int pidx, didx;
 	assert(opencl_is_init() == 1);
-	if (lindex > 0 && lindex < ocl_state.num_active_devices) {
+	if (lindex >= 0 && lindex < ocl_state.num_active_devices) {
 		pidx = ocl_state.active_devices[lindex].platform_idx;
 		didx = ocl_state.active_devices[lindex].device_idx;
 		assert(pidx >= 0);

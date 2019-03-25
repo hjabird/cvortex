@@ -152,12 +152,12 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
 
 CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_vel(
 	const cvtx_StraightVortFil **array_start,
-	const int num_particles,
+	const int num_filaments,
 	const bsv_V3f mes_point);
 
 CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_dvort(
 	const cvtx_StraightVortFil **array_start,
-	const int num_particles,
+	const int num_filaments,
 	const cvtx_Particle *induced_particle);
 
 CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel(

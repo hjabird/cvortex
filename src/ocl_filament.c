@@ -153,13 +153,13 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_filaments; i < n_modelled_filaments; ++i) {
-			fil_start_buff_data[i].x = array_start[i]->start.x[0];
-			fil_start_buff_data[i].y = array_start[i]->start.x[1];
-			fil_start_buff_data[i].z = array_start[i]->start.x[2];
-			fil_end_buff_data[i].x = array_start[i]->end.x[0];
-			fil_end_buff_data[i].y = array_start[i]->end.x[1];
-			fil_end_buff_data[i].z = array_start[i]->end.x[2];
-			fil_strength_buff_data[i] = array_start[i]->strength;
+			fil_start_buff_data[i].x = (float)0.0;
+			fil_start_buff_data[i].y = (float)0.0;
+			fil_start_buff_data[i].z = (float)0.0;
+			fil_end_buff_data[i].x = (float)0.0;
+			fil_end_buff_data[i].y = (float)0.0;
+			fil_end_buff_data[i].z = (float)0.0;
+			fil_strength_buff_data[i] = (float)0.0;
 		}
 		fil_start_buff = malloc(num_filament_groups * sizeof(cl_mem));
 		fil_end_buff = malloc(num_filament_groups * sizeof(cl_mem));
@@ -375,13 +375,13 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort_impl(
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_fil; i < n_modelled_filaments; ++i) {
-			fil_start_buff_data[i].x = array_start[i]->start.x[0];
-			fil_start_buff_data[i].y = array_start[i]->start.x[1];
-			fil_start_buff_data[i].z = array_start[i]->start.x[2];
-			fil_end_buff_data[i].x = array_start[i]->end.x[0];
-			fil_end_buff_data[i].y = array_start[i]->end.x[1];
-			fil_end_buff_data[i].z = array_start[i]->end.x[2];
-			fil_strength_buff_data[i] = array_start[i]->strength;
+			fil_start_buff_data[i].x = (float)0.0;
+			fil_start_buff_data[i].y = (float)0.0;
+			fil_start_buff_data[i].z = (float)0.0;
+			fil_end_buff_data[i].x = (float)0.0;
+			fil_end_buff_data[i].y = (float)0.0;
+			fil_end_buff_data[i].z = (float)0.0;
+			fil_strength_buff_data[i] = (float)0.0;
 		}
 		fil_start_buff = malloc(num_filament_groups * sizeof(cl_mem));
 		fil_end_buff = malloc(num_filament_groups * sizeof(cl_mem));

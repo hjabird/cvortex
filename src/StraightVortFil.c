@@ -46,7 +46,8 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_vel(
 	t21 = bsv_V3f_dot(r1, r0) / bsv_V3f_abs(r1);
 	t22 = bsv_V3f_dot(r2, r0) / bsv_V3f_abs(r2);
 	t2 = t21 - t22;
-	return bsv_V3f_mult(crosstmp, t1 * t2);
+	/* (NaN != NaN) == TRUE*/
+	return t1 * t2 != t1 * t2 ? bsv_V3f_zero() : bsv_V3f_mult(crosstmp, t1 * t2);
 }
 
 CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
@@ -56,7 +57,7 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
 	assert(self != NULL);
 	/* HJAB, Notes 4, pg.42 - pg. 43 for general theme. */
 	bsv_V3f r0, r1, r2, t211, A, ret;
-	float t1, t2121, t2122, t221, t2221, t2222, B;
+	float t1, t2121, t2122, t221, t212, t222, t2221, t2222, B;
 	r1 = bsv_V3f_minus(induced_particle->coord, self->start);
 	r2 = bsv_V3f_minus(induced_particle->coord, self->end);
 	r0 = bsv_V3f_minus(r1, r2);
@@ -67,11 +68,14 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
 	t221 = (float)3.0 / bsv_V3f_abs(r0);
 	t2221 = bsv_V3f_abs(bsv_V3f_cross(r0, r1)) / bsv_V3f_abs(r1);
 	t2222 = -bsv_V3f_abs(bsv_V3f_cross(r0, r1)) / bsv_V3f_abs(r2);
-	A = bsv_V3f_mult(t211, t1*(t2121 + t2122));
-	B = t221 * t1 * (t2221 + t2222);
+	t222 = t2221 + t2222;
+	t212 = t2121 + t2122;
+	A = bsv_V3f_mult(t211, t1*t212);
+	B = t221 * t1 * t222;
 	ret = bsv_V3f_plus(
 			bsv_V3f_mult(induced_particle->vorticity, B),
 			bsv_V3f_cross(A, induced_particle->vorticity));
+	if ((t222 != t222) || (t212 != t212)) { ret = bsv_V3f_zero(); }
 	return ret;
 };
 
