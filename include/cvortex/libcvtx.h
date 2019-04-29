@@ -174,4 +174,12 @@ CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
 	const int num_induced,
 	bsv_V3f *result_array);
 
+CVTX_EXPORT void cvtx_StraightVortFilArr_inf_mtrx(
+	const cvtx_StraightVortFil **array_start,
+	const int num_filaments,
+	const bsv_V3f *mes_start,
+	const bsv_V3f *dir_start,
+	const int num_mes,
+	float *result_matrix);
+
 #endif /* CVTX_LIBCVTX_H */

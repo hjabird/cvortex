@@ -196,3 +196,28 @@ CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
 	}
 	return;
 }
+
+CVTX_EXPORT void cvtx_StraightVortFilArr_inf_mtrx(
+	const cvtx_StraightVortFil **array_start,
+	const int num_filaments,
+	const bsv_V3f *mes_start,
+	const bsv_V3f *dir_start,
+	const int num_mes,
+	float *result_array) {
+	assert(array_start != NULL);
+	assert(num_filaments >= 0);
+	assert(mes_start != NULL);
+	assert(dir_start != NULL);
+	assert(num_mes >= 0);
+	assert(result_array != NULL);
+	int i;
+#pragma omp parallel for schedule(static)
+	for (i = 0; i < num_mes; ++i) {
+		int j;
+		bsv_V3f vel;
+		for (j = 0; j < num_filaments; ++j) {
+			vel = cvtx_StraightVortFil_ind_vel(array_start[j], mes_start[i]);
+			result_array[i * num_filaments + j] = bsv_V3f_dot(vel, dir_start[i]);
+		}
+	}
+}
