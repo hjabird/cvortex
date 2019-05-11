@@ -187,7 +187,7 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
 			assert(status == CL_SUCCESS);
 			status = clEnqueueWriteBuffer(
 				queue, fil_strength_buff[i], CL_FALSE,
-				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float3),
+				0, CVTX_WORKGROUP_SIZE * sizeof(cl_float),
 				fil_strength_buff_data + i * CVTX_WORKGROUP_SIZE, 0, NULL, event_chain + 4 * i + 2);
 			assert(status == CL_SUCCESS);
 			status = clSetKernelArg(cl_kernel, 0, sizeof(cl_mem), fil_start_buff + i);
