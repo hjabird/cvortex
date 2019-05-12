@@ -178,7 +178,7 @@ CVTX_EXPORT bsv_V3f cvtx_ParticleArr_visc_ind_dvort(
 	assert(num_particles >= 0);
 	for (i = 0; i < num_particles; ++i) {
 		dvort = cvtx_Particle_visc_ind_dvort(array_start[i],
-			induced_particle, kernel, kinematic_visc, regularisation_radius);
+			induced_particle, kernel, regularisation_radius, kinematic_visc);
 		rx += dvort.x[0];
 		ry += dvort.x[1];
 		rz += dvort.x[2];
@@ -216,8 +216,8 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 	float regularisation_radius)
 {
 #ifdef CVTX_USING_OPENCL
-	if (num_particles < 1024
-		|| num_mes < 512
+	if (num_particles < 256
+		|| num_mes < 256
 		|| kernel->cl_kernel_name_ext == ""
 		|| opencl_brute_force_ParticleArr_Arr_ind_vel(
 			array_start, num_particles, mes_start,
@@ -260,8 +260,8 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
 	float regularisation_radius)
 {
 #ifdef CVTX_USING_OPENCL
-	if (	num_particles < 1024
-		||	num_induced < 512
+	if (	num_particles < 256
+		||	num_induced < 256
 		||	kernel->cl_kernel_name_ext == ""
 		||	opencl_brute_force_ParticleArr_Arr_ind_dvort(
 				array_start, num_particles, induced_start,
@@ -290,7 +290,7 @@ void cpu_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	for (i = 0; i < num_induced; ++i) {
 		result_array[i] = cvtx_ParticleArr_visc_ind_dvort(
 			array_start, num_particles, induced_start[i],
-			kernel, kinematic_visc, regularisation_radius);
+			kernel, regularisation_radius, kinematic_visc);
 	}
 	return;
 }
@@ -306,17 +306,17 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
 	float kinematic_visc)
 {
 #ifdef CVTX_USING_OPENCL
-	if (	num_particles < 1024
-		||	num_induced < 512
+	if (	num_particles < 256
+		||	num_induced < 256
 		||	kernel->cl_kernel_name_ext == ""
 		||	opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 				array_start, num_particles, induced_start,
-				num_induced, result_array, kernel, kinematic_visc, regularisation_radius) != 0)
+				num_induced, result_array, kernel, regularisation_radius, kinematic_visc) != 0)
 #endif
 	{
 		cpu_brute_force_ParticleArr_Arr_visc_ind_dvort(
 			array_start, num_particles, induced_start,
-			num_induced, result_array, kernel, kinematic_visc, regularisation_radius);
+			num_induced, result_array, kernel, regularisation_radius, kinematic_visc);
 	}
 	return;
 

@@ -47,7 +47,7 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_vel(
 	t22 = bsv_V3f_dot(r2, r0) / bsv_V3f_abs(r2);
 	t2 = t21 - t22;
 	/* (NaN != NaN) == TRUE*/
-	return t1 * t2 != t1 * t2 ? bsv_V3f_zero() : bsv_V3f_mult(crosstmp, t1 * t2);
+	return fabs(t1 * t2) <= 3.40282346e38 ? bsv_V3f_mult(crosstmp, t1 * t2) : bsv_V3f_zero();
 }
 
 CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
@@ -161,8 +161,8 @@ CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel(
 	bsv_V3f *result_array)
 {
 #ifdef CVTX_USING_OPENCL
-	if (num_filaments < 1024
-		|| num_mes < 512
+	if (num_filaments < 256
+		|| num_mes < 256
 		|| opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
 			array_start, num_filaments, mes_start,
 			num_mes, result_array) != 0)
@@ -183,8 +183,8 @@ CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
 	bsv_V3f *result_array)
 {
 #ifdef CVTX_USING_OPENCL
-	if (num_fil < 1024
-		|| num_induced < 512
+	if (num_fil < 256
+		|| num_induced < 256
 		|| opencl_brute_force_StraightVortFilArr_Arr_ind_dvort(
 			array_start, num_fil, induced_start,
 			num_induced, result_array) != 0)
