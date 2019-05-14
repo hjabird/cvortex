@@ -261,14 +261,15 @@ char* opencl_accelerator_name(int lindex) {
 	char *res = NULL;
 	int pidx, didx;
 	assert(opencl_is_init() == 1);
-	if (lindex >= 0 && lindex < ocl_state.num_active_devices) {
-		pidx = ocl_state.active_devices[lindex].platform_idx;
-		didx = ocl_state.active_devices[lindex].device_idx;
+	if (lindex >= 0 && lindex < opencl_num_devices()) {
+		opencl_deindex_device(lindex, &pidx, &didx);
 		assert(pidx >= 0);
 		assert(pidx < ocl_state.num_platforms);
 		assert(didx >= 0);
 		assert(didx < ocl_state.platforms[pidx].num_devices);
-		if (ocl_state.platforms[pidx].device_names != NULL) {
+		if (pidx >= 0 && pidx < ocl_state.num_platforms &&
+				didx >= 0 && didx < ocl_state.platforms[pidx].num_devices &&
+				ocl_state.platforms[pidx].device_names != NULL) {
 			res = ocl_state.platforms[pidx].device_names[didx];
 		}
 	}
