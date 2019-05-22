@@ -27,6 +27,7 @@ SOFTWARE.
 
 #ifdef CVTX_USING_OPENCL
 #include <assert.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <CL/cl.h>
@@ -132,6 +133,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 {
 	char kernel_name[128] = "cvtx_nb_Particle_ind_vel_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
+	float constant_multiplyer = 1.f / (4.f * acosf(-1));
 	size_t global_work_size[2], workgroup_size[2];
 	cl_float3 *mes_pos_buff_data, *part_pos_buff_data, *part_vort_buff_data, *res_buff_data;
 	cl_mem mes_pos_buff, res_buff, *part_pos_buff, *part_vort_buff;
@@ -174,8 +176,8 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 			return -1;
 		}
 
-		cl_float cl_regularisation_radius = regularisation_radius;
-		status = clSetKernelArg(cl_kernel, 2, sizeof(cl_float), &cl_regularisation_radius);
+		cl_float cl_recip_regularisation_radius = 1.f/regularisation_radius;
+		status = clSetKernelArg(cl_kernel, 2, sizeof(cl_float), &cl_recip_regularisation_radius);
 		assert(status == CL_SUCCESS);
 
 		/* Generate a results buffer */
@@ -267,9 +269,10 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 		for (i = 0; i < n_particle_groups * 3; ++i) { clReleaseEvent(event_chain[i]); }
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_mes; ++i) {
-			result_array[i].x[0] = res_buff_data[i].x;
-			result_array[i].x[1] = res_buff_data[i].y;
-			result_array[i].x[2] = res_buff_data[i].z;
+			/* Constant multiplyer is constant the 1/4pi term. */
+			result_array[i].x[0] = res_buff_data[i].x * constant_multiplyer;
+			result_array[i].x[1] = res_buff_data[i].y * constant_multiplyer;
+			result_array[i].x[2] = res_buff_data[i].z * constant_multiplyer;
 		}
 		free(res_buff_data);
 
