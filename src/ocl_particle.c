@@ -306,6 +306,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 {
 	char kernel_name[128] = "cvtx_nb_Particle_ind_dvort_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
+	float constant_multiplyer = 1.f / (4.f * acosf(-1) * powf(regularisation_radius, 3));
 	size_t global_work_size[2], workgroup_size[2];
 	cl_float3 *part1_pos_buff_data, *part1_vort_buff_data, *part2_pos_buff_data, *part2_vort_buff_data, *res_buff_data;
 	cl_mem res_buff, *part1_pos_buff, *part1_vort_buff, part2_pos_buff, part2_vort_buff;
@@ -374,8 +375,8 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 		status = clSetKernelArg(cl_kernel, 5, sizeof(cl_mem), &res_buff);
 		assert(status == CL_SUCCESS);
 
-		cl_float cl_regularisation_radius = regularisation_radius;
-		status = clSetKernelArg(cl_kernel, 2, sizeof(cl_float), &cl_regularisation_radius);
+		cl_float cl_recip_regularisation_rad = 1.f/regularisation_radius;
+		status = clSetKernelArg(cl_kernel, 2, sizeof(cl_float), &cl_recip_regularisation_rad);
 		assert(status == CL_SUCCESS);
 
 		/* Now create & dispatch particle buffers and kernel.
@@ -451,9 +452,10 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 		for (i = 0; i < n_particle_groups * 3; ++i) { clReleaseEvent(event_chain[i]); }
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
 		for (i = 0; i < num_induced; ++i) {
-			result_array[i].x[0] = res_buff_data[i].x;
-			result_array[i].x[1] = res_buff_data[i].y;
-			result_array[i].x[2] = res_buff_data[i].z;
+			/* We take the 1 / (4 pi * reg_dist^3) into account here as const mult. */
+			result_array[i].x[0] = res_buff_data[i].x * constant_multiplyer;
+			result_array[i].x[1] = res_buff_data[i].y * constant_multiplyer;
+			result_array[i].x[2] = res_buff_data[i].z * constant_multiplyer;
 		}
 		free(res_buff_data);
 
