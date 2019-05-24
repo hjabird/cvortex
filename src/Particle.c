@@ -60,7 +60,7 @@ CVTX_EXPORT bsv_V3f cvtx_Particle_ind_dvort(
 	const cvtx_VortFunc * kernel,
 	float regularisation_radius)
 {
-	bsv_V3f ret, rad, cross_om, t2, t21, t21n, t22, t224;
+	bsv_V3f ret, rad, cross_om, t2, t21, t21n, t22;
 	float g, f, radd, rho, t1, t21d, t221, t222, t223;
 	if(bsv_V3f_isequal(self->coord, induced_particle->coord)){
 		ret = bsv_V3f_zero();
@@ -71,14 +71,13 @@ CVTX_EXPORT bsv_V3f cvtx_Particle_ind_dvort(
 		kernel->combined_fn(rho, &g, &f);
 		cross_om = bsv_V3f_cross(induced_particle->vorticity, self->vorticity);
 		t1 = (float)1. / ((float)4. * (float)acos(-1) * powf(regularisation_radius, 3));
-		t21n = bsv_V3f_mult(cross_om, -g);
+		t21n = bsv_V3f_mult(cross_om, g);
 		t21d = rho * rho * rho;
 		t21 = bsv_V3f_div(t21n, t21d);
-		t221 = (float)1. / (radd * radd);
+		t221 = (float)-1. / (radd * radd);
 		t222 = (3 * g) / (rho * rho * rho) - f;
-		t223 = bsv_V3f_dot(induced_particle->vorticity, rad);
-		t224 = bsv_V3f_cross(rad, self->vorticity);
-		t22 = bsv_V3f_mult(t224, t221 * t222 * t223);
+		t223 = bsv_V3f_dot(rad, cross_om);
+		t22 = bsv_V3f_mult(rad, t221 * t222 * t223);
 		t2 = bsv_V3f_plus(t21, t22);
 		ret = bsv_V3f_mult(t2, t1);
 	}
