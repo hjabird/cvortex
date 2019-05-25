@@ -40,14 +40,37 @@ static struct {
 	struct ocl_active_device *active_devices;	/* Devices in use. */
 } ocl_state = { 0, 0, NULL, 0, NULL };
 
-/* Returns number of platforms and loads the into the ocl_state. 
+/* Returns number of platforms and loads them into the ocl_state. 
 -1 for error.*/
 static int load_platforms();
+
+/* Initialises an individual platform into the ocl_state.
+Returns 1 if successful, 0 otherwise. */
 static int initialise_platform(struct ocl_platform_state *plat);
+
+/* Initialises an ocl_platform_state struct with values 
+for an unitialised state (ie. NULL pointers, etc). Returns 0. */
 static int zero_new_platform(struct ocl_platform_state *plat);
+
+/* Loads the information about a platform (ie. name, num devices)
+and information about the devices (ie. names).
+Returns the number of devices if successful, -1 otherwise.*/
 static int load_platform_devices(struct ocl_platform_state *plat);
+
+/* Generates an OpenCL context on the platform and builds OCL code.
+Platfrom->good is set to 0 zero on any failure. If code fails to build,
+platfrom->program_build_log will be set to point to a string describing
+the build failure.
+Returns 1 if successful, 0 otherwise. */
 static int create_platform_context_and_program(struct ocl_platform_state *plat);
+
+/* Generates OCL command queues. 
+On failure, platform->good is set to bad (0)
+Returns 1 if successful, 0 otherwise. */
 static int load_platform_device_queues(struct ocl_platform_state *plat);
+
+/* Deallocates / tears down a platform.
+Returns 1. */
 static int finalise_platform(struct ocl_platform_state *plat);
 
 int opencl_init() {
@@ -240,15 +263,15 @@ int opencl_get_device_state(
 		assert(pidx >= 0);
 		assert(didx < ocl_state.platforms[pidx].num_devices);
 		assert(didx >= 0);
-		*program = ocl_state.platforms[pidx].program;
-		*context = ocl_state.platforms[pidx].context;
-		*queue = ocl_state.platforms[pidx].queues[didx];
 		if (!ocl_state.platforms[pidx].good) {
 			retv = -1;
 		}
 		else
 		{
 			retv = 0;
+			*program = ocl_state.platforms[pidx].program;
+			*context = ocl_state.platforms[pidx].context;
+			*queue = ocl_state.platforms[pidx].queues[didx];
 		}
 	}
 	else

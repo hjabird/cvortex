@@ -35,7 +35,7 @@ SOFTWARE.
 #define CVTX_WORKGROUP_SIZE 256
 
 struct ocl_platform_state{
-	int good;
+	int good;					/* 1 if good, 0 if bad. */
 	cl_platform_id platform;
 	int num_devices;
 	cl_device_id *devices;
@@ -43,8 +43,8 @@ struct ocl_platform_state{
 	cl_program program;
 	cl_context context;
 	char *platform_name;
-	char **device_names;
-	char *program_build_log;
+	char **device_names;		/* Pointer to array of strings. */
+	char *program_build_log;	/* Normally NULL. Build log of OCL build fails.*/
 };
 
 struct ocl_active_device {
@@ -52,8 +52,14 @@ struct ocl_active_device {
 	int device_idx;
 };
 
-/* Make OpenCL code ready to use. */
+/* 
+Make OpenCL code ready to use by initialising devices, platforms etc.
+Returns 0 if finding devices and compiling OpenCL code goes to plan.
+*/
 int opencl_init();
+
+/* Check that OpenCL stuff has been initialised
+Returns 1 if good, 0 otherwise.*/
 int opencl_is_init();
 
 /* Release all OpenCL resources - they can no longer be used. */
@@ -88,8 +94,10 @@ int opencl_device_in_active_list(int plat_idx, int dev_idx);
 /* Enable a `default' accelerator on the user's behalf. */
 int opencl_enable_default_accelerator(); 
 
-/* Get the program, context and queue for a device
-by its active device index. */
+/* 
+Get the program, context and queue for a device by its active device index.
+Returns 0 if successful and device is "good", -1 otherwise.
+*/
 int opencl_get_device_state(
 	int ad_idx,
 	cl_program *program,
