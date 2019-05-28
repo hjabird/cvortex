@@ -1,35 +1,36 @@
-"/*============================================================================\n"
-"nbody.cl\n"
+/*============================================================================
+nbody.cl
 
-"OpenCL implementation of vortex particle N-Body problem using brute force.\n"
+OpenCL implementation of vortex particle N-Body problem using brute force.
 
-"Copyright(c) 2018 HJA Bird\n"
+Copyright(c) 2018 HJA Bird
 
-"Permission is hereby granted, free of charge, to any person obtaining a copy\n"
-"of this software and associated documentation files(the \"Software\"), to deal\n"
-"in the Software without restriction, including without limitation the rights\n"
-"to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
-"copies of the Software, and to permit persons to whom the Software is\n"
-"furnished to do so, subject to the following conditions :\n"
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files(the \"Software\"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions :
 
-"The above copyright notice and this permission notice shall be included in all\n"
-"copies or substantial portions of the Software.\n"
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
-"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
-"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE\n"
-"AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
-"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
-"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
-"SOFTWARE.\n"
-"============================================================================*/\n"
-"/* CVTX_CL_WORKGROUP_SIZE controlled with build options from host 		*/\n"
-"/* CVTX_CL_LOG2_WORKGROUP_SIZE controlled with build options from host */\n"
-"\n"
-"/*############################################################################\n"
-"Definitions for the repeated body of kernels\n"
-"############################################################################*/\n"
-"\n"
+THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+============================================================================*/
+
+/* CVTX_CL_WORKGROUP_SIZE controlled with build options from host 		*/
+/* CVTX_CL_LOG2_WORKGROUP_SIZE controlled with build options from host */
+
+/*############################################################################
+Definitions for the repeated body of kernels\
+############################################################################*/
+
 "#define CVTX_P_INDVEL_START 										\\\n"
 "(																	\\\n"
 "	__global float3* particle_locs,									\\\n"
@@ -59,15 +60,7 @@
 "	ret = num * (cor / den);										\\\n"
 "	ret = isnormal(ret) ? ret : (float3)(0.f, 0.f, 0.f);			\\\n"
 "	reduction_workspace[widx] = ret;								\\\n"
-"	/* Now sum to a single value. */								\\\n"
-"	for(loop_idx = 2; loop_idx <= CVTX_CL_WORKGROUP_SIZE; 			\\\n"
-"		loop_idx *= 2){												\\\n"
-"		barrier(CLK_LOCAL_MEM_FENCE);								\\\n"
-"		if( widx < CVTX_CL_WORKGROUP_SIZE/loop_idx ){				\\\n"
-"			reduction_workspace[widx] = reduction_workspace[widx] 	\\\n"
-"				+  reduction_workspace[widx + CVTX_CL_WORKGROUP_SIZE/loop_idx];\\\n"
-"		}															\\\n"
-"	}																\\\n"
+"	local_workspace_float3_reduce(reduction_workspace);				\\\n"
 "	barrier(CLK_LOCAL_MEM_FENCE);									\\\n"
 "	if( widx == 0 ){												\\\n"
 "		results[midx] = reduction_workspace[0] + results[midx];		\\\n"
@@ -110,15 +103,7 @@
 "	ret = fma(t221 * t222 * t223, rad, t21); /* 1/(4 pi reg_dist^3) is host side */\\\n"
 "	ret = isnormal(ret) ? ret : (float3)(0.f, 0.f, 0.f);			\\\n"
 "	reduction_workspace[widx] = ret;								\\\n"
-"	/* Now sum to a single value. */								\\\n"
-"	for(loop_idx = 2; loop_idx <= CVTX_CL_WORKGROUP_SIZE; 			\\\n"
-"		loop_idx *= 2){												\\\n"
-"		barrier(CLK_LOCAL_MEM_FENCE);								\\\n"
-"		if( widx < CVTX_CL_WORKGROUP_SIZE/loop_idx ){				\\\n"
-"			reduction_workspace[widx] = reduction_workspace[widx] 	\\\n"
-"				+  reduction_workspace[widx + CVTX_CL_WORKGROUP_SIZE/loop_idx];\\\n"
-"		}															\\\n"
-"	}																\\\n"
+"	local_workspace_float3_reduce(reduction_workspace);				\\\n"
 "	barrier(CLK_LOCAL_MEM_FENCE);									\\\n"
 "	if( widx == 0 ){												\\\n"
 "		results[indidx] = reduction_workspace[0] + results[indidx];	\\\n"
@@ -151,9 +136,9 @@
 "	indidx = get_global_id(1);										\\\n"
 "	widx = get_local_id(0);											\\\n"
 "	if(all(isequal(particle_locs[sidx], induced_locs[indidx]))){	\\\n"
-"		ret.x = 0.0f;											\\\n"
-"		ret.y = 0.0f;											\\\n"
-"		ret.z = 0.0f;											\\\n"
+"		ret.x = 0.0f;												\\\n"
+"		ret.y = 0.0f;												\\\n"
+"		ret.z = 0.0f;												\\\n"
 "	}																\\\n" 
 "	else {															\\\n"
 "		rad = particle_locs[sidx] - induced_locs[indidx];			\\\n"
@@ -171,15 +156,7 @@
 "		ret = t2 * t1;												\\\n"
 "	}																\\\n"
 "	reduction_workspace[widx] = convert_float3(ret);				\\\n"
-"	/* Now sum to a single value. */								\\\n"
-"	for(loop_idx = 2; loop_idx <= CVTX_CL_WORKGROUP_SIZE; 			\\\n"
-"		loop_idx *= 2){												\\\n"
-"		barrier(CLK_LOCAL_MEM_FENCE);								\\\n"
-"		if( widx < CVTX_CL_WORKGROUP_SIZE/loop_idx ){				\\\n"
-"			reduction_workspace[widx] = reduction_workspace[widx] 	\\\n"
-"				+  reduction_workspace[widx + CVTX_CL_WORKGROUP_SIZE/loop_idx];\\\n"
-"		}															\\\n"
-"	}																\\\n"
+"	local_workspace_float3_reduce(reduction_workspace);				\\\n"
 "	barrier(CLK_LOCAL_MEM_FENCE);									\\\n"
 "	if( widx == 0 ){												\\\n"
 "		results[indidx] = reduction_workspace[0] + results[indidx];	\\\n"
@@ -187,52 +164,69 @@
 "	return;															\\\n"
 "}																	\n"
 
+"inline void local_workspace_float3_reduce(									\n"
+"	__local float3* reduction_workspace)									\n"
+"{																			\n"
+"	uint loop_idx = 2;														\n"
+"	uint widx = get_local_id(0);											\n"
+"	for(; loop_idx <= CVTX_CL_WORKGROUP_SIZE; 								\n"
+"		loop_idx *= 2)														\n"
+"	{																		\n"
+"		barrier(CLK_LOCAL_MEM_FENCE);										\n"
+"		if( widx < CVTX_CL_WORKGROUP_SIZE/loop_idx ){						\n"
+"			reduction_workspace[widx] = reduction_workspace[widx] 			\n"
+"				+  reduction_workspace[widx + CVTX_CL_WORKGROUP_SIZE/loop_idx];\n"
+"		}																	\n"
+"	}																		\n"
+"	return;																	\n"
+"}																			\n"
 
 
-"/* ###########################################################	*/	\n"
-"/* Velocity calculation kernels here:							*/	\n"
-"/* name cvtx_nb_Particle_ind_vel_XXXXX							*/	\n"
-"/* ###########################################################	*/	\n"
+
+/* ###########################################################	*/
+/* Velocity calculation kernels here:							*/
+/* name cvtx_nb_Particle_ind_vel_XXXXX							*/
+/* ###########################################################	*/
 
 "__kernel void cvtx_nb_Particle_ind_vel_singular\n"
-"	CVTX_P_INDVEL_START\n"
-"	g = 1.f;\n"
-"	CVTX_P_INDVEL_END\n"
+"	CVTX_P_INDVEL_START														\n"
+"	g = 1.f;																\n"
+"	CVTX_P_INDVEL_END														\n"
 
 
-"__kernel void cvtx_nb_Particle_ind_vel_winckelmans\n"
-"	CVTX_P_INDVEL_START\n"
+"__kernel void cvtx_nb_Particle_ind_vel_winckelmans							\n"
+"	CVTX_P_INDVEL_START														\n"
 "	g = (rho * rho + 2.5f) * rho * rho * rho * rsqrt(pown(rho * rho + 1, 5));\n"
-"	CVTX_P_INDVEL_END\n"
+"	CVTX_P_INDVEL_END														\n"
 
 
-"__kernel void cvtx_nb_Particle_ind_vel_planetary\n"
-"	CVTX_P_INDVEL_START\n"
-"	g = rho < 1.f ? rho * rho * rho : 1.f;\n"
-"	CVTX_P_INDVEL_END\n"
+"__kernel void cvtx_nb_Particle_ind_vel_planetary							\n"
+"	CVTX_P_INDVEL_START														\n"
+"	g = rho < 1.f ? rho * rho * rho : 1.f;									\n"
+"	CVTX_P_INDVEL_END														\n"
 
 
-"__kernel void cvtx_nb_Particle_ind_vel_gaussian\n"
-"	CVTX_P_INDVEL_START\n"
-"	if(rho > 6.f){\n"
-"		g = 1.f;\n"
-"	} else {\n"
-"		const float pi = 3.14159265359f;\n"
+"__kernel void cvtx_nb_Particle_ind_vel_gaussian									\n"
+"	CVTX_P_INDVEL_START																\n"
+"	if(rho > 6.f){																	\n"
+"		g = 1.f;																	\n"
+"	} else {																		\n"
+"		const float pi = 3.14159265359f;											\n"
 "		float a1 = 0.3480242f, a2 = -0.0958798f, a3 = 0.7478556f, p = 0.47047f;		\n"
-"		float rho_sr2 = rho / sqrt(2.f);										\n"
-"		float t = 1.f / (1 + p * rho_sr2);									\n"
+"		float rho_sr2 = rho / sqrt(2.f);											\n"
+"		float t = 1.f / (1 + p * rho_sr2);											\n"
 "		float erf = 1.f-t * (a1 + t * (a2 + t * a3)) * exp(-rho_sr2 * rho_sr2);		\n"
 "		float term2 = rho * sqrt((float)2 / pi) * exp(-rho_sr2 * rho_sr2);			\n"
 "		g = erf - term2;															\n"
 "	}																				\n"
-"	CVTX_P_INDVEL_END\n"
+"	CVTX_P_INDVEL_END																\n"
 
 
 
-"/* ###########################################################	*/	\n"
-"/* Ind Dvort calculation kernels here:							*/	\n"
-"/* name cvtx_nb_Particle_ind_dvort_XXXXX						*/	\n"
-"/* ###########################################################	*/	\n"
+/* ###########################################################
+	Ind Dvort calculation kernels here:
+	name cvtx_nb_Particle_ind_dvort_XXXXX
+	###########################################################	*/	
 
 "__kernel void cvtx_nb_Particle_ind_dvort_singular\n"
 "	CVTX_P_IND_DVORT_START\n"
@@ -272,10 +266,10 @@
 "	CVTX_P_IND_DVORT_END															\n"
 
 
-"/* ###########################################################	*/	\n"
-"/* viscous ind Dvort calculation kernels here:					*/	\n"
-"/* name cvtx_nb_Particle_visc_ind_dvort_XXXXX					*/	\n"
-"/* ###########################################################	*/	\n"
+/* ###########################################################
+	viscous ind Dvort calculation kernels here:
+	name cvtx_nb_Particle_visc_ind_dvort_XXXXX	
+	###########################################################	*/
 
 "	/* Viscocity doesn't work for singular & planetary */							\n"
 
@@ -292,9 +286,9 @@
 "	CVTX_P_VISC_IND_DVORT_END														\n"
 
 
-"/* ###########################################################	*/	\n"
-"/* vortex_filament code:										*/	\n"
-"/* ###########################################################	*/	\n"
+/*	###########################################################
+	vortex_filament code:
+	###########################################################	*/
 
 "__kernel void cvtx_nb_Filament_ind_vel_singular									\n"
 "(																					\n"
@@ -326,15 +320,7 @@
 "	}																				\n"
 "	__local float3 reduction_workspace[CVTX_CL_WORKGROUP_SIZE];						\n"
 "	reduction_workspace[fidx] = ret;												\n"
-"	/* Now sum to a single value. */												\n"
-"	for(loop_idx = 2; loop_idx <= CVTX_CL_WORKGROUP_SIZE; 							\n"
-"		loop_idx *= 2){																\n"
-"		barrier(CLK_LOCAL_MEM_FENCE);												\n"
-"		if( fidx < CVTX_CL_WORKGROUP_SIZE/loop_idx ){								\n"
-"			reduction_workspace[fidx] = reduction_workspace[fidx] 					\n"
-"				+  reduction_workspace[fidx + CVTX_CL_WORKGROUP_SIZE/loop_idx];		\n"
-"		}																			\n"
-"	}																				\n"
+"	local_workspace_float3_reduce(reduction_workspace);								\n"
 "	barrier(CLK_LOCAL_MEM_FENCE);													\n"
 "	if( fidx == 0 ){																\n"
 "		results[midx] = reduction_workspace[0] + results[midx];						\n"
@@ -380,14 +366,7 @@
 "	__local float3 reduction_workspace[CVTX_CL_WORKGROUP_SIZE];						\n"
 "	reduction_workspace[fidx] = ret;												\n"
 "	/* Now sum to a single value. */												\n"
-"	for(loop_idx = 2; loop_idx <= CVTX_CL_WORKGROUP_SIZE; 							\n"
-"		loop_idx *= 2){																\n"
-"		barrier(CLK_LOCAL_MEM_FENCE);												\n"
-"		if( fidx < CVTX_CL_WORKGROUP_SIZE/loop_idx ){								\n"
-"			reduction_workspace[fidx] = reduction_workspace[fidx] 					\n"
-"				+  reduction_workspace[fidx + CVTX_CL_WORKGROUP_SIZE/loop_idx];		\n"
-"		}																			\n"
-"	}																				\n"
+"	local_workspace_float3_reduce(reduction_workspace);								\n"
 "	barrier(CLK_LOCAL_MEM_FENCE);													\n"
 "	if( fidx == 0 ){																\n"
 "		results[pidx] = reduction_workspace[0] + results[pidx];						\n"
