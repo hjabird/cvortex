@@ -33,25 +33,41 @@ SOFTWARE.
 #	include "ocl_particle.h"
 #endif
 
+/* The induced velocity for a particle excluding the constant
+coefficient 1 / 4pi */
+inline bsv_V3f particle_ind_vel_inner(
+	const cvtx_Particle * self,
+	const bsv_V3f mes_point,
+	const cvtx_VortFunc * kernel,
+	float recip_reg_rad)
+{
+	bsv_V3f rad, num, ret;
+	if (bsv_V3f_isequal(self->coord, mes_point)) {
+		ret = bsv_V3f_zero();
+	}
+	else {
+		float cor, den, rho, radd;
+		rad = bsv_V3f_minus(mes_point, self->coord);
+		radd = bsv_V3f_abs(rad);
+		rho = radd * recip_reg_rad; /* Assume positive. */
+		cor = -kernel->g_fn(rho);
+		den = powf(radd, -3);
+		num = bsv_V3f_cross(rad, self->vorticity);
+		ret = bsv_V3f_mult(num, cor * den);
+	}
+	return ret;
+}
+
 CVTX_EXPORT bsv_V3f cvtx_Particle_ind_vel(
 	const cvtx_Particle * self,
 	const bsv_V3f mes_point,
 	const cvtx_VortFunc * kernel,
 	float regularisation_radius)
 {
-	bsv_V3f rad, num, ret;
-	if(bsv_V3f_isequal(self->coord, mes_point)){
-		ret = bsv_V3f_zero();
-	} else {
-		float cor, den, rho;
-		rad = bsv_V3f_minus(mes_point, self->coord);
-		rho = fabsf(bsv_V3f_abs(rad) / regularisation_radius);
-		cor = - kernel->g_fn(rho) / ((float)4. * (float)acos(-1));
-		den = powf(bsv_V3f_abs(rad), 3);
-		num = bsv_V3f_cross(rad, self->vorticity);
-		ret = bsv_V3f_mult(num, cor / den);
-	}
-	return ret;
+	bsv_V3f ret;
+	ret = particle_ind_vel_inner(self, mes_point, kernel, 
+		1.f/fabsf(regularisation_radius));
+	return bsv_V3f_mult(ret, 1.f / (4.f * acosf(-1.f)));
 }
 
 CVTX_EXPORT bsv_V3f cvtx_Particle_ind_dvort(
@@ -126,19 +142,20 @@ CVTX_EXPORT bsv_V3f cvtx_ParticleArr_ind_vel(
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius)
 {
-	bsv_V3f vel;
 	double rx = 0, ry = 0, rz = 0;
 	long i;
+	float recip_reg_rad = 1.f / fabsf(regularisation_radius);
 	assert(num_particles >= 0);
+#pragma omp parallel for reduction(+:rx, ry, rz)
 	for (i = 0; i < num_particles; ++i) {
-		vel = cvtx_Particle_ind_vel(array_start[i],
-			mes_point, kernel, regularisation_radius);
+		bsv_V3f vel = particle_ind_vel_inner(array_start[i],
+			mes_point, kernel, recip_reg_rad);
 		rx += vel.x[0];
 		ry += vel.x[1];
 		rz += vel.x[2];
 	}
 	bsv_V3f ret = {(float)rx, (float)ry, (float)rz};
-	return ret;
+	return bsv_V3f_mult(ret, 1.f / (4.f * acosf(-1.f)));
 }
 
 CVTX_EXPORT bsv_V3f cvtx_ParticleArr_ind_dvort(
