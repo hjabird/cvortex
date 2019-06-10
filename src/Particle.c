@@ -36,7 +36,7 @@ SOFTWARE.
 /* The induced velocity for a particle excluding the constant
 coefficient 1 / 4pi */
 inline bsv_V3f particle_ind_vel_inner(
-	const cvtx_Particle * self,
+	const cvtx_P3D * self,
 	const bsv_V3f mes_point,
 	const cvtx_VortFunc * kernel,
 	float recip_reg_rad)
@@ -58,8 +58,8 @@ inline bsv_V3f particle_ind_vel_inner(
 	return ret;
 }
 
-CVTX_EXPORT bsv_V3f cvtx_Particle_ind_vel(
-	const cvtx_Particle * self,
+CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vel(
+	const cvtx_P3D * self,
 	const bsv_V3f mes_point,
 	const cvtx_VortFunc * kernel,
 	float regularisation_radius)
@@ -70,9 +70,9 @@ CVTX_EXPORT bsv_V3f cvtx_Particle_ind_vel(
 	return bsv_V3f_mult(ret, 1.f / (4.f * acosf(-1.f)));
 }
 
-CVTX_EXPORT bsv_V3f cvtx_Particle_ind_dvort(
-	const cvtx_Particle * self,
-	const cvtx_Particle * induced_particle,
+CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_dvort(
+	const cvtx_P3D * self,
+	const cvtx_P3D * induced_particle,
 	const cvtx_VortFunc * kernel,
 	float regularisation_radius)
 {
@@ -104,9 +104,9 @@ float sphere_volume(float radius){
 	return 4 * (float)acos(-1) * radius * radius * radius / (float) 3.;
 }
 
-CVTX_EXPORT bsv_V3f cvtx_Particle_visc_ind_dvort(
-	const cvtx_Particle * self,
-	const cvtx_Particle * induced_particle,
+CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_visc_dvort(
+	const cvtx_P3D * self,
+	const cvtx_P3D * induced_particle,
 	const cvtx_VortFunc * kernel,
 	float regularisation_radius,
 	float kinematic_visc)
@@ -135,8 +135,8 @@ CVTX_EXPORT bsv_V3f cvtx_Particle_visc_ind_dvort(
 	return ret;
 }
 
-CVTX_EXPORT bsv_V3f cvtx_ParticleArr_ind_vel(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(
+	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f mes_point,
 	const cvtx_VortFunc *kernel,
@@ -158,10 +158,10 @@ CVTX_EXPORT bsv_V3f cvtx_ParticleArr_ind_vel(
 	return bsv_V3f_mult(ret, 1.f / (4.f * acosf(-1.f)));
 }
 
-CVTX_EXPORT bsv_V3f cvtx_ParticleArr_ind_dvort(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_dvort(
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle *induced_particle,
+	const cvtx_P3D *induced_particle,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius)
 {
@@ -170,7 +170,7 @@ CVTX_EXPORT bsv_V3f cvtx_ParticleArr_ind_dvort(
 	long i;
 	assert(num_particles >= 0);
 	for (i = 0; i < num_particles; ++i) {
-		dvort = cvtx_Particle_ind_dvort(array_start[i],
+		dvort = cvtx_P3D_S2S_dvort(array_start[i],
 			induced_particle, kernel, regularisation_radius);
 		rx += dvort.x[0];
 		ry += dvort.x[1];
@@ -180,10 +180,10 @@ CVTX_EXPORT bsv_V3f cvtx_ParticleArr_ind_dvort(
 	return ret;
 }
 
-CVTX_EXPORT bsv_V3f cvtx_ParticleArr_visc_ind_dvort(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle *induced_particle,
+	const cvtx_P3D *induced_particle,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
 	float kinematic_visc)
@@ -193,7 +193,7 @@ CVTX_EXPORT bsv_V3f cvtx_ParticleArr_visc_ind_dvort(
 	long i;
 	assert(num_particles >= 0);
 	for (i = 0; i < num_particles; ++i) {
-		dvort = cvtx_Particle_visc_ind_dvort(array_start[i],
+		dvort = cvtx_P3D_S2S_visc_dvort(array_start[i],
 			induced_particle, kernel, regularisation_radius, kinematic_visc);
 		rx += dvort.x[0];
 		ry += dvort.x[1];
@@ -204,7 +204,7 @@ CVTX_EXPORT bsv_V3f cvtx_ParticleArr_visc_ind_dvort(
 }
 
 static void cpu_brute_force_ParticleArr_Arr_ind_vel(
-	const cvtx_Particle **array_start,
+	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -215,15 +215,15 @@ static void cpu_brute_force_ParticleArr_Arr_ind_vel(
 	long i;
 #pragma omp parallel for schedule(static)
 	for(i = 0; i < num_mes; ++i){
-		result_array[i] = cvtx_ParticleArr_ind_vel(
+		result_array[i] = cvtx_P3D_M2S_vel(
 			array_start, num_particles, mes_start[i], 
 			kernel, regularisation_radius);
 	}
 	return;
 }
 
-CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT void cvtx_P3D_M2M_vel(
+	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -248,9 +248,9 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 }
 
 void cpu_brute_force_ParticleArr_Arr_ind_dvort(
-	const cvtx_Particle **array_start,
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
@@ -259,17 +259,17 @@ void cpu_brute_force_ParticleArr_Arr_ind_dvort(
 	long i;
 #pragma omp parallel for schedule(static)
 	for (i = 0; i < num_induced; ++i) {
-		result_array[i] = cvtx_ParticleArr_ind_dvort(
+		result_array[i] = cvtx_P3D_M2S_dvort(
 			array_start, num_particles, induced_start[i], 
 			kernel, regularisation_radius);
 	}
 	return;
 }
 
-CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT void cvtx_P3D_M2M_dvort(
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
@@ -292,9 +292,9 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
 }
 
 void cpu_brute_force_ParticleArr_Arr_visc_ind_dvort(
-	const cvtx_Particle **array_start,
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
@@ -304,17 +304,17 @@ void cpu_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	long i;
 #pragma omp parallel for schedule(static)
 	for (i = 0; i < num_induced; ++i) {
-		result_array[i] = cvtx_ParticleArr_visc_ind_dvort(
+		result_array[i] = cvtx_P3D_M2S_visc_dvort(
 			array_start, num_particles, induced_start[i],
 			kernel, regularisation_radius, kinematic_visc);
 	}
 	return;
 }
 
-CVTX_EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,

@@ -30,8 +30,8 @@ SOFTWARE.
 
 static const float pi_f = (float) 3.14159265359;
 
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_vel(
-	const cvtx_StraightVortFil *self,
+CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_vel(
+	const cvtx_F3D *self,
 	const bsv_V3f mes_point) 
 {
 
@@ -50,9 +50,9 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_vel(
 	return fabs(t1 * t2) <= 3.40282346e38 ? bsv_V3f_mult(crosstmp, t1 * t2) : bsv_V3f_zero();
 }
 
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
-	const cvtx_StraightVortFil *self,
-	const cvtx_Particle *induced_particle) 
+CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_dvort(
+	const cvtx_F3D *self,
+	const cvtx_P3D *induced_particle) 
 {
 	assert(self != NULL);
 	/* HJAB, Notes 4, pg.42 - pg. 43 for general theme. */
@@ -79,8 +79,8 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
 	return ret;
 };
 
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_vel(
-	const cvtx_StraightVortFil **array_start,
+CVTX_EXPORT bsv_V3f cvtx_F3D_M2S_vel(
+	const cvtx_F3D **array_start,
 	const int num_particles,
 	const bsv_V3f mes_point) 
 {
@@ -90,7 +90,7 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_vel(
 	double rx = 0, ry = 0, rz = 0;
 	long i;
 	for (i = 0; i < num_particles; ++i) {
-		vel = cvtx_StraightVortFil_ind_vel(array_start[i],
+		vel = cvtx_F3D_S2S_vel(array_start[i],
 			mes_point);
 		rx += vel.x[0];
 		ry += vel.x[1];
@@ -100,10 +100,10 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_vel(
 	return ret;
 }
 
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_dvort(
-	const cvtx_StraightVortFil **array_start,
+CVTX_EXPORT bsv_V3f cvtx_F3D_M2S_dvort(
+	const cvtx_F3D **array_start,
 	const int num_particles,
-	const cvtx_Particle *induced_particle) 
+	const cvtx_P3D *induced_particle) 
 {
 	assert(num_particles >= 0);
 	assert(array_start != NULL);
@@ -111,7 +111,7 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_dvort(
 	double rx = 0, ry = 0, rz = 0;
 	long i;
 	for (i = 0; i < num_particles; ++i) {
-		dvort = cvtx_StraightVortFil_ind_dvort(array_start[i],
+		dvort = cvtx_F3D_S2S_dvort(array_start[i],
 			induced_particle);
 		rx += dvort.x[0];
 		ry += dvort.x[1];
@@ -122,7 +122,7 @@ CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_dvort(
 }
 
 void cpu_brute_force_StraightVortFilArr_Arr_ind_vel(
-	const cvtx_StraightVortFil **array_start,
+	const cvtx_F3D **array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -131,30 +131,30 @@ void cpu_brute_force_StraightVortFilArr_Arr_ind_vel(
 	long i;
 #pragma omp parallel for schedule(static)
 	for (i = 0; i < num_mes; ++i) {
-		result_array[i] = cvtx_StraightVortFilArr_ind_vel(
+		result_array[i] = cvtx_F3D_M2S_vel(
 			array_start, num_particles, mes_start[i]);
 	}
 	return;
 }
 
 void cpu_brute_force_StraightVortFilArr_Arr_ind_dvort(
-	const cvtx_StraightVortFil **array_start,
+	const cvtx_F3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array) 
 {
 	long i;
 #pragma omp parallel for schedule(static)
 	for (i = 0; i < num_induced; ++i) {
-		result_array[i] = cvtx_StraightVortFilArr_ind_dvort(
+		result_array[i] = cvtx_F3D_M2S_dvort(
 			array_start, num_particles, induced_start[i]);
 	}
 	return;
 }
 
-CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel(
-	const cvtx_StraightVortFil **array_start,
+CVTX_EXPORT void cvtx_F3D_M2M_vel(
+	const cvtx_F3D **array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -175,10 +175,10 @@ CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel(
 	return;
 }
 
-CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
-	const cvtx_StraightVortFil **array_start,
+CVTX_EXPORT void cvtx_F3D_M2M_dvort(
+	const cvtx_F3D **array_start,
 	const int num_fil,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array)
 {
@@ -197,8 +197,8 @@ CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
 	return;
 }
 
-CVTX_EXPORT void cvtx_StraightVortFilArr_inf_mtrx(
-	const cvtx_StraightVortFil **array_start,
+CVTX_EXPORT void cvtx_F3D_inf_mtrx(
+	const cvtx_F3D **array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const bsv_V3f *dir_start,
@@ -216,7 +216,7 @@ CVTX_EXPORT void cvtx_StraightVortFilArr_inf_mtrx(
 		int j;
 		bsv_V3f vel;
 		for (j = 0; j < num_filaments; ++j) {
-			vel = cvtx_StraightVortFil_ind_vel(array_start[j], mes_start[i]);
+			vel = cvtx_F3D_S2S_vel(array_start[j], mes_start[i]);
 			result_array[i * num_filaments + j] = bsv_V3f_dot(vel, dir_start[i]);
 		}
 	}

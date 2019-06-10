@@ -35,7 +35,7 @@ SOFTWARE.
 #include "ocl_particle.h"
 
 int opencl_brute_force_ParticleArr_Arr_ind_vel(
-	const cvtx_Particle **array_start,
+	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -63,9 +63,9 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 }
 
 int opencl_brute_force_ParticleArr_Arr_ind_dvort(
-	const cvtx_Particle **array_start,
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
@@ -91,9 +91,9 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 }
 
 int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
-	const cvtx_Particle **array_start,
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
@@ -120,7 +120,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 }
 
 int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
-	const cvtx_Particle **array_start,
+	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -293,9 +293,9 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 }
 
 int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
-	const cvtx_Particle **array_start,
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
@@ -478,9 +478,9 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 }
 
 int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort_impl(
-	const cvtx_Particle **array_start,
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,

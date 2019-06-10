@@ -35,16 +35,18 @@ SOFTWARE.
 
 #include <bsv/bsv.h>
 
+/* A Vortex particle in 3D */
 typedef struct {
 	bsv_V3f coord;
 	bsv_V3f vorticity;
 	float volume;
-} cvtx_Particle;
+} cvtx_P3D;
 
+/* A Vortex singular vortex filament in 3D */
 typedef struct {
 	bsv_V3f start, end;		/* Beginning & end coordinates of line segment */
 	float strength;			/* Vort per unit length */
-} cvtx_StraightVortFil;
+} cvtx_F3D;
 
 typedef struct {
 	float(*g_fn)(float rho);
@@ -64,50 +66,50 @@ CVTX_EXPORT int cvtx_accelerator_enabled(int accelerator_id);
 CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id);
 CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id);
 
-/* cvtx_Particle functions */
-CVTX_EXPORT bsv_V3f cvtx_Particle_ind_vel(
-	const cvtx_Particle *self,
+/* cvtx_P3D functions */
+CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vel(
+	const cvtx_P3D *self,
 	const bsv_V3f mes_point,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
-CVTX_EXPORT bsv_V3f cvtx_Particle_ind_dvort(
-	const cvtx_Particle *self,
-	const cvtx_Particle *induced_particle,
+CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_dvort(
+	const cvtx_P3D *self,
+	const cvtx_P3D *induced_particle,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
-CVTX_EXPORT bsv_V3f cvtx_Particle_visc_ind_dvort(
-	const cvtx_Particle *self,
-	const cvtx_Particle *induced_particle,
+CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_visc_dvort(
+	const cvtx_P3D *self,
+	const cvtx_P3D *induced_particle,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
 	float kinematic_visc);
 
-CVTX_EXPORT bsv_V3f cvtx_ParticleArr_ind_vel(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(
+	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f mes_point,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
-CVTX_EXPORT bsv_V3f cvtx_ParticleArr_ind_dvort(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_dvort(
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle *induced_particle,
+	const cvtx_P3D *induced_particle,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
-CVTX_EXPORT bsv_V3f cvtx_ParticleArr_visc_ind_dvort(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle *induced_particle,
+	const cvtx_P3D *induced_particle,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
 	float kinematic_visc);
 
-CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT void cvtx_P3D_M2M_vel(
+	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -115,19 +117,19 @@ CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_vel(
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
-CVTX_EXPORT void cvtx_ParticleArr_Arr_ind_dvort(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT void cvtx_P3D_M2M_dvort(
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
-CVTX_EXPORT void cvtx_ParticleArr_Arr_visc_ind_dvort(
-	const cvtx_Particle **array_start,
+CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
+	const cvtx_P3D **array_start,
 	const int num_particles,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc *kernel,
@@ -142,40 +144,40 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void);
 
 /* cvtx_straight vortex filament functions */
 
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_vel(
-	const cvtx_StraightVortFil *self,
+CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_vel(
+	const cvtx_F3D *self,
 	const bsv_V3f mes_point);
 
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort(
-	const cvtx_StraightVortFil *self,
-	const cvtx_Particle *induced_particle);
+CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_dvort(
+	const cvtx_F3D *self,
+	const cvtx_P3D *induced_particle);
 
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_vel(
-	const cvtx_StraightVortFil **array_start,
+CVTX_EXPORT bsv_V3f cvtx_F3D_M2S_vel(
+	const cvtx_F3D **array_start,
 	const int num_filaments,
 	const bsv_V3f mes_point);
 
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_dvort(
-	const cvtx_StraightVortFil **array_start,
+CVTX_EXPORT bsv_V3f cvtx_F3D_M2S_dvort(
+	const cvtx_F3D **array_start,
 	const int num_filaments,
-	const cvtx_Particle *induced_particle);
+	const cvtx_P3D *induced_particle);
 
-CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel(
-	const cvtx_StraightVortFil **array_start,
+CVTX_EXPORT void cvtx_F3D_M2M_vel(
+	const cvtx_F3D **array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const int num_mes,
 	bsv_V3f *result_array);
 
-CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
-	const cvtx_StraightVortFil **array_start,
+CVTX_EXPORT void cvtx_F3D_M2M_dvort(
+	const cvtx_F3D **array_start,
 	const int num_filaments,
-	const cvtx_Particle **induced_start,
+	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array);
 
-CVTX_EXPORT void cvtx_StraightVortFilArr_inf_mtrx(
-	const cvtx_StraightVortFil **array_start,
+CVTX_EXPORT void cvtx_F3D_inf_mtrx(
+	const cvtx_F3D **array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const bsv_V3f *dir_start,
