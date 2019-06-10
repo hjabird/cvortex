@@ -31,7 +31,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <CL/cl.h>
 #include "opencl_acc.h"
-#include "ocl_filament.h"
+#include "ocl_F3D.h"
 
 int opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
 	const cvtx_F3D **array_start,

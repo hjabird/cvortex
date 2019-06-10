@@ -32,7 +32,7 @@ SOFTWARE.
 #include <string.h>
 #include <CL/cl.h>
 #include "opencl_acc.h"
-#include "ocl_particle.h"
+#include "ocl_P3D.h"
 
 int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_P3D **array_start,

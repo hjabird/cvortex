@@ -26,7 +26,7 @@ SOFTWARE.
 ============================================================================*/
 #include <assert.h>
 #include <math.h>
-#include "ocl_filament.h"
+#include "ocl_F3D.h"
 
 static const float pi_f = (float) 3.14159265359;
 
