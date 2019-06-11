@@ -3,12 +3,14 @@
 cvortex is a C library for accelerating vortex particle methods in unsteady aerodynamics with an 
 emphisis on ease of use. Currently, computations are best kept to the region of 100,000 particles.
 
-The library is accelerated using OpenMP and OpenCL 1.2, so AMD,
-Intel and Nvidia gpus are capable of accelerating computation.
+The library is accelerated using OpenMP and OpenCL 1.2.
+It can be run on AMD, Intel and Nvidia gpus.
 
-Want to avoid the pain of building and using C? Try:
-- The prebuilt binaries available in the release section.
-- The Julia language wrapper - [cvortex.jl](https://github.com/hjabird/cvortex.jl)
+There are several ways to use the library:
+- The Julia language wrapper is the easiest - [CVortex.jl](https://github.com/hjabird/CVortex.jl),
+although it doesn't yet expose the whole API and comes with a small overhead.
+- Prebuilt binaries are available in the release section. Currently these 
+are built for x86-64 compatable CPUs on Windows (MSVC) and Linux (Ubuntu GCC7).
 - Consider wrapping cvortex for another language - its not a 
 complicated interface and precompiled binaries are available.
 
@@ -73,90 +75,70 @@ cvtx_finalise();
 ```
 You'll notice that all calls to cvortex start with `cvtx`.
 
-### Vortex particles
+### The Basics
 
-Vortex particles are defined as
-```
-typedef struct {
-	bsv_V3f coord;
-	bsv_V3f vorticity;
-	float volume;
-} cvtx_Particle;
-```
-where `volume` only matters if you're using particle strength exchange to model viscocity.
-This feature might be removed in a later release.
+The library supports 3 boundary elements:
+ - The 3D vortex particle `cvtx_P3D`
+ - The 3D straight, singular vortex filament `cvtx_F3D`
+ - The 2D vortex particle `cvtx_P2D`
+ 
+The vortex particle can be regularised using `cvtx_VortFunc`.
 
-You'll be interested in the following functions:
-```
-/* Single particle - single induced */
-cvtx_Particle_ind_vel
-cvtx_Particle_ind_dvort
-cvtx_Particle_visc_ind_dvort
-/* Multiple particle - single induced */
-cvtx_ParticleArr_ind_vel
-cvtx_ParticleArr_ind_dvort
-cvtx_ParticleArr_visc_ind_dvort
-/* Multiple particle - multiple induced */
-cvtx_ParticleArr_Arr_ind_vel
-cvtx_ParticleArr_Arr_ind_dvort
-cvtx_ParticleArr_Arr_visc_ind_dvort
-```
-Multiple to single is accelerated with OpenMP.
-Multiple-Multiple is accelerated using OpenCL.
+When using the library, you'll want to use different functions according to the number of interactions:
+ - Single to single, `S2S`.
+ - Many to single, `M2S`.
+ - Many to many, `M2M`.
+ 
+Additionally, different types of interaction can occur:
+ - Most often, the induced velocity at point, `vel`.
+ - With 3D vortex particles, the vortex stretching term leading to a change in vorticity, `dvort`.
+ - And viscocity (for some regularisations). `visc_dvort`.
+ 
+The library includes apparatus to model the effect of vortex filaments on vortex particles in 3D,
+but since the vortex filaments are singular, this is restricted to invicid interaction.
 
-You'll need to use regularisation functions as inputs to the above.
-```
-typedef struct {
-	float(*g_fn)(float rho);
-	float(*zeta_fn)(float rho);
-	void(*combined_fn)(float rho, float* g, float* zeta);
-	float(*eta_fn)(float rho);
-	char cl_kernel_name_ext[32];
-} cvtx_VortFunc;
+Consequently, a function name is generally of the form `cvtx_OOO_III_FN` where
+`OOO` is the object type (`P3D`, `F3D` or `P2D`), `III` is according to the number
+of interactions (ie `S2S`, `M2S` or `M2M`) and `FN` is what is being computed (`vel`, `dvort` 
+or `visc_dvort`).
 
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void);
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void);
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void);
-```
-You can create your own regularisation function, but it won't be GPU accelerated
-(although it will be accelerated using OpenMP.
+For example, to find the velocity imposed on a set of points by a set of 3D vortex particles, 
+one would use `cvtx_P3D_M2M_vel`.
 
-You'll have to do your own ODE solving - this isn't included 
-in the library. Whilst forward-Euler schemes are easy, its generally believed
-that high order schemes are needed for better accuracy.
+### Regularisation
 
-### Vortex Filaments
+Regularised vortex particles are far more useful than singular ones. Consequently, 
+the library included regularisation functions, where functions are packaged together
+into a struct called of type `cvtx_VortFunc`. The library includes functions to generate
+several popular regularisations in both 2D and 3D:
+ - No regularisation - singular: `cvtx_VortFunc_singular`.
+ - Winckelmans' high order algebraic regularisation `cvtx_VortFunc_winckelmans`.
+ - Gaussian regularisation `cvtx_VortFunc_gaussian`.
+ - Planetary regularisation `cvtx_VortFunc_planetary`.
+The structures do not contain the regularisation distance - this is fed into 
+functions as an argument which is ignored for singular regularisation. Not all
+regularisations support viscous interaction via `visc_dvort`.
 
-All vortex filaments are straight and singular here. They
-are represented with a start and an end.
-```
-typedef struct {
-	bsv_V3f start, end;		/* Beginning & end coordinates of line segment */
-	float strength;			/* Vort per unit length */
-} cvtx_StraightVortFil;
-```
+### Function arguments
 
-The API is similar to that of the vortex particle, but all interaction is viscous
-and, consequently, viscosity cannot be modelled.
-```
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_vel;
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFil_ind_dvort;
+Generally, the best place to see the available functions is `libcvtx.h` - the 
+public interface header. Displayed here are the function signitures available.
 
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_vel;
-CVTX_EXPORT bsv_V3f cvtx_StraightVortFilArr_ind_dvort;
-
-CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_vel;
-CVTX_EXPORT void cvtx_StraightVortFilArr_Arr_ind_dvort(
+Of note is the method by which arrays of filaments or vortex particles are
+passed into the functions. Lets look at one function in particular:
 ```
-
-Additionally, there is a function to create an influence matrix for use
-by vortex lattice solvers, etc. This is called as
+void cvtx_F3D_M2M_dvort(
+	const cvtx_F3D **array_start,
+	const int num_filaments,
+	const cvtx_P3D **induced_start,
+	const int num_induced,
+	bsv_V3f *result_array);
 ```
-CVTX_EXPORT void cvtx_StraightVortFilArr_inf_mtrx;
-```
-Note that the matrix quickly gets big - don't include too many vortex
-filaments or you'll have issues.
+This function computes the vortex stretching term induced on a set of 3D vortex
+particles by a set of vortex filaments. Both the filaments and vortex
+particles are passed into the function by something of the form
+`**objects`. This is an array of points to vortex particles or vortex filments.
+ie. `*(objects[0])` should give the object.
 
 ### Accelerators
 You'll want a way to control the accelerators on your platform. Right now, 
@@ -200,7 +182,7 @@ To obtain best performance, try and use as few calls as possible. If there aren'
 input measurement points or particles, the CPU implementation is used. Also, note that
 for implementation reasons, particles are internally grouped into sets of 256. Hence
 Modelling 512 and 700 particles will consume the same abount of time for a given 
-number of measurement points.
+number of measurement points. 
 
 ## Alternative libaries
 A lack of easy to use, cross platform and non-CUDA alternatives is why this library was written. 
