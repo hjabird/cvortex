@@ -1,10 +1,10 @@
 #include "libcvtx.h"
 /*============================================================================
-ocl_P3D.h
+ocl_P2D.h
 
-Handles the opencl accelerated 3D vortex particle methods.
+Handles the opencl accelerated 2D vortex particle methods.
 
-Copyright(c) 2018-2019 HJA Bird
+Copyright(c) 2019 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -28,67 +28,23 @@ SOFTWARE.
 #include <bsv/bsv.h>
 #include "opencl_acc.h"
 
-int opencl_brute_force_ParticleArr_Arr_ind_vel(
-	const cvtx_P3D **array_start,
+int opencl_brute_force_P2D_M2M_vel(
+	const cvtx_P2D **array_start,
 	const int num_particles,
-	const bsv_V3f *mes_start,
+	const bsv_V2f *mes_start,
 	const int num_mes,
-	bsv_V3f *result_array,
+	bsv_V2f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
-int opencl_brute_force_ParticleArr_Arr_ind_dvort(
-	const cvtx_P3D **array_start,
+int opencl_brute_force_P2D_M2M_vel_impl(
+	const cvtx_P2D **array_start,
 	const int num_particles,
-	const cvtx_P3D **induced_start,
-	const int num_induced,
-	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
-	float regularisation_radius);
-
-int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
-	const cvtx_P3D **array_start,
-	const int num_particles,
-	const cvtx_P3D **induced_start,
-	const int num_induced,
-	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
-	float regularisation_radius,
-	float kinematic_visc);
-
-int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
-	const cvtx_P3D **array_start,
-	const int num_particles,
-	const bsv_V3f *mes_start,
+	const bsv_V2f *mes_start,
 	const int num_mes,
-	bsv_V3f *result_array,
+	bsv_V2f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
-	cl_program program,
-	cl_command_queue queue,
-	cl_context context);
-
-int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
-	const cvtx_P3D **array_start,
-	const int num_particles,
-	const cvtx_P3D **induced_start,
-	const int num_induced,
-	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
-	float regularisation_radius,
-	cl_program program,
-	cl_command_queue queue,
-	cl_context context);
-
-int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort_impl(
-	const cvtx_P3D **array_start,
-	const int num_particles,
-	const cvtx_P3D **induced_start,
-	const int num_induced,
-	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
-	float regularisation_radius,
-	float kinematic_visc,
 	cl_program program,
 	cl_command_queue queue,
 	cl_context context);

@@ -131,7 +131,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 	cl_command_queue queue,
 	cl_context context)
 {
-	char kernel_name[128] = "cvtx_nb_Particle_ind_vel_";
+	char kernel_name[128] = "cvtx_nb_P3D_vel_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
 	float constant_multiplyer = 1.f / (4.f * acosf(-1));
 	size_t global_work_size[2], workgroup_size[2];
@@ -304,7 +304,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 	cl_command_queue queue,
 	cl_context context)
 {
-	char kernel_name[128] = "cvtx_nb_Particle_ind_dvort_";
+	char kernel_name[128] = "cvtx_nb_P3D_dvort_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
 	float constant_multiplyer = 1.f / (4.f * acosf(-1) * powf(regularisation_radius, 3));
 	size_t global_work_size[2], workgroup_size[2];
@@ -490,7 +490,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort_impl(
 	cl_command_queue queue,
 	cl_context context)
 {
-	char kernel_name[128] = "cvtx_nb_Particle_visc_ind_dvort_";
+	char kernel_name[128] = "cvtx_nb_P3D_visc_dvort_";
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
 	size_t global_work_size[2], workgroup_size[2];
 	cl_float3 *part1_pos_buff_data, *part1_vort_buff_data, *part2_pos_buff_data, *part2_vort_buff_data, *res_buff_data;

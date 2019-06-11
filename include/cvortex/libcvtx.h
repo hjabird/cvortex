@@ -48,15 +48,38 @@ typedef struct {
 	float strength;			/* Vort per unit length */
 } cvtx_F3D;
 
+/* A Vortex particle/filament in 2D */
 typedef struct {
-	float(*g_fn)(float rho);
-	float(*zeta_fn)(float rho);
-	void(*combined_fn)(float rho, float* g, float* zeta);
-	float(*eta_fn)(float rho);
+	bsv_V2f coord;
+	float vorticity;
+	float area;
+} cvtx_P2D;
+
+/* Vortex particle regularisation functions
+	Naming is following that of Winckelmans
+	- g(rho): normally used in induced vel
+		(NULL for unsupported)
+	- zeta(rho): used with g(rho) in induced dvort
+		(NULL for unsupported)
+	- combined(rho): combines g and zeta for perf.
+		(NULL for unsupported)
+	- eta(rho): used in particle strength exchange
+		(NULL for unsupported)
+	- cl_kernel_name_ext: identifies opencl kernel variant to run. 
+		(fall back to OpenMP)
+	- 2D and 3D variants
+*/
+typedef struct {
+	float(*g_3D)(float rho);
+	float(*g_2D)(float rho);
+	float(*zeta_3D)(float rho);
+	void(*combined_3D)(float rho, float* g, float* zeta);
+	float(*eta_3D)(float rho);
+	float(*eta_2D)(float rho);
 	char cl_kernel_name_ext[32];
 } cvtx_VortFunc;
 
-/* cvtx_libary controls */
+/* cvtx libary accelerator controls */
 CVTX_EXPORT void cvtx_initialise();
 CVTX_EXPORT void cvtx_finalise();
 CVTX_EXPORT int cvtx_num_accelerators();
@@ -66,7 +89,7 @@ CVTX_EXPORT int cvtx_accelerator_enabled(int accelerator_id);
 CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id);
 CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id);
 
-/* cvtx_P3D functions */
+/* cvtx_P3D 3D vortex particle functions */
 CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vel(
 	const cvtx_P3D *self,
 	const bsv_V3f mes_point,
@@ -142,8 +165,7 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
 CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void);
 CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void);
 
-/* cvtx_straight vortex filament functions */
-
+/* cvtx_F3D straight vortex filament functions */
 CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_vel(
 	const cvtx_F3D *self,
 	const bsv_V3f mes_point);
@@ -183,5 +205,28 @@ CVTX_EXPORT void cvtx_F3D_inf_mtrx(
 	const bsv_V3f *dir_start,
 	const int num_mes,
 	float *result_matrix);
+
+/* cvtx_P2D vortex particle 2D functions */
+CVTX_EXPORT bsv_V2f cvtx_P2D_S2S_vel(
+	const cvtx_P2D *self,
+	const bsv_V2f mes_point,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius);
+
+CVTX_EXPORT bsv_V2f cvtx_P2D_M2S_vel(
+	const cvtx_P2D **array_start,
+	const int num_particles,
+	const bsv_V2f mes_point,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius);
+
+CVTX_EXPORT void cvtx_P2D_M2M_vel(
+	const cvtx_P2D **array_start,
+	const int num_particles,
+	const bsv_V2f *mes_start,
+	const int num_mes,
+	bsv_V2f *result_array,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius);
 
 #endif /* CVTX_LIBCVTX_H */

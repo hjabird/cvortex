@@ -42,73 +42,99 @@ static float warn_bad_eta_fn(float rho){
 	return 0;
 }
 
-static float g_singular(float rho) {
+static float g_singular_3D(float rho) {
 	return 1;
 }
 
-static float zeta_singular(float rho) {
+static float zeta_singular_3D(float rho) {
 	return 0;
 }
 
-static void combined_singular(float rho, float* g, float* zeta) {
+static void combined_singular_3D(float rho, float* g, float* zeta) {
 	*g = 1;
 	*zeta = 0;
 	return;
 }
 
-static float g_winckel(float rho) {
+static float g_singular_2D(float rho) {
+	return 1;
+}
+
+static float g_winckel_3D(float rho) {
 	float a, b, c, d;
 	assert(rho >= 0 && "Rho should not be -ve");
-	a = rho * rho + (float)2.5;
+	a = rho * rho + 2.5f;
 	b = a * rho * rho * rho;
 	c = rho * rho + 1;
-	d = (b / powf(c, 2.5));
+	d = (b / powf(c, 2.5f));
 	return d;
 }
 
-static float zeta_winckel(float rho) {
+static float zeta_winckel_3D(float rho) {
 	float a, b, c;
 	assert(rho >= 0 && "Rho should not be -ve");
 	a = rho * rho + 1;
-	b = powf(a, 3.5);
+	b = powf(a, 3.5f);
 	c = (float)7.5 / b;
 	return c;
 }
 
-static float eta_winckel(float rho) {
+static float eta_winckel_3D(float rho) {
 	float a, b, c;
 	assert(rho >= 0 && "Rho should not be -ve");
-	a = (float) 52.5;
+	a = 52.5f;
 	b = rho * rho + 1;
-	c = powf(b, -4.5);
+	c = powf(b, -4.5f);
 	return a * c;
 }
 
-static void combined_winckel(float rho, float* g, float* zeta) {
+static void combined_winckel_3D(float rho, float* g, float* zeta) {
 	assert(rho >= 0 && "Rho should not be -ve");
-	*g = g_winckel(rho);
-	*zeta = zeta_winckel(rho);
+	*g = g_winckel_3D(rho);
+	*zeta = zeta_winckel_3D(rho);
 	return;
 }
 
-static float g_planetary(float rho) {
+static float g_winckel_2D(float rho) {
+	float num, denom;
+	num = rho * rho * (rho * rho + 2.f);
+	denom = rho * rho + 1.f;
+	denom = denom * denom;
+	return num / denom;
+}
+
+static float eta_winckel_2D(float rho) {
+	assert(rho >= 0 && "Rho should not be -ve");
+	float a, b, c;
+	a = rho * rho + 1.f;
+	b = powf(a, 4);
+	c = 24.f * expf(4.f / powf(a, 3));
+	return c / b;
+}
+
+static float g_planetary_3D(float rho) {
 	assert(rho >= 0 && "Rho should not be -ve");
 	return rho < (float)1. ? rho * rho * rho : (float)1.;
 }
 
-static float zeta_planetary(float rho){
+static float zeta_planetary_3D(float rho){
 	assert(rho >= 0 && "Rho should not be -ve");
-	return rho < (float)1. ? (float)3 : (float)0;
+	return rho < (float)1. ? (float)2 : (float)0;
 }
 
-static void combined_planetary(float rho, float* g, float* zeta) {
+static void combined_planetary_3D(float rho, float* g, float* zeta) {
 	assert(rho >= 0 && "Rho should not be -ve");
-	*g = g_planetary(rho);
-	*zeta = zeta_planetary(rho);
+	*g = g_planetary_3D(rho);
+	*zeta = zeta_planetary_3D(rho);
 	return;
 }
 
-static float g_gaussian(float rho){
+static float g_planetary_2D(float rho) {
+	assert(rho >= 0 && "Rho should not be -ve");
+	return rho < 1.f ? rho * rho : 1.f;
+}
+
+static float g_gaussian_3D(float rho){
 	/* = 1 to 8sf for rho ~>6. Taylor expansion otherwise */
 	assert(rho >= 0 && "Rho should not be -ve");
 	if(rho > (float)6.){
@@ -125,26 +151,38 @@ static float g_gaussian(float rho){
 	}
 }
 
-static float zeta_gaussian(float rho){
+static float zeta_gaussian_3D(float rho){
 	assert(rho >= 0 && "Rho should not be -ve");
 	const float pi = 3.14159265359f;
 	return sqrtf(2 / pi) * expf(-rho * rho / 2);
 }
 
-static void combined_gaussian(float rho, float* g, float* zeta) {
+static void combined_gaussian_3D(float rho, float* g, float* zeta) {
 	assert(rho >= 0 && "Rho should not be -ve");
-	*g = g_gaussian(rho);
-	*zeta = zeta_gaussian(rho);
+	*g = g_gaussian_3D(rho);
+	*zeta = zeta_gaussian_3D(rho);
 	return;
+}
+
+static float g_gaussian_2D(float rho) {
+	assert(rho >= 0 && "Rho should not be -ve");
+	return 1 - expf(-rho * rho / 2);
+}
+
+static float zeta_gaussian_2D(float rho) {
+	assert(rho >= 0 && "Rho should not be -ve");
+	return expf(-rho * rho / 2.f);
 }
 
 CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void)
 {
 	cvtx_VortFunc ret;
-	ret.g_fn = &g_singular;
-	ret.zeta_fn = &zeta_singular;
-	ret.eta_fn = &warn_bad_eta_fn;	/* Not possible for singular vortex */
-	ret.combined_fn = &combined_singular;
+	ret.g_3D = &g_singular_3D;
+	ret.g_2D = &g_singular_2D;
+	ret.zeta_3D = &zeta_singular_3D;
+	ret.eta_3D = &warn_bad_eta_fn;	/* Not possible for singular vortex */
+	ret.eta_2D = &warn_bad_eta_fn;
+	ret.combined_3D = &combined_singular_3D;
 	strcpy(ret.cl_kernel_name_ext, "singular");
 	return ret;
 }
@@ -152,10 +190,12 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void)
 CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void)
 {
 	cvtx_VortFunc ret;
-	ret.g_fn = &g_winckel;
-	ret.zeta_fn = &zeta_winckel;
-	ret.eta_fn = eta_winckel;
-	ret.combined_fn = &combined_winckel;
+	ret.g_3D = &g_winckel_3D;
+	ret.g_2D = &g_winckel_2D;
+	ret.zeta_3D = &zeta_winckel_3D;
+	ret.eta_3D = &eta_winckel_3D;
+	ret.eta_2D = &eta_winckel_2D;
+	ret.combined_3D = &combined_winckel_3D;
 	strcpy(ret.cl_kernel_name_ext, "winckelmans");
 	return ret;
 }
@@ -163,21 +203,23 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void)
 CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void)
 {
 	cvtx_VortFunc ret;
-	ret.g_fn = &g_planetary;
-	ret.zeta_fn = &zeta_planetary;
-	ret.eta_fn = &warn_bad_eta_fn; /* Not possible for planetary vortex */
-	ret.combined_fn = &combined_winckel;
+	ret.g_3D = &g_planetary_3D;
+	ret.zeta_3D = &zeta_planetary_3D;
+	ret.eta_3D = &warn_bad_eta_fn; /* Not possible for planetary vortex */
+	ret.combined_3D = &combined_winckel_3D;
 	strcpy(ret.cl_kernel_name_ext, "planetary");
 	return ret;
 }
 
 CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void){
 	cvtx_VortFunc ret;
-	ret.g_fn = &g_gaussian;
-	ret.zeta_fn = &zeta_gaussian;
-	ret.eta_fn = &zeta_gaussian; 
+	ret.g_3D = &g_gaussian_3D;
+	ret.g_2D = &g_gaussian_2D;
+	ret.zeta_3D = &zeta_gaussian_3D;
+	ret.eta_3D = &zeta_gaussian_3D; 
+	ret.eta_2D = &zeta_gaussian_2D;
 	/* See Winckelmans et al., C. R. Physique 6 (2005), around eq (28) */
-	ret.combined_fn = &combined_winckel;
+	ret.combined_3D = &combined_winckel_3D;
 	strcpy(ret.cl_kernel_name_ext, "gaussian");
 	return ret;
 }

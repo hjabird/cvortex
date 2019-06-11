@@ -28,10 +28,10 @@ SOFTWARE.
 /* CVTX_CL_LOG2_WORKGROUP_SIZE controlled with build options from host */
 
 /*############################################################################
-Definitions for the repeated body of kernels\
+Definitions for the repeated body of kernels
 ############################################################################*/
 
-"#define CVTX_P_INDVEL_START 										\\\n"
+"#define CVTX_P3D_VEL_START 										\\\n"
 "(																	\\\n"
 "	__global float3* particle_locs,									\\\n"
 "	__global float3* particle_vorts,								\\\n"
@@ -51,9 +51,9 @@ Definitions for the repeated body of kernels\
 "	radd = length(rad);												\\\n"
 "	rho = radd * recip_reg_rad;    									\n"
 
-"		/* Fill in g calc here */\n"
+/* Fill in g calc here */
 
-"#define CVTX_P_INDVEL_END 											\\\n"
+"#define CVTX_P3D_VEL_END 											\\\n"
 "	cor = - g;	/*1/4pi term is done by host. */					\\\n"
 "	den = pown(radd, 3);											\\\n"
 "	num = cross(rad, particle_vorts[pidx]);							\\\n"
@@ -68,7 +68,7 @@ Definitions for the repeated body of kernels\
 "	return;															\\\n"
 "}																	\n"
 
-"#define CVTX_P_IND_DVORT_START										\\\n"
+"#define CVTX_P3D_DVORT_START										\\\n"
 "(																	\\\n"
 "	__global float3* particle_locs,									\\\n"
 "	__global float3* particle_vorts,								\\\n"
@@ -89,9 +89,9 @@ Definitions for the repeated body of kernels\
 "	radd = length(rad);												\\\n"
 "	rho = radd * recip_reg_rad;  									\n"
 
-"		/* FILL in f & g calc here! */\n"
+/* FILL in f & g calc here! */
 
-"#define CVTX_P_IND_DVORT_END										\\\n"
+"#define CVTX_P3D_DVORT_END											\\\n"
 "	cross_om = cross(induced_vorts[indidx], 						\\\n"
 "		particle_vorts[sidx]);										\\\n"
 "	t21n = cross_om * g;											\\\n"
@@ -115,7 +115,7 @@ Definitions for the repeated body of kernels\
 "	return 4 * acos((float)-1) * radius * radius * radius / 3.f;    \n"
 "}																	\n"
 
-"#define CVTX_P_VISC_IND_DVORT_START								\\\n"
+"#define CVTX_P3D_VISC_DVORT_START								\\\n"
 "(																	\\\n"
 "	__global float3* particle_locs,									\\\n"
 "	__global float3* particle_vorts,								\\\n"
@@ -149,9 +149,9 @@ Definitions for the repeated body of kernels\
 "		t212 = induced_vorts[indidx] * -1 * particle_vols[sidx];	\\\n"
 "		t21 = t211 + t212;											\n"
 
-"		/* ETA FUNCTION function!  here */							"
+/* ETA FUNCTION function!  here */
 
-"#define CVTX_P_VISC_IND_DVORT_END									\\\n"
+"#define CVTX_P3D_VISC_DVORT_END									\\\n"
 "		t2 = t21 * eta;												\\\n"
 "		ret = t2 * t1;												\\\n"
 "	}																\\\n"
@@ -181,33 +181,87 @@ Definitions for the repeated body of kernels\
 "	return;																	\n"
 "}																			\n"
 
+/* 2D Vortex particle induced velocity */
 
+"#define CVTX_P2D_VEL_START 										\\\n"
+"(																	\\\n"
+"	__global float2* particle_locs,									\\\n"
+"	__global float* particle_vorts,									\\\n"
+"	float    recip_reg_rad,								            \\\n"
+"	__global float2* mes_locs,										\\\n"
+"	__global float2* results)										\\\n"
+"{																	\\\n"
+"	float2 rad, ret;												\\\n"
+"	float cor, den, rho, g, radd;									\\\n"
+"	__local float2 reduction_workspace[CVTX_CL_WORKGROUP_SIZE];		\\\n"
+"	/* Particle idx, mes_pnt idx and local work item idx */			\\\n"
+"	uint pidx, midx, widx, loop_idx;								\\\n"
+"	midx = get_global_id(1);										\\\n"
+"	widx = get_local_id(0);											\\\n"
+"	pidx = widx;													\\\n"
+"	rad = mes_locs[midx] - particle_locs[pidx];						\\\n"
+"	radd = length(rad);												\\\n"
+"	rho = radd * recip_reg_rad;    									\n"
 
-/* ###########################################################	*/
-/* Velocity calculation kernels here:							*/
-/* name cvtx_nb_Particle_ind_vel_XXXXX							*/
-/* ###########################################################	*/
+/* Fill in g calc here */
 
-"__kernel void cvtx_nb_Particle_ind_vel_singular\n"
-"	CVTX_P_INDVEL_START														\n"
+"#define CVTX_P2D_VEL_END 											\\\n"
+"	cor = - g;	/*1/2pi term is done by host. */					\\\n"
+"	den = pown(radd, 2);											\\\n"
+"	ret.x = rad.y * (cor * particle_vorts[pidx] / den);				\\\n"
+"	ret.y = -rad.x * (cor * particle_vorts[pidx] / den);			\\\n"
+"	ret = isnormal(ret) ? ret : (float2)(0.f, 0.f);					\\\n"
+"	reduction_workspace[widx] = ret;								\\\n"
+"	local_workspace_float2_reduce(reduction_workspace);				\\\n"
+"	barrier(CLK_LOCAL_MEM_FENCE);									\\\n"
+"	if( widx == 0 ){												\\\n"
+"		results[midx] = reduction_workspace[0] + results[midx];		\\\n"
+"	}																\\\n"
+"	return;															\\\n"
+"}																	\n"	
+
+"inline void local_workspace_float2_reduce(									\n"
+"	__local float2* reduction_workspace)									\n"
+"{																			\n"
+"	uint loop_idx = 2;														\n"
+"	uint widx = get_local_id(0);											\n"
+"	for(; loop_idx <= CVTX_CL_WORKGROUP_SIZE; 								\n"
+"		loop_idx *= 2)														\n"
+"	{																		\n"
+"		barrier(CLK_LOCAL_MEM_FENCE);										\n"
+"		if( widx < CVTX_CL_WORKGROUP_SIZE/loop_idx ){						\n"
+"			reduction_workspace[widx] = reduction_workspace[widx] 			\n"
+"				+  reduction_workspace[widx + CVTX_CL_WORKGROUP_SIZE/loop_idx];\n"
+"		}																	\n"
+"	}																		\n"
+"	return;																	\n"
+"}																			\n"
+
+/* 	###########################################################
+	3D Velocity calculation kernels here:
+	name cvtx_nb_P3D_vel_XXXXX
+	###########################################################	*/
+
+"__kernel void cvtx_nb_P3D_vel_singular\n"
+"	CVTX_P3D_VEL_START														\n"
 "	g = 1.f;																\n"
-"	CVTX_P_INDVEL_END														\n"
+"	CVTX_P3D_VEL_END														\n"
 
 
-"__kernel void cvtx_nb_Particle_ind_vel_winckelmans							\n"
-"	CVTX_P_INDVEL_START														\n"
+"__kernel void cvtx_nb_P3D_vel_winckelmans									\n"
+"	CVTX_P3D_VEL_START														\n"
 "	g = (rho * rho + 2.5f) * rho * rho * rho * rsqrt(pown(rho * rho + 1, 5));\n"
-"	CVTX_P_INDVEL_END														\n"
+"	CVTX_P3D_VEL_END														\n"
 
 
-"__kernel void cvtx_nb_Particle_ind_vel_planetary							\n"
-"	CVTX_P_INDVEL_START														\n"
+"__kernel void cvtx_nb_P3D_vel_planetary									\n"
+"	CVTX_P3D_VEL_START														\n"
 "	g = rho < 1.f ? rho * rho * rho : 1.f;									\n"
-"	CVTX_P_INDVEL_END														\n"
+"	CVTX_P3D_VEL_END														\n"
 
 
-"__kernel void cvtx_nb_Particle_ind_vel_gaussian									\n"
-"	CVTX_P_INDVEL_START																\n"
+"__kernel void cvtx_nb_P3D_vel_gaussian												\n"
+"	CVTX_P3D_VEL_START																\n"
 "	if(rho > 6.f){																	\n"
 "		g = 1.f;																	\n"
 "	} else {																		\n"
@@ -219,38 +273,38 @@ Definitions for the repeated body of kernels\
 "		float term2 = rho * sqrt((float)2 / pi) * exp(-rho_sr2 * rho_sr2);			\n"
 "		g = erf - term2;															\n"
 "	}																				\n"
-"	CVTX_P_INDVEL_END																\n"
+"	CVTX_P3D_VEL_END																\n"
 
 
 
 /* ###########################################################
-	Ind Dvort calculation kernels here:
-	name cvtx_nb_Particle_ind_dvort_XXXXX
+	3D Ind Dvort calculation kernels here:
+	name cvtx_nb_P3D_dvort_XXXXX
 	###########################################################	*/	
 
-"__kernel void cvtx_nb_Particle_ind_dvort_singular\n"
-"	CVTX_P_IND_DVORT_START\n"
+"__kernel void cvtx_nb_P3D_dvort_singular\n"
+"	CVTX_P3D_DVORT_START\n"
 "		g = 1.f;\n"
 "		f = 0.f;\n"
-"	CVTX_P_IND_DVORT_END\n"
+"	CVTX_P3D_DVORT_END\n"
 
 
-"__kernel void cvtx_nb_Particle_ind_dvort_planetary\n"
-"	CVTX_P_IND_DVORT_START\n"
+"__kernel void cvtx_nb_P3D_dvort_planetary\n"
+"	CVTX_P3D_DVORT_START\n"
 "		g = rho < 1.f ? rho * rho * rho : (float)1.;\n"
 "		f = rho < 1.f ? (float)3 : (float)0;\n"
-"	CVTX_P_IND_DVORT_END\n"
+"	CVTX_P3D_DVORT_END\n"
 
 
-"__kernel void cvtx_nb_Particle_ind_dvort_winckelmans\n"
-"	CVTX_P_IND_DVORT_START\n"
+"__kernel void cvtx_nb_P3D_dvort_winckelmans\n"
+"	CVTX_P3D_DVORT_START\n"
 "		g = (rho * rho + 2.5f) * rho * rho * rho * rsqrt(pown(rho * rho + 1, 5));\n"
 "		f = (float)7.5 * rsqrt(pown(rho * rho + 1, 7));							\n"
-"	CVTX_P_IND_DVORT_END\n"
+"	CVTX_P3D_DVORT_END\n"
 
 
-"__kernel void cvtx_nb_Particle_ind_dvort_gaussian\n"
-"	CVTX_P_IND_DVORT_START															\n"
+"__kernel void cvtx_nb_P3D_dvort_gaussian\n"
+"	CVTX_P3D_DVORT_START															\n"
 "	const float pi = 3.14159265359f;												\n"
 "	if(rho > (float)6.){															\n"
 "		g = 1.f;																	\n"
@@ -263,28 +317,56 @@ Definitions for the repeated body of kernels\
 "		g = erf - term2;															\n"
 "	}																				\n"
 "	f =  sqrt((float) 2 / pi) * exp(-rho * rho / 2);								\n"
-"	CVTX_P_IND_DVORT_END															\n"
+"	CVTX_P3D_DVORT_END																\n"
 
 
 /* ###########################################################
-	viscous ind Dvort calculation kernels here:
-	name cvtx_nb_Particle_visc_ind_dvort_XXXXX	
+	3D viscous ind Dvort calculation kernels here:
+	name cvtx_nb_P3D_visc_dvort_XXXXX	
 	###########################################################	*/
 
 "	/* Viscocity doesn't work for singular & planetary */							\n"
 
-"__kernel void cvtx_nb_Particle_visc_ind_dvort_winckelmans							\n"
-"	CVTX_P_VISC_IND_DVORT_START														\n"
+"__kernel void cvtx_nb_P3D_visc_dvort_winckelmans									\n"
+"	CVTX_P3D_VISC_DVORT_START														\n"
 "		eta = (float)52.5 * pow(rho * rho + 1, (float)-4.5);						\n"
-"	CVTX_P_VISC_IND_DVORT_END														\n"
+"	CVTX_P3D_VISC_DVORT_END															\n"
 
 
-"__kernel void cvtx_nb_Particle_visc_ind_dvort_gaussian								\n"
-"	CVTX_P_VISC_IND_DVORT_START														\n"
+"__kernel void cvtx_nb_P3D_visc_dvort_gaussian										\n"
+"	CVTX_P3D_VISC_DVORT_START														\n"
 "		const float pi = 3.14159265359f;											\n"
 "		eta =  sqrt((float) 2.f / pi) * exp(-rho * rho / 2.f);						\n"
-"	CVTX_P_VISC_IND_DVORT_END														\n"
+"	CVTX_P3D_VISC_DVORT_END															\n"
 
+
+/* 	###########################################################
+	2DVelocity calculation kernels here:
+	name cvtx_nb_P2D_vel_XXXXX
+	###########################################################	*/
+
+"__kernel void cvtx_nb_P2D_vel_singular\n"
+"	CVTX_P2D_VEL_START														\n"
+"	g = 1.f;																\n"
+"	CVTX_P2D_VEL_END														\n"
+
+
+"__kernel void cvtx_nb_P2D_vel_winckelmans									\n"
+"	CVTX_P2D_VEL_START														\n"
+"	g = (rho * rho + 2.0f) * rho * rho * pown(rho * rho + 1.f, -2);			\n"
+"	CVTX_P2D_VEL_END														\n"
+
+
+"__kernel void cvtx_nb_P2D_vel_planetary									\n"
+"	CVTX_P2D_VEL_START														\n"
+"	g = rho < 1.f ? rho * rho : 1.f;										\n"
+"	CVTX_P2D_VEL_END														\n"
+
+
+"__kernel void cvtx_nb_P2D_vel_gaussian										\n"
+"	CVTX_P2D_VEL_START														\n"
+"	g = 1.f - exp(-rho * rho * 0.5f);										\n"
+"	CVTX_P2D_VEL_END														\n"
 
 /*	###########################################################
 	vortex_filament code:
