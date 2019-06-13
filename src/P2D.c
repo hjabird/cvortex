@@ -50,7 +50,7 @@ inline bsv_V2f P2D_vel_inner(
 		rad = bsv_V2f_minus(mes_point, self->coord);
 		radd = bsv_V2f_abs(rad);
 		rho = radd * recip_reg_rad;
-		g = -kernel->g_2D(rho);
+		g = kernel->g_2D(rho);
 		ret.x[0] = rad.x[1] * self->vorticity * g / (radd * radd);
 		ret.x[1] = -rad.x[0] * self->vorticity * g / (radd * radd);
 	}
