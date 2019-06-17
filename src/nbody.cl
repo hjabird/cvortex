@@ -206,7 +206,7 @@ Definitions for the repeated body of kernels
 /* Fill in g calc here */
 
 "#define CVTX_P2D_VEL_END 											\\\n"
-"	cor = - g;	/*1/2pi term is done by host. */					\\\n"
+"	cor = g;	/*1/2pi term is done by host. */					\\\n"
 "	den = pown(radd, 2);											\\\n"
 "	ret.x = rad.y * (cor * particle_vorts[pidx] / den);				\\\n"
 "	ret.y = -rad.x * (cor * particle_vorts[pidx] / den);			\\\n"

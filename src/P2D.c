@@ -66,7 +66,7 @@ CVTX_EXPORT bsv_V2f cvtx_P2D_S2S_vel(
 	bsv_V2f ret;
 	ret = P2D_vel_inner(self, mes_point, kernel,
 		1.f / fabsf(regularisation_radius));
-	return bsv_V2f_mult(ret, -1.f / (2.f * acosf(-1.f)));
+	return bsv_V2f_mult(ret, 1.f / (2.f * acosf(-1.f)));
 }
 
 CVTX_EXPORT bsv_V2f cvtx_P2D_M2S_vel(
@@ -88,7 +88,7 @@ CVTX_EXPORT bsv_V2f cvtx_P2D_M2S_vel(
 		ry += vel.x[1];
 	}
 	bsv_V2f ret = { (float)rx, (float)ry };
-	return bsv_V2f_mult(ret, -1.f / (2.f * acosf(-1.f)));
+	return bsv_V2f_mult(ret, 1.f / (2.f * acosf(-1.f)));
 }
 
 
