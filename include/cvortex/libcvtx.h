@@ -79,6 +79,11 @@ typedef struct {
 	char cl_kernel_name_ext[32];
 } cvtx_VortFunc;
 
+typedef struct {
+	float(*func)(float U);
+	float radius;
+} cvtx_RedistFunc;
+
 /* cvtx libary accelerator controls */
 CVTX_EXPORT void cvtx_initialise();
 CVTX_EXPORT void cvtx_finalise();
@@ -88,6 +93,19 @@ CVTX_EXPORT char* cvtx_accelerator_name(int accelerator_id);
 CVTX_EXPORT int cvtx_accelerator_enabled(int accelerator_id);
 CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id);
 CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id);
+
+/* cvtx_VortFunc functions */
+CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void);
+CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
+CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void);
+CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void);
+
+/* cvtx_RedistFunc functions */
+CVTX_EXPORT const cvtx_RedistFunc cvtx_RedistFunc_lambda0(void);
+CVTX_EXPORT const cvtx_RedistFunc cvtx_RedistFunc_lambda1(void);
+CVTX_EXPORT const cvtx_RedistFunc cvtx_RedistFunc_lambda2(void);
+CVTX_EXPORT const cvtx_RedistFunc cvtx_RedistFunc_lambda3(void);
+CVTX_EXPORT const cvtx_RedistFunc cvtx_RedistFunc_m4p(void);
 
 /* cvtx_P3D 3D vortex particle functions */
 CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vel(
@@ -159,11 +177,14 @@ CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
 	float regularisation_radius,
 	float kinematic_visc);
 
-/* cvtx_VortFunc functions */
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void);
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void);
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void);
+CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
+	const cvtx_P3D **input_array_start,
+	const int n_input_particles,
+	cvtx_P3D *output_particles,		/* input is &(*cvtx_P3D) to write to */
+	int max_output_particles,		/* Set to resultant num particles.   */
+	const cvtx_RedistFunc *redistributor,
+	float grid_density,
+	float negligible_vort);
 
 /* cvtx_F3D straight vortex filament functions */
 CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_vel(
@@ -228,5 +249,14 @@ CVTX_EXPORT void cvtx_P2D_M2M_vel(
 	bsv_V2f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
+
+CVTX_EXPORT int cvtx_P2D_redistribute_on_grid( /* Returns number of created particles. */
+	const cvtx_P2D **input_array_start,
+	const int num_particles,
+	cvtx_P2D *output_particles,	/* Is preallocated array. */
+	int num_output_particles,		/* Size of preallocated array.   */
+	const cvtx_RedistFunc *redistributor,
+	float grid_density,
+	float negligible_vort);
 
 #endif /* CVTX_LIBCVTX_H */

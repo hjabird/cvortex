@@ -4,6 +4,10 @@ This folder contains files with methods from `libcvtx.h`
 - `P2D.c`: 2D vortex particle methods (CPU + calls to GPU methods).
 - `VortFunc.c`: Vortex regularisation functions.
 - `accelerators.c`: Handeling of accelerator API.
+- `RedistFunc.c`: Particle redistribution functions.
+
+These are supported by helper functions in
+- `gridkey.h/c`: Functions for working with particles on grids.
 
 If compiled with `CVTX_USING_OPENCL`the following files are also used:
 - `nbody.cl`: The opencl implementation of many to many interactions. This is embedded as text within the final library, hence is written as a C string.
