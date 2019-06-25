@@ -1,0 +1,794 @@
+/*============================================================================
+libcvtx.dox
+
+Documentation for the CVortex library.
+The source file contains on code.
+
+Copyright(c) 2019 HJA Bird
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files(the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions :
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+============================================================================*/
+/*! \def CVTX_EXPORT
+ *	\brief Contols dll export/import on multiple platforms. Set by build
+ *	system.
+ */
+
+/*----------------------------------------------------------------------------
+STRUCTURES
+----------------------------------------------------------------------------*/
+/*! \struct cvtx_P3D
+ *	\brief A vortex particle in 3D
+ */
+/*! \var bsv_V3f cvtx_P3D::coord
+ *	\brief The vortex particle's cartesian coordinate.
+ */
+/*! \var bsv_V3f cvtx_P3D::vorticity
+ *	\brief The vortex particle's vorticity vector
+ */
+/*! \var float cvtx_P3D::volume
+ *	\brief The vortex particle's volume.
+ */
+ 
+ /*! \struct cvtx_F3D
+ *	\brief A straight, singular vortex filament in 3D
+ */
+/*! \var bsv_V3f cvtx_F3D::start
+ *	\brief The cartesian coordinate of the start of the filament.
+ */
+/*! \var bsv_V3f cvtx_F3D::end
+ *	\brief The cartesian coordinate of the end of the filament.
+ */
+/*! \var float cvtx_F3D::strength
+ *	\brief The vortex filament's vorticity per unit length.
+ */
+ 
+/*! \struct cvtx_P2D
+ *	\brief A vortex particle in 2D
+ */
+/*! \var bsv_V3f cvtx_P2D::coord
+ *	\brief The vortex particle's cartesian coordinate.
+ */
+/*! \var float cvtx_P2D::vorticity
+ *	\brief The vortex particle's vorticity.
+ */
+/*! \var float cvtx_P2D::area
+ *	\brief The vortex particle's area.
+ */
+ 
+/*! \struct bsv_V3f
+ *	\brief A 3D float vector from the bsv library (github.com/hjabird/bsv)
+ */
+ 
+/*! \struct bsv_V2f
+ *	\brief A 2D float vector from the bsv library (github.com/hjabird/bsv)
+ */
+ 
+typedef struct {
+	float(*g_3D)(float rho);
+	float(*g_2D)(float rho);
+	float(*zeta_3D)(float rho);
+	void(*combined_3D)(float rho, float* g, float* zeta);
+	float(*eta_3D)(float rho);
+	float(*eta_2D)(float rho);
+	char cl_kernel_name_ext[32];
+} cvtx_VortFunc;
+
+/*! \struct cvtx_VortFunc
+ *	\brief Unifies a collection of functions describing a vortex particle 
+ *	regularisation method.
+ */
+/*! \var bsv_V3f cvtx_VortFunc::g_3D
+ *	\brief A float(*g_3D)(float rho)
+ */
+/*! \var bsv_V3f cvtx_VortFunc::g_2D
+ *	\brief A float(*g_2D)(float rho)
+ */
+/*! \var bsv_V3f cvtx_VortFunc::zeta_3D
+ *	\brief A float(*zeta_3D)(float rho)
+ */
+/*! \var bsv_V3f cvtx_VortFunc::combined_3D
+ *	\brief A void(*combined_3D)(float rho, float* g, float* zeta)
+ *	unifing the evaluation of g_3D and zeta_3D.
+ */
+/*! \var bsv_V3f cvtx_VortFunc::eta_3D
+ *	\brief float(*eta_3D)(float rho)
+ */
+/*! \var bsv_V3f cvtx_VortFunc::eta_2D
+ *	\brief A float(*eta_2D)(float rho);
+ */
+/*! \var bsv_V3f cvtx_VortFunc::cl_kernel_name_ext
+ *	\brief A 32 character array (inc NULL terminator)
+ *	indicating the name of the regularisation method for 
+ *	purposes of calling GPU accelerated kernels.
+ */
+ 
+ /*! \struct cvtx_RedistFunc
+ *	\brief Unifies information describing a vortex particle redistribution method.
+ *	regularisation method.
+ */
+/*! \var bsv_V3f cvtx_RedistFunc::func
+ *	\brief A float(*func)(float U) of the redistribution function,
+ *	where U is the normalised radius from the particle (always +ve).
+ */
+/*! \var bsv_V3f cvtx_RedistFunc::radius
+ *	\brief A float describing the max value of U that elicits a non-zero
+ *	evaluation of the cvtx_RedistFunc::func.
+ */
+ 
+/*----------------------------------------------------------------------------
+LIBRARY CONTROL
+----------------------------------------------------------------------------*/
+/*! \fn cvtx_initialise()
+ *
+ * 	\brief Initialise CVortex
+ *         Call before using CVortex
+ *
+ *	Initialises internal datastructures of CVortex. MUST be called before
+ *	the library is used. Compilation of GPU accelerated kernels may occur
+ *	on this call. Multiple calls to this function are not detrimental. 
+ */
+ 
+/*! \fn cvtx_finalise()
+ *
+ * 	\brief Finalise CVortex
+ *         Free resources associated with CVortex after use.
+ *
+ *	Should be called before an application using CVortex closes. Deallocates
+ *	resorces associated with CVortex.
+ */
+ 
+/*! \fn cvtx_num_accelerators()
+ *
+ * 	\brief Number of accelerators found by CVortex
+ *         Includes GPUs only. 
+ *	\returns the number of accelerators found.
+ *
+ *	CVortex can use GPUs to accelerate computation. This returns the 
+ *	number of accelerators found by the library. 
+ *	The number of accelerators found by the library may not correspond
+ *	to the number in the system. This may be due to drivers, failure
+ *	of GPU kernels to build or the way CVortex was built.
+ */
+ 
+/*! \fn cvtx_accelerator_name(int accelerator_id)
+ *
+ * 	\brief The name of an accelerator.
+ *
+ *	\param accelerator_id An integer representing an accelerator by 
+ *	index. This is between [0, cvtx_num_accelerators()].
+ *	\returns A non-owning *char to the name of the accelerator. May
+ *	return NULL for unknown name or bad index.
+ *
+ *	Returns the name of the accelerator. This is supplied by the 
+ *	device and may vary from the useful (Intel HD4000 graphics)
+ *	to the mildly cryptic (gfx902).
+ */
+ 
+/*----------------------------------------------------------------------------
+3D VORTEX PARTICLES
+----------------------------------------------------------------------------*/
+
+/*! \fn bsv_V3f cvtx_P3D_S2S_vel(
+ *	const cvtx_P3D * self,
+ *	const bsv_V3f mes_point,
+ *	const cvtx_VortFunc * kernel,
+ *	float regularisation_radius)
+ *
+ * 	\brief Induced velocity
+ *         Due to a single 3D vortex particle on a single point
+ *
+ *	\param self Pointer to the inducing particle
+ *	\param mes_point The location to evaluate the induced velocity
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *	\return The induced velocity
+ *
+ *  The velocity induced by a single regularised vortex particle
+ *	on at a single location. If that location matches the centre 
+ *	of the vortex particle, a zero velocity is returned. A
+ *	regularisation kernel and regularisation radius must be used.
+ *	For singular kernels, the regularisation radius is ignored.
+ */
+ 
+/*! \fn bsv_V3f cvtx_P3D_S2S_dvort(
+ *	const cvtx_P3D * self,
+ *	const cvtx_P3D * induced_particle,
+ *	const cvtx_VortFunc * kernel,
+ *	float regularisation_radius)
+ *
+ *	\brief Invicid rate of change of vorticity
+ *         Due to a single 3D vortex particle on another particle.
+ *
+ *	\param self Pointer to the inducing particle
+ *	\param induced_particle Pointer to the induced particle
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *
+ *  The rate of change of vorticity induced by one particle on 
+ *	another. These may be the same particle, although this will
+ *	return a zero induced rate of change of vorticity.
+ *	This vortex stretching term uses a transpose scheme.
+ */
+ 
+/*! \fn bsv_V3f cvtx_P3D_S2S_visc_dvort(
+ *	const cvtx_P3D * self,
+ *	const cvtx_P3D * induced_particle,
+ *	const cvtx_VortFunc * kernel,
+ *	float regularisation_radius,
+ *	float kinematic_visc)
+ *
+ *	\brief Viscous rate of change of vorticity
+ *         Due to a single 3D vortex particle on another particle.
+ *
+ *	\param self Pointer to the inducing particle
+ *	\param induced_particle Pointer to the induced particle
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *	\param kinematic_visc Kinematic viscosity.
+ *
+ *  The rate of change of vorticity induced by one particle on
+ *	another due to viscosity. Computed using particle strength
+ *	exchange. Note that only one direction of the pairwise 
+ *	interaction is considered.
+ */
+ 
+ /*! \fn bsv_V3f cvtx_P3D_M2S_vel(
+ *	const cvtx_P3D **array_start,
+ *	const int num_particles,
+ *	const bsv_V3f mes_point,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius)
+ *	
+ *	\brief Induced velocity
+ *         Due to a multiple 3D vortex particles on a single point
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P3D) for particles inducing a velocity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param mes_point The location to evaluate the induced velocity
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *
+ *  The velocity induced by multiple regularised vortex particles
+ *	on at a single location. If that location matches the centre
+ *	of the vortex particle, a zero velocity is induced by that 
+ *	particular particle. A regularisation kernel and regularisation
+ *	radius must be used.
+ *	For singular kernels, the regularisation radius is ignored.
+ */
+ 
+ /*! \fn bsv_V3f cvtx_P3D_M2S_dvort(
+ * 	const cvtx_P3D **array_start,
+ *	const int num_particles,
+ *	const cvtx_P3D *induced_particle,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius)
+ *
+ *	\brief Invicid rate of change of vorticity
+ *         Due to multiple 3D vortex particles on another particle.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P3D) for particles inducing a rate of change
+ *	of vorticity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param induced_particle Pointer to the induced particle
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *
+ *  The rate of change of vorticity induced by multiple particles
+ *	on a single particle. If the centre of the induced particle
+ *	matches that of any inducing particle, the result of that
+ *	single interaction is zero induced rate of change of 
+ *	vorticity.
+ *	This vortex stretching term uses a transpose scheme.
+ */
+ 
+ /*! \fn bsv_V3f cvtx_P3D_M2S_visc_dvort(
+ *	const cvtx_P3D **array_start,
+ *	const int num_particles,
+ *	const cvtx_P3D *induced_particle,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius,
+ *	float kinematic_visc)
+ *	
+ * 	\brief Viscous rate of change of vorticity
+ *         Due to a multiple 3D vortex particles on another particle.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P3D) for particles inducing a rate of change
+ *	of vorticity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param induced_particle Pointer to the induced particle
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *	\param kinematic_visc Kinematic viscosity.
+ *
+ *  The rate of change of vorticity induced by multiple particles on
+ *	another due to viscosity. Computed using particle strength
+ *	exchange. Note that only one direction of the pairwise
+ *	interaction is considered.
+ */
+ 
+ /*! \fn void cvtx_P3D_M2M_vel(
+ *	const cvtx_P3D **array_start,
+ *	const int num_particles,
+ *	const bsv_V3f *mes_start,
+ *	const int num_mes,
+ *	bsv_V3f *result_array,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius)
+ *	
+ *	\brief Induced velocity
+ *         Due to a multiple 3D vortex particles on multiple points.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P3D) for particles inducing a velocity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param mes_start A pointer to the first location in an array
+ *	of bsv_V3f points at which to measure the velocity.
+ *	\param num_mes Integer indicating the number of measurement points
+ *	in array mes_start, and therefore the corresponding length of
+ *	array result_array.
+ *	\param result_array A preallocated array of bsv_V3f into which 
+ *	the induced velocities are written.
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *
+ *  The velocity induced by multiple regularised vortex particles
+ *	at multiple locations. If that location matches the centre
+ *	of the vortex particle, a zero velocity is induced by that
+ *	particular particle. A regularisation kernel and regularisation
+ *	radius must be used.
+ *	For singular kernels, the regularisation radius is ignored.
+ */
+ 
+ /*! \fn void cvtx_P3D_M2M_dvort(
+ *	const cvtx_P3D **array_start,
+ *	const int num_particles,
+ *	const cvtx_P3D **induced_start,
+ *	const int num_induced,
+ *	bsv_V3f *result_array,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius)
+ *	
+ *	\brief Invicid rate of change of vorticity
+ *         Due to muliple 3D vortex particles on multiple 3D vortex particles.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P3D) for particles inducing a rate of change
+ *	of vorticity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param induced_start The first location in an array of 3D vortex
+ *	particle pointers (*P3D) for particles having a rate of change
+ *	of vorticity induced in them.
+ *	\param num_induced The number of particles in the array
+ *	given by induced_start
+ *	\param result_array The start of a bsv_V3f array of length
+ *	num_induced into which the induced rates of change of vorticity 
+ *	are returned.
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *
+ *  The rate of change of vorticity induced by multiple particles
+ *	on multiple particles. If the centre of any induced particle
+ *	matches that of any inducing particle, the result of that
+ *	single interaction is zero induced rate of change of
+ *	vorticity.
+ *	This vortex stretching term uses a transpose scheme.
+ */
+ 
+ /*! \fn void cvtx_P3D_M2M_visc_dvort(
+ *	const cvtx_P3D **array_start,
+ *	const int num_particles,
+ *	const cvtx_P3D **induced_start,
+ *	const int num_induced,
+ *	bsv_V3f *result_array,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius,
+ *	float kinematic_visc)
+ * 
+ *	\brief Viscous rate of change of vorticity
+ *         Due to a multiple 3D vortex particles on another particle.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P3D) for particles inducing a rate of change
+ *	of vorticity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param induced_start The first location in an array of 3D vortex
+ *	particle pointers (*P3D) for particles having a rate of change
+ *	of vorticity induced in them.
+ *	\param num_induced The number of particles in the array
+ *	given by induced_start
+ *	\param result_array The start of a bsv_V3f array of length
+ *	num_induced into which the induced rates of change of vorticity
+ *	are returned.
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *	\param kinematic_visc Kinematic viscosity.
+ *
+ *  The rate of change of vorticity induced by multiple particles on
+ *	another due to viscosity. Computed using particle strength
+ *	exchange. Note that only one direction of the pairwise
+ *	interaction is considered.
+ */
+ 
+ /*! \fnint cvtx_P3D_redistribute_on_grid(
+ *	const cvtx_P3D **input_array_start,
+ *	const int n_input_particles,
+ *	cvtx_P3D *output_particles,
+ *	int max_output_particles,
+ *	const cvtx_RedistFunc *redistributor,
+ *	float grid_density,
+ *	float negligible_vort)\brief Redistribute vortex particles
+ *         Redistributes 3D vortex particles onto a regular grid.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P3D) for particles inducing a rate of change
+ *	of vorticity.
+ *	\param n_input The number of particles in the array
+ *	given by array_start
+ *	\param output_particles A preallocated array of 3D vortex
+ *	particles into which to return the new representation of the
+ *	vorticity. Can be NULL.
+ *	\param max_output_particles The length of the output_particles
+ *	array.
+ *	\param redistributor Pointer to a redistribution scheme
+ *	\param grid_density The spacing between particles on new grid.
+ *	\param negligible_vort A float in [0, 1] defining what proportion
+ *	of the average absolute vorticity is considered neglidgible,
+ *	such that particles with very small vorticities can be removed.
+ *
+ *  Redistribute the vortex particles onto a regular grid.
+ *	The input particles are redistributed according to the redistribution
+ *	scheme. An integer with the number of particles in the redistributed
+ *	vorticity field is returned.
+ *	To avoid particles with zero or very negligible vorticities being 
+ *	created, particles are removed if they have absolute vorticity
+ *	less than or equal to negligible_vort * (average absolute vorticity).
+ *	If the resulting number of particles is more than max_output_particles
+ *	and output_particles is not NULL, than further particles are removed
+ *	until the new particle field can fit within the output_particles 
+ *	buffer. 
+ *	Consequentially, the function may be called once to find the number
+ *	of particles in the output field, the output_particles buffer allocated
+ *	to the correct size, and then called again to populate the buffer.
+ */
+ 
+/*----------------------------------------------------------------------------
+2D VORTEX PARTICLES
+----------------------------------------------------------------------------*/
+
+/*! \fn bsv_V2f cvtx_P2D_S2S_vel(
+ *	const cvtx_P2D * self,
+ *	const bsv_V2f mes_point,
+ *	const cvtx_VortFunc * kernel,
+ *	float regularisation_radius)
+ *
+ * 	\brief Induced velocity
+ *         Due to a single 2D vortex particle on a single point
+ *
+ *	\param self Pointer to the inducing particle
+ *	\param mes_point The location to evaluate the induced velocity
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *	\return The induced velocity
+ *
+ *  The velocity induced by a single regularised vortex particle
+ *	on at a single location. If that location matches the centre 
+ *	of the vortex particle, a zero velocity is returned. A
+ *	regularisation kernel and regularisation radius must be used.
+ *	For singular kernels, the regularisation radius is ignored.
+ */
+ 
+/*! \fn bsv_V3f cvtx_P2D_S2S_dvort(
+ *	const cvtx_P2D * self,
+ *	const cvtx_P2D * induced_particle,
+ *	const cvtx_VortFunc * kernel,
+ *	float regularisation_radius)
+ *
+ *	\brief Invicid rate of change of vorticity
+ *         Due to a single 2D vortex particle on another particle.
+ *
+ *	\param self Pointer to the inducing particle
+ *	\param induced_particle Pointer to the induced particle
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *
+ *  The rate of change of vorticity induced by one particle on 
+ *	another. These may be the same particle, although this will
+ *	return a zero induced rate of change of vorticity.
+ *	This vortex stretching term uses a transpose scheme.
+ */
+ 
+/*! \fn bsv_V3f cvtx_P2D_S2S_visc_dvort(
+ *	const cvtx_P2D * self,
+ *	const cvtx_P2D * induced_particle,
+ *	const cvtx_VortFunc * kernel,
+ *	float regularisation_radius,
+ *	float kinematic_visc)
+ *
+ *	\brief Viscous rate of change of vorticity
+ *         Due to a single 2D vortex particle on another particle.
+ *
+ *	\param self Pointer to the inducing particle
+ *	\param induced_particle Pointer to the induced particle
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *	\param kinematic_visc Kinematic viscosity.
+ *
+ *  The rate of change of vorticity induced by one particle on
+ *	another due to viscosity. Computed using particle strength
+ *	exchange. Note that only one direction of the pairwise 
+ *	interaction is considered.
+ */
+ 
+ /*! \fn bsv_V2f cvtx_P2D_M2S_vel(
+ *	const cvtx_P2D **array_start,
+ *	const int num_particles,
+ *	const bsv_V2f mes_point,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius)
+ *	
+ *	\brief Induced velocity
+ *         Due to a multiple 2D vortex particles on a single point
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P2D) for particles inducing a velocity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param mes_point The location to evaluate the induced velocity
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *
+ *  The velocity induced by multiple regularised vortex particles
+ *	on at a single location. If that location matches the centre
+ *	of the vortex particle, a zero velocity is induced by that 
+ *	particular particle. A regularisation kernel and regularisation
+ *	radius must be used.
+ *	For singular kernels, the regularisation radius is ignored.
+ */
+ 
+ /*! \fn bsv_V2f cvtx_P3D_M2S_dvort(
+ * 	const cvtx_P2D **array_start,
+ *	const int num_particles,
+ *	const cvtx_P2D *induced_particle,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius)
+ *
+ *	\brief Invicid rate of change of vorticity
+ *         Due to multiple 2D vortex particles on another particle.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P2D) for particles inducing a rate of change
+ *	of vorticity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param induced_particle Pointer to the induced particle
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *
+ *  The rate of change of vorticity induced by multiple particles
+ *	on a single particle. If the centre of the induced particle
+ *	matches that of any inducing particle, the result of that
+ *	single interaction is zero induced rate of change of 
+ *	vorticity.
+ *	This vortex stretching term uses a transpose scheme.
+ */
+ 
+ /*! \fn bsv_V3f cvtx_P2D_M2S_visc_dvort(
+ *	const cvtx_P2D **array_start,
+ *	const int num_particles,
+ *	const cvtx_P2D *induced_particle,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius,
+ *	float kinematic_visc)
+ *	
+ * 	\brief Viscous rate of change of vorticity
+ *         Due to a multiple 2D vortex particles on another particle.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P2D) for particles inducing a rate of change
+ *	of vorticity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param induced_particle Pointer to the induced particle
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *	\param kinematic_visc Kinematic viscosity.
+ *
+ *  The rate of change of vorticity induced by multiple particles on
+ *	another due to viscosity. Computed using particle strength
+ *	exchange. Note that only one direction of the pairwise
+ *	interaction is considered.
+ */
+ 
+ /*! \fn void cvtx_P2D_M2M_vel(
+ *	const cvtx_P2D **array_start,
+ *	const int num_particles,
+ *	const bsv_V2f *mes_start,
+ *	const int num_mes,
+ *	bsv_V2f *result_array,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius)
+ *	
+ *	\brief Induced velocity
+ *         Due to a multiple 2D vortex particles on multiple points.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P2D) for particles inducing a velocity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param mes_start A pointer to the first location in an array
+ *	of bsv_V3f points at which to measure the velocity.
+ *	\param num_mes Integer indicating the number of measurement points
+ *	in array mes_start, and therefore the corresponding length of
+ *	array result_array.
+ *	\param result_array A preallocated array of bsv_V2f into which 
+ *	the induced velocities are written.
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *
+ *  The velocity induced by multiple regularised vortex particles
+ *	at multiple locations. If that location matches the centre
+ *	of the vortex particle, a zero velocity is induced by that
+ *	particular particle. A regularisation kernel and regularisation
+ *	radius must be used.
+ *	For singular kernels, the regularisation radius is ignored.
+ */
+ 
+ /*! \fn void cvtx_P2D_M2M_dvort(
+ *	const cvtx_P2D **array_start,
+ *	const int num_particles,
+ *	const cvtx_P2D **induced_start,
+ *	const int num_induced,
+ *	float *result_array,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius)
+ *	
+ *	\brief Invicid rate of change of vorticity
+ *         Due to muliple 2D vortex particles on multiple 3D vortex particles.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P2D) for particles inducing a rate of change
+ *	of vorticity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param induced_start The first location in an array of 3D vortex
+ *	particle pointers (*P2D) for particles having a rate of change
+ *	of vorticity induced in them.
+ *	\param num_induced The number of particles in the array
+ *	given by induced_start
+ *	\param result_array The start of a float array of length
+ *	num_induced into which the induced rates of change of vorticity 
+ *	are returned.
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *
+ *  The rate of change of vorticity induced by multiple particles
+ *	on multiple particles. If the centre of any induced particle
+ *	matches that of any inducing particle, the result of that
+ *	single interaction is zero induced rate of change of
+ *	vorticity.
+ *	This vortex stretching term uses a transpose scheme.
+ */
+ 
+ /*! \fn void cvtx_P2D_M2M_visc_dvort(
+ *	const cvtx_P2D **array_start,
+ *	const int num_particles,
+ *	const cvtx_P2D **induced_start,
+ *	const int num_induced,
+ *	float *result_array,
+ *	const cvtx_VortFunc *kernel,
+ *	float regularisation_radius,
+ *	float kinematic_visc)
+ * 
+ *	\brief Viscous rate of change of vorticity
+ *         Due to a multiple 3D vortex particles on another particle.
+ *
+ *	\param array_start The first location in an array of 3D vortex
+ *	particle pointers (*P2D) for particles inducing a rate of change
+ *	of vorticity.
+ *	\param num_particles The number of particles in the array
+ *	given by array_start
+ *	\param induced_start The first location in an array of 3D vortex
+ *	particle pointers (*P2D) for particles having a rate of change
+ *	of vorticity induced in them.
+ *	\param num_induced The number of particles in the array
+ *	given by induced_start
+ *	\param result_array The start of a float array of length
+ *	num_induced into which the induced rates of change of vorticity
+ *	are returned.
+ *	\param kernel Pointer to a regularisation kernel.
+ *	\param regularisation_radius The regularisation radius. Must
+ *	not be zero.
+ *	\param kinematic_visc Kinematic viscosity.
+ *
+ *  The rate of change of vorticity induced by multiple particles on
+ *	another due to viscosity. Computed using particle strength
+ *	exchange. Note that only one direction of the pairwise
+ *	interaction is considered.
+ */
+ 
+ /*! \fn int cvtx_P2D_redistribute_on_grid(
+ *	const cvtx_P2D **input_array_start,
+ *	const int n_input_particles,
+ *	cvtx_P2D *output_particles,
+ *	int max_output_particles,
+ *	const cvtx_RedistFunc *redistributor,
+ *	float grid_density,
+ *	float negligible_vort)
+ *
+ *\brief Redistribute vortex particles
+ *         Redistributes 2D vortex particles onto a regular grid.
+ *
+ *	\param array_start The first location in an array of 2D vortex
+ *	particle pointers (*P2D) for particles inducing a rate of change
+ *	of vorticity.
+ *	\param n_input The number of particles in the array
+ *	given by array_start
+ *	\param output_particles A preallocated array of 2D vortex
+ *	particles into which to return the new representation of the
+ *	vorticity. Can be NULL.
+ *	\param max_output_particles The length of the output_particles
+ *	array.
+ *	\param redistributor Pointer to a redistribution scheme
+ *	\param grid_density The spacing between particles on new grid.
+ *	\param negligible_vort A float in [0, 1] defining what proportion
+ *	of the average absolute vorticity is considered neglidgible,
+ *	such that particles with very small vorticities can be removed.
+ *
+ *  Redistribute the vortex particles onto a regular grid.
+ *	The input particles are redistributed according to the redistribution
+ *	scheme. An integer with the number of particles in the redistributed
+ *	vorticity field is returned.
+ *	To avoid particles with zero or very negligible vorticities being 
+ *	created, particles are removed if they have absolute vorticity
+ *	less than or equal to negligible_vort * (average absolute vorticity).
+ *	If the resulting number of particles is more than max_output_particles
+ *	and output_particles is not NULL, than further particles are removed
+ *	until the new particle field can fit within the output_particles 
+ *	buffer. 
+ *	Consequentially, the function may be called once to find the number
+ *	of particles in the output field, the output_particles buffer allocated
+ *	to the correct size, and then called again to populate the buffer.
+ */
+ 

@@ -25,6 +25,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
+/*!	\file libcvtx.h
+ *	\brief Public header for CVortex library.
+ *	\author HJA Bird
+ *	
+ *	See https://github.com/hjabird/cvortex to find the source and precompiled
+ *	binaries and to report bugs.
+ *	Full documentation is in libcvtx.dox and can be generated with
+ *	using Doxygen.
+ */
+
 #ifndef CVTX_EXPORT
 # ifdef _WIN32
 #  define CVTX_EXPORT __declspec(dllimport)
@@ -249,6 +259,31 @@ CVTX_EXPORT void cvtx_P2D_M2M_vel(
 	bsv_V2f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
+
+CVTX_EXPORT float cvtx_P2D_S2S_visc_dvort(
+	const cvtx_P2D * self,
+	const cvtx_P2D * induced_particle,
+	const cvtx_VortFunc * kernel,
+	float regularisation_radius,
+	float kinematic_visc);
+
+CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(
+	const cvtx_P2D **array_start,
+	const int num_particles,
+	const cvtx_P2D *induced_particle,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius,
+	float kinematic_visc);
+
+CVTX_EXPORT void cvtx_P2D_M2M_visc_dvort(
+	const cvtx_P2D **array_start,
+	const int num_particles,
+	const cvtx_P2D **induced_start,
+	const int num_induced,
+	float *result_array,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius,
+	float kinematic_visc);
 
 CVTX_EXPORT int cvtx_P2D_redistribute_on_grid( /* Returns number of created particles. */
 	const cvtx_P2D **input_array_start,
