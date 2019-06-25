@@ -163,7 +163,7 @@ CVTX_EXPORT void cvtx_F3D_M2M_vel(
 #ifdef CVTX_USING_OPENCL
 	if (num_filaments < 256
 		|| num_mes < 256
-		|| opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
+		|| opencl_brute_force_F3D_M2M_vel(
 			array_start, num_filaments, mes_start,
 			num_mes, result_array) != 0)
 #endif
@@ -185,7 +185,7 @@ CVTX_EXPORT void cvtx_F3D_M2M_dvort(
 #ifdef CVTX_USING_OPENCL
 	if (num_fil < 256
 		|| num_induced < 256
-		|| opencl_brute_force_StraightVortFilArr_Arr_ind_dvort(
+		|| opencl_brute_force_F3D_M2M_dvort(
 			array_start, num_fil, induced_start,
 			num_induced, result_array) != 0)
 #endif

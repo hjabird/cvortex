@@ -28,7 +28,7 @@ SOFTWARE.
 #include <bsv/bsv.h>
 #include "opencl_acc.h"
 
-int opencl_brute_force_ParticleArr_Arr_ind_vel(
+int opencl_brute_force_P3D_M2M_vel(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
@@ -37,7 +37,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
-int opencl_brute_force_ParticleArr_Arr_ind_dvort(
+int opencl_brute_force_P3D_M2M_dvort(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const cvtx_P3D **induced_start,
@@ -46,7 +46,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
-int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
+int opencl_brute_force_P3D_M2M_visc_dvort(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const cvtx_P3D **induced_start,
@@ -56,7 +56,7 @@ int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	float regularisation_radius,
 	float kinematic_visc);
 
-int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
+int opencl_brute_force_P3D_M2M_vel_impl(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
@@ -68,7 +68,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 	cl_command_queue queue,
 	cl_context context);
 
-int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
+int opencl_brute_force_P3D_M2M_dvort_impl(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const cvtx_P3D **induced_start,
@@ -80,7 +80,7 @@ int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 	cl_command_queue queue,
 	cl_context context);
 
-int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort_impl(
+int opencl_brute_force_P3D_M2M_visc_dvort_impl(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const cvtx_P3D **induced_start,

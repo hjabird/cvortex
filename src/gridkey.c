@@ -36,8 +36,9 @@ void minmax_xy_posn(
 	int i;
 
 	if (nparticles > 0) {
-		txmin = txmax = array_start[0]->coord.x[0];
-		tymin = tymax = array_start[0]->coord.x[1];
+		bsv_V2f coord = array_start[0]->coord;
+		txmin = txmax = coord.x[0];
+		tymin = tymax = coord.x[1];
 	}
 	else {
 		txmin = txmax = tymin = tymax = 0.f;

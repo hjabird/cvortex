@@ -33,7 +33,7 @@ SOFTWARE.
 #include "opencl_acc.h"
 #include "ocl_F3D.h"
 
-int opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
+int opencl_brute_force_F3D_M2M_vel(
 	const cvtx_F3D **array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
@@ -48,7 +48,7 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
 
 	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
-		return opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
+		return opencl_brute_force_F3D_M2M_vel_impl(
 			array_start, num_filaments, mes_start,
 			num_mes, result_array, prog, queue, cont);
 	}
@@ -58,7 +58,7 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
 	}
 }
 
-int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
+int opencl_brute_force_F3D_M2M_vel_impl(
 	const cvtx_F3D **array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
@@ -241,7 +241,7 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
 	}
 }
 
-int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort(
+int opencl_brute_force_F3D_M2M_dvort(
 	const cvtx_F3D **array_start,
 	const int num_fil,
 	const cvtx_P3D **induced_start,
@@ -256,7 +256,7 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort(
 
 	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
-		return opencl_brute_force_StraightVortFilArr_Arr_ind_dvort_impl(
+		return opencl_brute_force_F3D_M2M_dvort_impl(
 			array_start, num_fil, induced_start,
 			num_induced, result_array, prog, queue, cont);
 	}
@@ -266,7 +266,7 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort(
 	}
 }
 
-int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort_impl(
+int opencl_brute_force_F3D_M2M_dvort_impl(
 	const cvtx_F3D **array_start,
 	const int num_fil,
 	const cvtx_P3D **induced_start,

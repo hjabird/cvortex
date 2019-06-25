@@ -206,6 +206,7 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void)
 	ret.g_3D = &g_planetary_3D;
 	ret.zeta_3D = &zeta_planetary_3D;
 	ret.eta_3D = &warn_bad_eta_fn; /* Not possible for planetary vortex */
+	ret.eta_2D = &warn_bad_eta_fn;
 	ret.combined_3D = &combined_winckel_3D;
 	strcpy(ret.cl_kernel_name_ext, "planetary");
 	return ret;

@@ -37,6 +37,16 @@ int opencl_brute_force_P2D_M2M_vel(
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius);
 
+int opencl_brute_force_P2D_M2M_visc_dvort(
+	const cvtx_P2D **array_start,
+	const int num_particles,
+	const cvtx_P2D **induced_start,
+	const int num_induced,
+	float *result_array,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius,
+	float kinematic_visc);
+
 int opencl_brute_force_P2D_M2M_vel_impl(
 	const cvtx_P2D **array_start,
 	const int num_particles,
@@ -45,6 +55,19 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 	bsv_V2f *result_array,
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
+	cl_program program,
+	cl_command_queue queue,
+	cl_context context);
+
+int opencl_brute_force_P2D_M2M_visc_dvort_impl(
+	const cvtx_P2D **array_start,
+	const int num_particles,
+	const cvtx_P2D **induced_start,
+	const int num_induced,
+	float *result_array,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius,
+	float kinematic_visc,
 	cl_program program,
 	cl_command_queue queue,
 	cl_context context);

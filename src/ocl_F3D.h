@@ -28,14 +28,14 @@ SOFTWARE.
 #ifdef CVTX_USING_OPENCL
 #include <CL/cl.h>
 
-int opencl_brute_force_StraightVortFilArr_Arr_ind_vel(
+int opencl_brute_force_F3D_M2M_vel(
 	const cvtx_F3D **array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const int num_mes,
 	bsv_V3f *result_array);
 
-int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
+int opencl_brute_force_F3D_M2M_vel_impl(
 	const cvtx_F3D **array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
@@ -45,14 +45,14 @@ int opencl_brute_force_StraightVortFilArr_Arr_ind_vel_impl(
 	cl_command_queue queue,
 	cl_context context);
 
-int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort(
+int opencl_brute_force_F3D_M2M_dvort(
 	const cvtx_F3D **array_start,
 	const int num_fil,
 	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array);
 
-int opencl_brute_force_StraightVortFilArr_Arr_ind_dvort_impl(
+int opencl_brute_force_F3D_M2M_dvort_impl(
 	const cvtx_F3D **array_start,
 	const int num_fil,
 	const cvtx_P3D **induced_start,

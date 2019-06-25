@@ -148,6 +148,102 @@ CVTX_EXPORT void cvtx_P2D_M2M_vel(
 	return;
 }
 
+
+/* Visous vorticity exchange methods ----------------------------------------*/
+
+CVTX_EXPORT float cvtx_P2D_S2S_visc_dvort(
+	const cvtx_P2D * self,
+	const cvtx_P2D * induced_particle,
+	const cvtx_VortFunc * kernel,
+	float regularisation_radius,
+	float kinematic_visc)
+{
+	bsv_V2f rad;
+	float radd, rho, ret, t1, t2, t22, t21, t211, t212;
+	assert(kernel->eta_2D != NULL && "Used vortex regularisation"
+		"that did have a defined eta function");
+	if (bsv_V2f_isequal(self->coord, induced_particle->coord)) {
+		ret = 0.f;
+	}
+	else {
+		rad = bsv_V2f_minus(self->coord, induced_particle->coord);
+		radd = bsv_V2f_abs(rad);
+		rho = fabsf(radd / regularisation_radius);
+		t1 = 2 * kinematic_visc / powf(regularisation_radius, 2);
+		t211 = self->vorticity * induced_particle->area;
+		t212 = -induced_particle->vorticity * self->area;
+		t21 = t211 + t212;
+		t22 = kernel->eta_3D(rho);
+		t2 = t21* t22;
+		ret = t2 * t1;
+	}
+	return ret;
+}
+
+CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(
+	const cvtx_P2D **array_start,
+	const int num_particles,
+	const cvtx_P2D *induced_particle,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius,
+	float kinematic_visc)
+{
+	float dvort = 0.f;
+	long i;
+	assert(num_particles >= 0);
+#pragma omp parallel for reduction(+:dvort)
+	for (i = 0; i < num_particles; ++i) {
+		dvort += cvtx_P2D_S2S_visc_dvort(array_start[i],
+			induced_particle, kernel, regularisation_radius, kinematic_visc);
+	}
+	return dvort;
+}
+
+void cpu_brute_force_P2D_M2M_visc_dvort(
+	const cvtx_P2D **array_start,
+	const int num_particles,
+	const cvtx_P2D **induced_start,
+	const int num_induced,
+	float *result_array,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius,
+	float kinematic_visc)
+{
+	long i;
+	for (i = 0; i < num_induced; ++i) {
+		result_array[i] = cvtx_P2D_M2S_visc_dvort(
+			array_start, num_particles, induced_start[i],
+			kernel, regularisation_radius, kinematic_visc);
+	}
+	return;
+}
+
+CVTX_EXPORT void cvtx_P2D_M2M_visc_dvort(
+	const cvtx_P2D **array_start,
+	const int num_particles,
+	const cvtx_P2D **induced_start,
+	const int num_induced,
+	float *result_array,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius,
+	float kinematic_visc)
+{
+#ifdef CVTX_USING_OPENCL
+	if (num_particles < 256
+		|| num_induced < 256
+		|| kernel->cl_kernel_name_ext == ""
+		|| opencl_brute_force_P2D_M2M_visc_dvort(
+			array_start, num_particles, induced_start,
+			num_induced, result_array, kernel, regularisation_radius, kinematic_visc) != 0)
+#endif
+	{
+		cpu_brute_force_P2D_M2M_visc_dvort(
+			array_start, num_particles, induced_start,
+			num_induced, result_array, kernel, regularisation_radius, kinematic_visc);
+	}
+	return;
+}
+
 /* Particle redistribution -------------------------------------------------*/
 
 CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(

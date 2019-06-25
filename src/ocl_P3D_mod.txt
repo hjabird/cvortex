@@ -34,7 +34,21 @@ SOFTWARE.
 #include "opencl_acc.h"
 #include "ocl_P3D.h"
 
-int opencl_brute_force_P3D_M2M_vel(
+static cl_int create_zeroed_clfloat3_rwbuffer(
+	cl_context context, cl_command_queue queue,
+	cl_event *dependencies, int ndeps, cl_event *event,
+	int num_float3, cl_mem *buff);
+
+static cl_int add_clfloat3_to_V3f_buffer(
+	cl_context context, cl_command_queue queue,
+	cl_event *dependencies, int ndeps, cl_event *event,
+	int num_float3, cl_mem *clbuff, bsv_V3f *hostbuff);
+
+static void zero_clfloat3_array(cl_float3 *arr, int len);
+static void copyin_V3f_to_clfloat3(
+	cl_float3 *target, const bsv_V3f *source, int len, int stride_bytes);
+
+int opencl_brute_force_ParticleArr_Arr_ind_vel(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
@@ -51,7 +65,7 @@ int opencl_brute_force_P3D_M2M_vel(
 
 	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
-		return opencl_brute_force_P3D_M2M_vel_impl(
+		return opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 			array_start, num_particles, mes_start,
 			num_mes, result_array, kernel, regularisation_radius,
 			prog, queue, cont);
@@ -62,7 +76,7 @@ int opencl_brute_force_P3D_M2M_vel(
 	}
 }
 
-int opencl_brute_force_P3D_M2M_dvort(
+int opencl_brute_force_ParticleArr_Arr_ind_dvort(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const cvtx_P3D **induced_start,
@@ -79,7 +93,7 @@ int opencl_brute_force_P3D_M2M_dvort(
 
 	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
-		return opencl_brute_force_P3D_M2M_dvort_impl(
+		return opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 			array_start, num_particles, induced_start,
 			num_induced, result_array, kernel, regularisation_radius,
 			prog, queue, cont);
@@ -90,7 +104,7 @@ int opencl_brute_force_P3D_M2M_dvort(
 	}
 }
 
-int opencl_brute_force_P3D_M2M_visc_dvort(
+int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const cvtx_P3D **induced_start,
@@ -108,7 +122,7 @@ int opencl_brute_force_P3D_M2M_visc_dvort(
 
 	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
-		return opencl_brute_force_P3D_M2M_visc_dvort_impl(
+		return opencl_brute_force_ParticleArr_Arr_visc_ind_dvort_impl(
 			array_start, num_particles, induced_start,
 			num_induced, result_array, kernel, regularisation_radius,
 			kinematic_visc, prog, queue, cont);
@@ -119,7 +133,7 @@ int opencl_brute_force_P3D_M2M_visc_dvort(
 	}
 }
 
-int opencl_brute_force_P3D_M2M_vel_impl(
+int opencl_brute_force_ParticleArr_Arr_ind_vel_impl(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
@@ -135,7 +149,7 @@ int opencl_brute_force_P3D_M2M_vel_impl(
 	int i, n_particle_groups, n_zeroed_particles, n_modelled_particles;
 	float constant_multiplyer = 1.f / (4.f * acosf(-1));
 	size_t global_work_size[2], workgroup_size[2];
-	cl_float3 *mes_pos_buff_data, *part_pos_buff_data, *part_vort_buff_data, *res_buff_data;
+	cl_float3 *mes_pos_buff_data, *part_pos_buff_data, *part_vort_buff_data;
 	cl_mem mes_pos_buff, res_buff, *part_pos_buff, *part_vort_buff;
 	cl_int status;
 	cl_kernel cl_kernel;
@@ -157,11 +171,7 @@ int opencl_brute_force_P3D_M2M_vel_impl(
 
 		/* Generate an buffer for the measurement position data  */
 		mes_pos_buff_data = malloc(num_mes * sizeof(cl_float3));
-		for (i = 0; i < num_mes; ++i) {
-			mes_pos_buff_data[i].x = mes_start[i].x[0];
-			mes_pos_buff_data[i].y = mes_start[i].x[1];
-			mes_pos_buff_data[i].z = mes_start[i].x[2];
-		}
+		copyin_V3f_to_clfloat3(mes_pos_buff_data, mes_start, num_mes, sizeof(bsv_V3f));
 		mes_pos_buff = clCreateBuffer(context,
 			CL_MEM_READ_ONLY, num_mes * sizeof(cl_float3), NULL, &status);
 		status = clEnqueueWriteBuffer(
@@ -181,17 +191,8 @@ int opencl_brute_force_P3D_M2M_vel_impl(
 		assert(status == CL_SUCCESS);
 
 		/* Generate a results buffer */
-		res_buff_data = malloc(num_mes * sizeof(cl_float3));
-		res_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
-			sizeof(cl_float3) * num_mes, NULL, &status);
-		for (i = 0; i < num_mes; ++i) {
-			res_buff_data[i].x = 0;
-			res_buff_data[i].y = 0;
-			res_buff_data[i].z = 0;
-		}
-		status = clEnqueueWriteBuffer(
-			queue, res_buff, CL_FALSE,
-			0, num_mes * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
+		status = create_zeroed_clfloat3_rwbuffer(
+			context, queue, NULL, 0, NULL, num_mes, &res_buff); 
 		if (status != CL_SUCCESS) {
 			assert(false);
 		}
@@ -208,23 +209,14 @@ int opencl_brute_force_P3D_M2M_vel_impl(
 		n_modelled_particles = CVTX_WORKGROUP_SIZE * n_particle_groups;
 		part_pos_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
 		part_vort_buff_data = malloc(n_modelled_particles * sizeof(cl_float3));
-		for (i = 0; i < num_particles; ++i) {
-			part_pos_buff_data[i].x = array_start[i]->coord.x[0];
-			part_pos_buff_data[i].y = array_start[i]->coord.x[1];
-			part_pos_buff_data[i].z = array_start[i]->coord.x[2];
-			part_vort_buff_data[i].x = array_start[i]->vorticity.x[0];
-			part_vort_buff_data[i].y = array_start[i]->vorticity.x[1];
-			part_vort_buff_data[i].z = array_start[i]->vorticity.x[2];
-		}
+		copyin_V3f_to_clfloat3(part_pos_buff_data, 
+			&(array_start[0]->coord), num_mes, sizeof(bsv_V3f));
+		copyin_V3f_to_clfloat3(part_vort_buff_data,
+			&(array_start[0]->vorticity), num_mes, sizeof(bsv_V3f));
+
 		/* We need this so that we always have the minimum workgroup size. */
-		for (i = num_particles; i < n_modelled_particles; ++i) {
-			part_pos_buff_data[i].x = 0;
-			part_pos_buff_data[i].y = 0;
-			part_pos_buff_data[i].z = 0;
-			part_vort_buff_data[i].x = 0;
-			part_vort_buff_data[i].y = 0;
-			part_vort_buff_data[i].z = 0;
-		}
+		zero_clfloat3_array(part_pos_buff_data, n_modelled_particles);
+		zero_clfloat3_array(part_vort_buff_data, n_modelled_particles);
 		part_pos_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		part_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
 		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 3);
@@ -263,18 +255,12 @@ int opencl_brute_force_P3D_M2M_vel_impl(
 		}
 
 		/* Read back our results! */
-		clEnqueueReadBuffer(queue, res_buff, CL_TRUE, 0,
-			sizeof(cl_float3) * num_mes, res_buff_data, 1,
-			event_chain + 3 * n_particle_groups - 1, NULL);
+		add_clfloat3_to_V3f_buffer(
+			context, queue,
+			event_chain + 3 * n_particle_groups - 1, 1, NULL,
+			num_mes, &res_buff, result_array);
 		for (i = 0; i < n_particle_groups * 3; ++i) { clReleaseEvent(event_chain[i]); }
 		free(event_chain);	/* Its tempting to do this earlier, but remember, this is asynchonous! */
-		for (i = 0; i < num_mes; ++i) {
-			/* Constant multiplyer is constant the 1/4pi term. */
-			result_array[i].x[0] = res_buff_data[i].x * constant_multiplyer;
-			result_array[i].x[1] = res_buff_data[i].y * constant_multiplyer;
-			result_array[i].x[2] = res_buff_data[i].z * constant_multiplyer;
-		}
-		free(res_buff_data);
 
 		free(part_pos_buff);
 		free(part_vort_buff);
@@ -292,7 +278,7 @@ int opencl_brute_force_P3D_M2M_vel_impl(
 	}
 }
 
-int opencl_brute_force_P3D_M2M_dvort_impl(
+int opencl_brute_force_ParticleArr_Arr_ind_dvort_impl(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const cvtx_P3D **induced_start,
@@ -477,7 +463,7 @@ int opencl_brute_force_P3D_M2M_dvort_impl(
 	}
 }
 
-int opencl_brute_force_P3D_M2M_visc_dvort_impl(
+int opencl_brute_force_ParticleArr_Arr_visc_ind_dvort_impl(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const cvtx_P3D **induced_start,
@@ -694,6 +680,87 @@ int opencl_brute_force_P3D_M2M_visc_dvort_impl(
 	{
 		return -1;
 	}
+}
+
+static cl_int create_zeroed_clfloat3_rwbuffer(
+	cl_context context, cl_command_queue queue,
+	cl_event *dependencies, int ndeps, cl_event *event,
+	int num_float3,  cl_mem *buff) {
+
+	assert(buff != NULL);
+	assert(ndeps >= 0);
+	assert(ndeps > 0 ? dependencies != NULL : 1);
+	cl_float3 *res_buff_data;
+	cl_int status;
+
+	res_buff_data = malloc(num_float3 * sizeof(cl_float3));
+	*buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
+		sizeof(cl_float3) * num_float3, NULL, &status);
+	zero_clfloat3_array(res_buff_data, num_float3);
+	status = clEnqueueWriteBuffer(
+		queue, *buff, CL_FALSE,
+		0, num_float3 * sizeof(cl_float3), res_buff_data, 
+		ndeps, dependencies, event);
+	free(res_buff_data);
+	return status;
+}
+
+static cl_int add_clfloat3_to_V3f_buffer(
+	cl_context context,	cl_command_queue queue, 
+	cl_event *dependencies, int ndeps, cl_event *event,
+	int num_float3, cl_mem *clbuff, bsv_V3f *hostbuff) {
+
+	assert(clbuff != NULL);
+	assert(hostbuff != NULL);
+	assert(num_float3 >= 0);
+	assert(ndeps >= 0);
+	assert(ndeps > 0 ? dependencies != NULL : 1);
+
+	int i;
+	cl_float3 *res_buff_data;
+	cl_int status;
+
+	res_buff_data = malloc(num_float3 * sizeof(cl_float3));
+	status = clEnqueueReadBuffer(queue, *clbuff, CL_TRUE, 0,
+		sizeof(cl_float3) * num_float3, res_buff_data, ndeps,
+		dependencies, event);
+
+	for (i = 0; i < num_float3; ++i) {
+		hostbuff[i].x[0] += res_buff_data[i].x;
+		hostbuff[i].x[1] += res_buff_data[i].y;
+		hostbuff[i].x[2] += res_buff_data[i].z;
+	}
+	free(res_buff_data);
+	return status;
+}
+
+static void zero_clfloat3_array(cl_float3 *arr, int len) {
+	assert(len >= 0);
+	assert(arr != NULL);
+	int i;
+	for (i = 0; i < len; ++i) {
+		arr[i].x = 0;
+		arr[i].y = 0;
+		arr[i].z = 0;
+	}
+	return;
+}
+
+static void copyin_V3f_to_clfloat3(
+	cl_float3 *target, const bsv_V3f *source, int len, int stride_bytes) {
+
+	assert(target != NULL);
+	assert(source != NULL);
+	assert(len >= 0);
+	assert(stride_bytes > 0);
+	int i; 
+	char *vsource = (void*)source;
+	for (i = 0; i < len; ++i) {
+		target[i].x = ((bsv_V3f*)(vsource+i*stride_bytes))->x[0];
+		target[i].y = ((bsv_V3f*)(vsource+i*stride_bytes))->x[1];
+		target[i].z = ((bsv_V3f*)(vsource+i*stride_bytes))->x[2];
+	}
+	return;
 }
 
 #endif /* CVTX_USING_OPENCL */

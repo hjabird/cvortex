@@ -220,8 +220,72 @@ Definitions for the repeated body of kernels
 "	return;															\\\n"
 "}																	\n"	
 
+"#define CVTX_P2D_VISC_DVORT_START								\\\n"
+"(																	\\\n"
+"	__global float2* particle_locs,									\\\n"
+"	__global float* particle_vorts,									\\\n"
+"	__global float* particle_areas,									\\\n"
+"	__global float2* induced_locs,									\\\n"
+"	__global float* induced_vorts,									\\\n"
+"	__global float* induced_areas,									\\\n"
+"	__global float* results,										\\\n"
+"	float regularisation_dist,										\\\n"
+"	float kinematic_visc)											\\\n"
+"{																	\\\n"
+"	float2 rad;														\\\n"
+"	float ret, radd, rho, t1, t2, t21, t211, t212, eta;				\\\n"
+"	__local float reduction_workspace[CVTX_CL_WORKGROUP_SIZE];		\\\n"
+"	/* self (inducing particle) index, induced particle index */	\\\n"
+"	uint sidx, indidx, widx, loop_idx;								\\\n"
+"	sidx = get_global_id(0);										\\\n"
+"	indidx = get_global_id(1);										\\\n"
+"	widx = get_local_id(0);											\\\n"
+"	if(all(isequal(particle_locs[sidx], induced_locs[indidx]))){	\\\n"
+"		ret = 0.0f;													\\\n"
+"	}																\\\n" 
+"	else {															\\\n"
+"		rad = particle_locs[sidx] - induced_locs[indidx];			\\\n"
+"		radd = length(rad);											\\\n"
+"		rho = radd / regularisation_dist;							\\\n"
+"		t1 =  2 * kinematic_visc / pown(regularisation_dist, 2);	\\\n"
+"		t211 = particle_vorts[sidx] * induced_areas[indidx];  		\\\n"
+"		t212 = induced_vorts[indidx] * -1 * particle_areas[sidx];	\\\n"
+"		t21 = t211 + t212;											\n"
+
+/* ETA FUNCTION function!  here */
+
+"#define CVTX_P2D_VISC_DVORT_END									\\\n"
+"		t2 = t21 * eta;												\\\n"
+"		ret = t2 * t1;												\\\n"
+"	}																\\\n"
+"	reduction_workspace[widx] = ret;								\\\n"
+"	local_workspace_float_reduce(reduction_workspace);				\\\n"
+"	barrier(CLK_LOCAL_MEM_FENCE);									\\\n"
+"	if( widx == 0 ){												\\\n"
+"		results[indidx] = reduction_workspace[0] + results[indidx];	\\\n"
+"	}																\\\n"
+"	return;															\\\n"
+"}																	\n"
+
 "inline void local_workspace_float2_reduce(									\n"
 "	__local float2* reduction_workspace)									\n"
+"{																			\n"
+"	uint loop_idx = 2;														\n"
+"	uint widx = get_local_id(0);											\n"
+"	for(; loop_idx <= CVTX_CL_WORKGROUP_SIZE; 								\n"
+"		loop_idx *= 2)														\n"
+"	{																		\n"
+"		barrier(CLK_LOCAL_MEM_FENCE);										\n"
+"		if( widx < CVTX_CL_WORKGROUP_SIZE/loop_idx ){						\n"
+"			reduction_workspace[widx] = reduction_workspace[widx] 			\n"
+"				+  reduction_workspace[widx + CVTX_CL_WORKGROUP_SIZE/loop_idx];\n"
+"		}																	\n"
+"	}																		\n"
+"	return;																	\n"
+"}																			\n"
+
+"inline void local_workspace_float_reduce(									\n"
+"	__local float* reduction_workspace)										\n"
 "{																			\n"
 "	uint loop_idx = 2;														\n"
 "	uint widx = get_local_id(0);											\n"
@@ -367,6 +431,25 @@ Definitions for the repeated body of kernels
 "	CVTX_P2D_VEL_START														\n"
 "	g = 1.f - exp(-rho * rho * 0.5f);										\n"
 "	CVTX_P2D_VEL_END														\n"
+
+/* ###########################################################
+	2D viscous ind Dvort calculation kernels here:
+	name cvtx_nb_P2D_visc_dvort_XXXXX	
+	###########################################################	*/
+
+"	/* Viscocity doesn't work for singular & planetary */							\n"
+
+"__kernel void cvtx_nb_P2D_visc_dvort_winckelmans									\n"
+"	CVTX_P2D_VISC_DVORT_START														\n"
+"		eta = 24.f * exp(4.f / pown(rho * rho + 1.f, 3)) / pown(rho * rho + 1.f, 4);\n"
+"	CVTX_P2D_VISC_DVORT_END															\n"
+
+
+"__kernel void cvtx_nb_P2D_visc_dvort_gaussian										\n"
+"	CVTX_P2D_VISC_DVORT_START														\n"
+"		const float pi = 3.14159265359f;											\n"
+"		eta =  exp(-rho * rho * 0.5f);												\n"
+"	CVTX_P2D_VISC_DVORT_END															\n"
 
 /*	###########################################################
 	vortex_filament code:
