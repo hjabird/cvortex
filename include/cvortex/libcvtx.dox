@@ -92,25 +92,41 @@ typedef struct {
 /*! \struct cvtx_VortFunc
  *	\brief Unifies a collection of functions describing a vortex particle 
  *	regularisation method.
+ *
+ *	Nomenclature is taken from 
+ *	"Vortex methods and their application to trailing wake vortex simulations",
+ *	Winckelmans et al., C. R. Physique 6 (2005)
  */
 /*! \var bsv_V3f cvtx_VortFunc::g_3D
- *	\brief A float(*g_3D)(float rho)
+ *	\brief \f$g^{3D}(r/\sigma)\f$
+ *
+ *	The regularisation function for velocity in 3D where r is
+ *	radius and \f$\sigma\f$ is regularisation distance.
  */
 /*! \var bsv_V3f cvtx_VortFunc::g_2D
- *	\brief A float(*g_2D)(float rho)
+ *	\brief \f$g^{2D}(r/\sigma)\f$
+ *
+ *	The regularisation function for velocity in 2D where r is
+ *	radius and \f$\sigma\f$ is regularisation distance.
  */
 /*! \var bsv_V3f cvtx_VortFunc::zeta_3D
- *	\brief A float(*zeta_3D)(float rho)
+ *	\brief \f$\zeta^{3D}(r/\sigma)\f$
+ *
+ *	\f$\zeta^{3D}(\rho) = \frac{1}{\rho^2}\frac{dg^{3D}}{d\rho}(\rho)\f$
  */
 /*! \var bsv_V3f cvtx_VortFunc::combined_3D
  *	\brief A void(*combined_3D)(float rho, float* g, float* zeta)
  *	unifing the evaluation of g_3D and zeta_3D.
  */
 /*! \var bsv_V3f cvtx_VortFunc::eta_3D
- *	\brief float(*eta_3D)(float rho)
+ *	\brief \f$\eta^{3D}(r/\sigma)\f$
+ *
+ *	\f$\eta^{3D}(\rho) = -\frac{1}{\rho}\frac{d\zeta^{3D}}{d\rho}(\rho)\f$
  */
 /*! \var bsv_V3f cvtx_VortFunc::eta_2D
- *	\brief A float(*eta_2D)(float rho);
+ *	\brief \f$\eta^{2D}(r/\sigma)\f$
+ *
+ *	\f$\eta^{2D}(\rho) = -\frac{1}{\rho}\frac{d\zeta^{2D}}{d\rho}(\rho)\f$
  */
 /*! \var bsv_V3f cvtx_VortFunc::cl_kernel_name_ext
  *	\brief A 32 character array (inc NULL terminator)
@@ -121,6 +137,10 @@ typedef struct {
  /*! \struct cvtx_RedistFunc
  *	\brief Unifies information describing a vortex particle redistribution method.
  *	regularisation method.
+ *
+ *	Nomenclature is taken from 
+ *	"Vortex methods and their application to trailing wake vortex simulations",
+ *	Winckelmans et al., C. R. Physique 6 (2005)
  */
 /*! \var bsv_V3f cvtx_RedistFunc::func
  *	\brief A float(*func)(float U) of the redistribution function,
@@ -166,12 +186,28 @@ LIBRARY CONTROL
  *	of GPU kernels to build or the way CVortex was built.
  */
  
+/*! \fn cvtx_num_enabled_accelerators ()
+ *
+ * 	\brief Number of accelerators to be used by CVortex
+ * 
+ *	\returns the number of accelerators in use in 
+ *	[0, cvtx_num_accelerators]
+ *
+ *	CVortex can use GPUs to accelerate computation. This returns the 
+ *	number of accelerators in use by the library. Not all accelerators
+ *	found by the system may be in use, hence cvtx_num_enabled_accelerators()
+ *	may return a value less cvtx_num_accelerators().
+ *	
+ *	Accelerators may be enabled with cvtx_accelerator_enable(int) and
+ *	disabled with cvtx_accelerator_disable(int).
+ */
+ 
 /*! \fn cvtx_accelerator_name(int accelerator_id)
  *
  * 	\brief The name of an accelerator.
  *
  *	\param accelerator_id An integer representing an accelerator by 
- *	index. This is between [0, cvtx_num_accelerators()].
+ *	index. This is between [0, cvtx_num_accelerators()-1].
  *	\returns A non-owning *char to the name of the accelerator. May
  *	return NULL for unknown name or bad index.
  *
@@ -180,6 +216,158 @@ LIBRARY CONTROL
  *	to the mildly cryptic (gfx902).
  */
  
+/*! \fn cvtx_accelerator_enabled(int accelerator_id)
+ *
+ * 	\brief Returns true if a given accelerator is in use.
+ * 
+ *	\returns true or false. True if accelerator is in use, false
+ *	otherwise.
+ *
+ *	An accelerator with index in [0, cvtx_num_accelerators()-1]
+ *	is chosen by index. This function returns true if the accelerator
+ *	is enabled for use within CVortex.
+ *	
+ *	Accelerators may be enabled with cvtx_accelerator_enable(int) and
+ *	disabled with cvtx_accelerator_disable(int).
+ */
+ 
+/*! \fn cvtx_accelerator_enable(int accelerator_id)
+ *
+ * 	\brief Enables a given accelerator for use.
+ *
+ *	An accelerator with index in [0, cvtx_num_accelerators()-1]
+ *	is chosen by index. This function enables the accelerator if 
+ *	if not already enabled.
+ *	
+ *	Accelerators may be enabled with cvtx_accelerator_enable(int) and
+ *	disabled with cvtx_accelerator_disable(int).
+ */
+ 
+/*! \fn cvtx_accelerator_disable(int accelerator_id)
+ *
+ * 	\brief Stops CVortex using an accelerator.
+
+ *
+ *	An accelerator with index in [0, cvtx_num_accelerators()-1]
+ *	is chosen by index. This function disables the accelerator if 
+ *	if not already enabled.
+ *	
+ *	Accelerators may be enabled with cvtx_accelerator_enable(int) and
+ *	disabled with cvtx_accelerator_disable(int).
+ */
+ 
+/*----------------------------------------------------------------------------
+REDISTRIBUTION FUNCTIONS
+----------------------------------------------------------------------------*/
+/*! \fn cvtx_RedistFunc_lambda0(void)
+ *
+ * 	\brief Returns \f$\Lambda_0(U)\f$ vortex particle redistribution method.
+ *
+ *	A method to redistribute vortex particles:
+ *	\f[ \Lambda_0(U) = 
+	\begin{cases}
+		1 &\texttt{ if }U < \frac{1}{2} \\
+		0 &\texttt{ otherwise}	
+	\end{cases}
+ *	\f]
+ *	where \f$U\f$ is the distance between a grid point and a particle to be
+ *	redistbuted normalised with respect to grid spacing.
+ *
+ *	This method is discontinuous which may lead to poor numerical results.
+ */
+ 
+ /*! \fn cvtx_RedistFunc_lambda1(void)
+ *
+ * 	\brief Returns \f$\Lambda_1(U)\f$ vortex particle redistribution method.
+ *
+ *	A method to redistribute vortex particles:
+ *	\f[ \Lambda_1(U) = 
+	\begin{cases}
+		1-U &\texttt{ if }U < 1 \\
+		0 &\texttt{ otherwise}	
+	\end{cases}
+ *	\f]
+ *	where \f$U\f$ is the distance between a grid point and a particle to be
+ *	redistbuted normalised with respect to grid spacing.
+ *
+ *	This method is usually avoided because of its dissipative nature.
+ */
+ 
+ /*! \fn cvtx_RedistFunc_lambda2(void)
+ *
+ * 	\brief Returns \f$\Lambda_2(U)\f$ vortex particle redistribution method.
+ *
+ *	A method to redistribute vortex particles:
+ *	\f[ \Lambda_2(U) = 
+	\begin{cases}
+		1-U^2 &\texttt{ if } 0 \leq U < \frac{1}{2} \\
+		\frac{1}{2}(1-U)(2-U) &\texttt{ if }  \frac{1}{2} \leq U < \frac{3}{2} \\
+		0 &\texttt{ otherwise}	
+	\end{cases}
+ *	\f]
+ *	where \f$U\f$ is the distance between a grid point and a particle to be
+ *	redistbuted normalised with respect to grid spacing.
+ *
+ *	This method is discontinuous which may lead to poor numerical results.
+ */
+
+ /*! \fn cvtx_RedistFunc_lambda3(void)
+ *
+ * 	\brief Returns \f$\Lambda_3(U)\f$ vortex particle redistribution method.
+ *
+ *	A method to redistribute vortex particles:
+ *	\f[ \Lambda_3(U) = 
+	\begin{cases}
+		\frac{1}{2}(1-U^2)(2-U) &\texttt{ if } 0 \leq U \leq 1 \\
+		\frac{1}{6}(1-U)(2-U)(3-U) &\texttt{ if }  \frac{1}{2} \leq U \leq \frac{3}{2} \\
+		0 &\texttt{ otherwise}	
+	\end{cases}
+ *	\f]
+ *	where \f$U\f$ is the distance between a grid point and a particle to be
+ *	redistbuted normalised with respect to grid spacing.
+ */
+ 
+ /*! \fn cvtx_RedistFunc_m4p(void)
+ *
+ * 	\brief Returns \f$M_4'(U)\f$ vortex particle redistribution method.
+ *
+ *	A method to redistribute vortex particles:
+ *	\f[ M_4'(U) = 
+	\begin{cases}
+		1-\frac{5}{2}U^2 + \frac{3}{2}U^3 &\texttt{ if } 0 \leq U \leq 1 \\
+		\frac{1}{2}(1-U)(2-U)^2 &\texttt{ if }  \frac{1}{2} \leq U \leq \frac{3}{2} \\
+		0 &\texttt{ otherwise}	
+	\end{cases}
+ *	\f]
+ *	where \f$U\f$ is the distance between a grid point and a particle to be
+ *	redistbuted normalised with respect to grid spacing.
+ */
+ 
+/*----------------------------------------------------------------------------
+REGULARISATION FUNCTIONS
+----------------------------------------------------------------------------*/
+
+ /*! \fn cvtx_VortFunc_singular(void)
+ *
+ * 	\brief Returns a structure for representing singular vortex praticles.
+ */
+ 
+ /*! \fn cvtx_VortFunc_winckelmans(void)
+ *
+ * 	\brief Returns a structure for representing Winckelmans'
+ *	high order regularisation.
+ */
+ 
+ /*! \fn cvtx_VortFunc_planetary(void)
+ *
+ * 	\brief Returns a structure for representing planetary regularisation.
+ */
+ 
+ /*! \fn cvtx_VortFunc_gaussian(void)
+ *
+ * 	\brief Returns a structure for representing gaussian regularisation.
+ */
+
 /*----------------------------------------------------------------------------
 3D VORTEX PARTICLES
 ----------------------------------------------------------------------------*/
@@ -512,7 +700,7 @@ LIBRARY CONTROL
  *	For singular kernels, the regularisation radius is ignored.
  */
  
-/*! \fn bsv_V3f cvtx_P2D_S2S_dvort(
+/*! \fn float cvtx_P2D_S2S_dvort(
  *	const cvtx_P2D * self,
  *	const cvtx_P2D * induced_particle,
  *	const cvtx_VortFunc * kernel,
@@ -533,7 +721,7 @@ LIBRARY CONTROL
  *	This vortex stretching term uses a transpose scheme.
  */
  
-/*! \fn bsv_V3f cvtx_P2D_S2S_visc_dvort(
+/*! \fn float cvtx_P2D_S2S_visc_dvort(
  *	const cvtx_P2D * self,
  *	const cvtx_P2D * induced_particle,
  *	const cvtx_VortFunc * kernel,
@@ -583,7 +771,7 @@ LIBRARY CONTROL
  *	For singular kernels, the regularisation radius is ignored.
  */
  
- /*! \fn bsv_V2f cvtx_P3D_M2S_dvort(
+ /*! \fn float cvtx_P2D_M2S_dvort(
  * 	const cvtx_P2D **array_start,
  *	const int num_particles,
  *	const cvtx_P2D *induced_particle,
@@ -611,7 +799,7 @@ LIBRARY CONTROL
  *	This vortex stretching term uses a transpose scheme.
  */
  
- /*! \fn bsv_V3f cvtx_P2D_M2S_visc_dvort(
+ /*! \fn float cvtx_P2D_M2S_visc_dvort(
  *	const cvtx_P2D **array_start,
  *	const int num_particles,
  *	const cvtx_P2D *induced_particle,
