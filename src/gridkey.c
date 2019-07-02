@@ -72,7 +72,7 @@ void minmax_xyz_posn(
 	if (nparticles > 0) {
 		txmin = txmax = array_start[0]->coord.x[0];
 		tymin = tymax = array_start[0]->coord.x[1];
-		tzmin = tzmax = array_start[0]->coord.x[3];
+		tzmin = tzmax = array_start[0]->coord.x[2];
 	}
 	else {
 		txmin = txmax = tymin = tymax = tzmin = tzmax = 0.f;

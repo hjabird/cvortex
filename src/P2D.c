@@ -32,15 +32,10 @@ SOFTWARE.
 #include <string.h>
 
 #include "gridkey.h"
+#include "sorting.h"
 
 #ifdef CVTX_USING_OPENCL
 #	include "ocl_P2D.h"
-#endif
-
-#ifdef _WIN32
-#	define qsort_r qsort_s
-#elif defined(linux)
-#	define qsort_r qsort_r
 #endif
 
 #define NG_FOR_REDUCING_PARICLES 64
@@ -290,7 +285,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 			grid_density, minx, miny);
 	}
 	/* Sort our key indexs by gridkey (makes later array much faster to sort) */
-	qsort_r(oidx_array, n_input_particles, sizeof(unsigned int), comp_Gridkey2D_by_idx, okey_array);
+	/*qsort_r(oidx_array, n_input_particles, sizeof(unsigned int), comp_Gridkey2D_by_idx, okey_array);*/
 	
 	/* Now we make new particles based on grid. */
 	/* ppop = Particles per orginal particle. */
@@ -331,8 +326,11 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	free(okey_array);
 
 	/* Now merge our new particles */
-	qsort_r(nidx_array, n_input_particles * ppop, sizeof(unsigned int), 
-		comp_Gridkey2D_by_idx, nkey_array);
+	/*qsort_r(nidx_array, n_input_particles * ppop, sizeof(unsigned int), 
+		comp_Gridkey2D_by_idx, nkey_array);*/
+	sort_uintkey_by_uivar_radix((char*)nkey_array,
+		sizeof(struct Gridkey2D), nidx_array, n_input_particles * ppop);
+
 	nnkey_array = malloc(sizeof(struct Gridkey2D) * n_input_particles * ppop);
 	nnvort_array = malloc(sizeof(float) * n_input_particles * ppop);
 	for (i = 0; i < ppop * n_input_particles; ++i) {
@@ -402,16 +400,16 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 			while (1) {
 				for (i = 0; i < NG_FOR_REDUCING_PARICLES; ++i) {
 					grms[i] = 0;
-					guesses[i] = minv + (i + 1) * (maxv - minv) / (NG_FOR_REDUCING_PARICLES + 1);
+					guesses[i] = minv + i * (maxv - minv) / (float)NG_FOR_REDUCING_PARICLES;
 				}
 				for (i = 0; i < n_created_particles; ++i) {
-					for (j = 0; j < 16; ++j) {
+					for (j = 0; j < NG_FOR_REDUCING_PARICLES; ++j) {
 						grms[j] += fabsf(nvort_array[i]) < guesses[j] ? 0 : 1;
 					}
 				}
-				for (i = NG_FOR_REDUCING_PARICLES-2; i >= 0; ++i) {
-					maxv = guesses[i + 1];
-					minv = guesses[i];
+				for (i = 1; i < NG_FOR_REDUCING_PARICLES; ++i) {
+					maxv = guesses[i];
+					minv = guesses[i - 1];
 					if (grms[i] < max_output_particles) { 
 						k = i;
 						break;
@@ -420,11 +418,12 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 				/* Termination condition. */
 				if (minv == maxv || grms[k] == grms[k + 1] || 
 					((float)(max_output_particles - grms[k]) 
-						/ ((float)max_output_particles)) < 0.05) {
+						/ ((float)max_output_particles)) < 0.01) {
 					break;
 				}
 			}
 			min_keepable_particle = guesses[k];
+			j = 0;
 			for (i = 0; i < n_created_particles; ++i) {
 				if (fabsf(nvort_array[i]) >= min_keepable_particle) {
 					nvort_array[j] = nvort_array[i];
