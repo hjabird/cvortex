@@ -446,7 +446,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	/* Now merge our new particles */
 	/* qsort_r(nidx_array, n_input_particles * ppop, sizeof(unsigned int),
 		comp_Gridkey3D_by_idx, nkey_array); */
-	sort_uintkey_by_uivar_radix_p((char*)nkey_array,
+	sort_uintkey_by_uivar_radix((char*)nkey_array,
 		sizeof(struct Gridkey3D), nidx_array, n_input_particles* ppop);
 
 	nnkey_array = malloc(sizeof(struct Gridkey3D) * n_input_particles * ppop);

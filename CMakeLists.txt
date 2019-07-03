@@ -11,14 +11,6 @@ set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-if(USE_OPENMP)
-    find_package(OpenMP)
-    if (OPENMP_FOUND)
-        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-        set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-    endif()
-endif(USE_OPENMP)
-
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 file (GLOB CVORTEX_INCLUDE "include/cvortex/libcvtx.h") # So shoot me for GLOBing.
 file (GLOB CVORTEX_SOURCE  "src/*.[ch]")
@@ -40,6 +32,15 @@ else()
 endif(BUILD_STATIC_LIBRARY)
 # We don't want warnings...
 target_compile_definitions(cvortex PRIVATE _CRT_SECURE_NO_WARNINGS)
+
+if(USE_OPENMP)
+    find_package(OpenMP)
+    if (OPENMP_FOUND)
+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+		target_compile_definitions(cvortex PRIVATE CVTX_USING_OPENMP)
+    endif()
+endif(USE_OPENMP)
 
 if(USE_OPENCL)
     find_package(OpenCL REQUIRED)

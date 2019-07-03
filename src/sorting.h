@@ -42,17 +42,12 @@ END:	UI		= [3, 2, 6, 4]
 		KEYS	= [1, 0, 3, 2]
 UI is assumed to be array of unsigned integers of
 uibytes size.
-Uses radix sorting method.
+Uses parallel radix-8 sorting method.
 
 ui_start is an array of uibytes * num_items bytes long.
 key_start is an array of unsigned ints num_items long.
 */
 void sort_uintkey_by_uivar_radix(
-	unsigned char* ui_start, size_t uibytes,
-	unsigned int* key_start, size_t num_items);
-
-/* Parallel variant of sort_uintkey_by_uivar_radix(..) */
-void sort_uintkey_by_uivar_radix_p(
 	unsigned char* ui_start, size_t uibytes,
 	unsigned int* key_start, size_t num_items);
 
