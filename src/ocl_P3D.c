@@ -30,7 +30,7 @@ SOFTWARE.
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <CL/cl.h>
+
 #include "opencl_acc.h"
 #include "ocl_P3D.h"
 

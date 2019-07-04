@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 #ifdef CVTX_USING_OPENCL
-#include <CL/cl.h>
+
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -353,9 +353,11 @@ static int load_platform_devices(struct ocl_platform_state *plat){
 
 	int retv, i;
 	cl_int status;
+	cl_uint num_devices;
 	size_t str_len;
 	/* We're only interested in GPUs - cpus are slow in comparison and work better with OpenMP */
-	status = clGetDeviceIDs(plat->platform, CL_DEVICE_TYPE_GPU, 0, NULL, &(plat->num_devices));
+	status = clGetDeviceIDs(plat->platform, CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
+	plat->num_devices = num_devices;
 	plat->devices = malloc(sizeof(cl_device_id) * plat->num_devices);
 	status = clGetDeviceIDs(plat->platform, CL_DEVICE_TYPE_GPU, plat->num_devices, plat->devices, NULL);
 	if (status != CL_SUCCESS || plat->devices == NULL) {
@@ -386,7 +388,7 @@ static int load_platform_devices(struct ocl_platform_state *plat){
 static int create_platform_context_and_program(struct ocl_platform_state *plat) {
 	assert(plat != NULL);
 	assert(plat->platform != NULL);
-	assert(plat->good = 1);
+	assert(plat->good == 1);
 	assert(plat->program_build_log == NULL);
 	assert(plat->context == NULL);
 	assert(plat->program == NULL);
@@ -432,7 +434,7 @@ static int create_platform_context_and_program(struct ocl_platform_state *plat) 
 static int load_platform_device_queues(struct ocl_platform_state *plat) {
 	assert(plat != NULL);
 	assert(plat->platform != NULL);
-	assert(plat->good = 1);
+	assert(plat->good == 1);
 	assert(plat->program != NULL);
 	assert(plat->context != NULL);
 	assert(plat->devices != NULL);
@@ -440,7 +442,7 @@ static int load_platform_device_queues(struct ocl_platform_state *plat) {
 	assert(plat->queues == NULL);
 
 	int i;
-	cl_uint status;
+	cl_int status;
 
 	plat->queues = malloc(sizeof(cl_command_queue) * plat->num_devices);
 	for (i = 0; i < plat->num_devices; ++i) {

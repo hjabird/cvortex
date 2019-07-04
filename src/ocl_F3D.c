@@ -29,7 +29,7 @@ SOFTWARE.
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <CL/cl.h>
+
 #include "opencl_acc.h"
 #include "ocl_F3D.h"
 

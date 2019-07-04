@@ -237,7 +237,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_vel(
 #ifdef CVTX_USING_OPENCL
 	if (num_particles < 256
 		|| num_mes < 256
-		|| kernel->cl_kernel_name_ext == ""
+		|| strcmp(kernel->cl_kernel_name_ext, "")
 		|| opencl_brute_force_P3D_M2M_vel(
 			array_start, num_particles, mes_start,
 			num_mes, result_array, kernel, regularisation_radius) != 0)
@@ -281,7 +281,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_dvort(
 #ifdef CVTX_USING_OPENCL
 	if (	num_particles < 256
 		||	num_induced < 256
-		||	kernel->cl_kernel_name_ext == ""
+		||	strcmp(kernel->cl_kernel_name_ext, "")
 		||	opencl_brute_force_P3D_M2M_dvort(
 				array_start, num_particles, induced_start,
 				num_induced, result_array, kernel, regularisation_radius) != 0)
@@ -327,7 +327,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
 #ifdef CVTX_USING_OPENCL
 	if (	num_particles < 256
 		||	num_induced < 256
-		||	kernel->cl_kernel_name_ext == ""
+		||	strcmp(kernel->cl_kernel_name_ext, "")
 		||	opencl_brute_force_P3D_M2M_visc_dvort(
 				array_start, num_particles, induced_start,
 				num_induced, result_array, kernel, regularisation_radius, kinematic_visc) != 0)
@@ -446,7 +446,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	/* Now merge our new particles */
 	/* qsort_r(nidx_array, n_input_particles * ppop, sizeof(unsigned int),
 		comp_Gridkey3D_by_idx, nkey_array); */
-	sort_uintkey_by_uivar_radix((char*)nkey_array,
+	sort_uintkey_by_uivar_radix((unsigned char*)nkey_array,
 		sizeof(struct Gridkey3D), nidx_array, n_input_particles* ppop);
 
 	nnkey_array = malloc(sizeof(struct Gridkey3D) * n_input_particles * ppop);

@@ -26,6 +26,7 @@ SOFTWARE.
 ============================================================================*/
 
 #include <assert.h>
+#include <stdlib.h>
 
 void minmax_xy_posn(
 	const cvtx_P2D **array_start, const int nparticles,

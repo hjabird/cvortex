@@ -28,10 +28,10 @@ SOFTWARE.
 #ifndef CVTX_OPENCL_ACC_H
 #define CVTX_OPENCL_ACC_H
 
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #include <CL/cl.h>
 #include <bsv/bsv.h>
 
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #define CVTX_WORKGROUP_SIZE 256
 
 struct ocl_platform_state{
@@ -107,5 +107,5 @@ int opencl_get_device_state(
 /* Get the name of an accelerator by linear index. */
 char* opencl_accelerator_name(int lindex);
 
-#endif CVTX_OPENCL_ACC_H
-#endif CVTX_USING_OPENCL
+#endif
+#endif
