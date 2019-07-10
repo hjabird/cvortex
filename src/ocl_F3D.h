@@ -45,6 +45,17 @@ int opencl_brute_force_F3D_M2M_vel_impl(
 	cl_command_queue queue,
 	cl_context context);
 
+/* M2M, but for where the num_mes is small (EG. <256) */
+int opencl_brute_force_F3D_M2sM_vel_impl(
+	const cvtx_F3D** array_start,
+	const int num_filaments,
+	const bsv_V3f* mes_start,
+	const int num_mes,
+	bsv_V3f* result_array,
+	cl_program program,
+	cl_command_queue queue,
+	cl_context context);
+
 int opencl_brute_force_F3D_M2M_dvort(
 	const cvtx_F3D **array_start,
 	const int num_fil,

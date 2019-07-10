@@ -40,6 +40,12 @@ struct Gridkey3D {
 	unsigned int zk;
 };
 
+/* A coordinate in an oct-tree in 2D. */
+struct MortonKey2D {
+	unsigned int k1;
+	unsigned int k2;
+};
+
 void minmax_xy_posn(
 	const cvtx_P2D **array_start, const int nparticles,
 	float *xmin, float *xmax, float *ymin, float *ymax);
@@ -75,5 +81,23 @@ Array is of Gridkey3D is given by context.
 Compares an Gridkey3D by x key then y key then z key. */
 int comp_Gridkey3D_by_idx(void* context, const void* p1, const void* p2);
 
+/*
+Interleave 2 uint32s.
+x & y are interleaved such that all of the bits of x
+are in even positions and all the bits of y are in the 
+odd positions. Returns a 2 uints wrapped up in
+a MortonKey2D structure.
+*/
+struct MortonKey2D interleave_2uints(unsigned int x, unsigned int y);
 
-#endif // !CVTX_GRIDKEY_H
+/*
+Interleave bits of (8-bit) x and y, so that all of the
+bits of x are in the even positions and y in the odd;
+returns the resulting 16-bit Morton Number.
+
+Based on public domain code from
+https://graphics.stanford.edu/~seander/bithacks.html#Interleave64bitOps
+*/
+unsigned short interleave_2uchars(unsigned char x, unsigned char y);
+
+#endif /* CVTX_GRIDKEY_H */

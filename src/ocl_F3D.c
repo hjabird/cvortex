@@ -48,9 +48,16 @@ int opencl_brute_force_F3D_M2M_vel(
 
 	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
-		return opencl_brute_force_F3D_M2M_vel_impl(
-			array_start, num_filaments, mes_start,
-			num_mes, result_array, prog, queue, cont);
+		if (num_mes < CVTX_WORKGROUP_SIZE) {
+			return opencl_brute_force_F3D_M2sM_vel_impl(
+				array_start, num_filaments, mes_start,
+				num_mes, result_array, prog, queue, cont);
+		}
+		else {
+			return opencl_brute_force_F3D_M2M_vel_impl(
+				array_start, num_filaments, mes_start,
+				num_mes, result_array, prog, queue, cont);
+		}
 	}
 	else
 	{
@@ -226,6 +233,172 @@ int opencl_brute_force_F3D_M2M_vel_impl(
 		free(fil_start_buff);
 		free(fil_end_buff);
 		free(fil_strength_buff);
+		free(fil_start_buff_data);
+		free(fil_end_buff_data);
+		free(fil_strength_buff_data);
+		free(mes_pos_buff_data);
+		clReleaseMemObject(res_buff);
+		clReleaseMemObject(mes_pos_buff);
+		clReleaseKernel(cl_kernel);
+		return 0;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+int opencl_brute_force_F3D_M2sM_vel_impl(
+	const cvtx_F3D** array_start,
+	const int num_filaments,
+	const bsv_V3f* mes_start,
+	const int num_mes,
+	bsv_V3f* result_array,
+	cl_program program,
+	cl_command_queue queue,
+	cl_context context)
+{
+
+	char kernel_name[128] = "cvtx_nb_Filament_ind_vel_singular_smes";
+	int i, num_filament_groups, n_zeroed_particles, n_modelled_filaments;
+	size_t global_work_size[2], workgroup_size[2];
+	cl_float3 *mes_pos_buff_data, * fil_start_buff_data, * fil_end_buff_data, * res_buff_data;
+	cl_float *fil_strength_buff_data;
+	cl_mem mes_pos_buff, res_buff, fil_start_buff, fil_end_buff, fil_strength_buff;
+	cl_int status;
+	cl_kernel cl_kernel;
+
+	if (opencl_init() == 1)
+	{
+		cl_kernel = clCreateKernel(program, kernel_name, &status);
+		if (status != CL_SUCCESS) {
+			clReleaseKernel(cl_kernel);
+			return -1;
+		}
+
+		num_filament_groups = num_filaments / CVTX_WORKGROUP_SIZE +
+			(num_filaments % CVTX_WORKGROUP_SIZE == 0 ? 0 : 1);
+
+		/* This has to match the opencl kernels, so be careful with fiddling */
+		workgroup_size[0] = CVTX_WORKGROUP_SIZE;	/* Particles per group */
+		workgroup_size[1] = 1;	/* Only 1 measure pos per workgroup. */
+		global_work_size[0] = CVTX_WORKGROUP_SIZE;	/* We use multiple particle buffers */
+		global_work_size[1] = num_mes * num_filament_groups;
+
+		/* Generate an buffer for the measurement position data  */
+		mes_pos_buff_data = malloc(num_mes * sizeof(cl_float3));
+		for (i = 0; i < num_mes; ++i) {
+			mes_pos_buff_data[i].x = mes_start[i].x[0];
+			mes_pos_buff_data[i].y = mes_start[i].x[1];
+			mes_pos_buff_data[i].z = mes_start[i].x[2];
+		}
+		mes_pos_buff = clCreateBuffer(context,
+			CL_MEM_READ_ONLY, num_mes * sizeof(cl_float3), NULL, &status);
+		status = clEnqueueWriteBuffer(
+			queue, mes_pos_buff, CL_FALSE,
+			0, num_mes * sizeof(cl_float3), mes_pos_buff_data, 0, NULL, NULL);
+		assert(status == CL_SUCCESS);
+		status = clSetKernelArg(cl_kernel, 3, sizeof(cl_mem), &mes_pos_buff);
+		if (status != CL_SUCCESS) {
+			free(mes_pos_buff_data);
+			clReleaseMemObject(mes_pos_buff);
+			clReleaseKernel(cl_kernel);
+			return -1;
+		}
+
+		/* Generate a results buffer */
+		res_buff_data = malloc(num_mes * num_filament_groups * sizeof(cl_float3));
+		res_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
+			sizeof(cl_float3) * num_mes * num_filament_groups, NULL, &status);
+		for (i = 0; i < num_mes * num_filament_groups; ++i) {
+			res_buff_data[i].x = 0;
+			res_buff_data[i].y = 0;
+			res_buff_data[i].z = 0;
+		}
+		status = clEnqueueWriteBuffer(
+			queue, res_buff, CL_FALSE, 0, 
+			num_mes * num_filament_groups * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
+		if (status != CL_SUCCESS) {
+			assert(false);
+			printf("OPENCL:\tFailed to enqueue write buffer.");
+		}
+		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &res_buff);
+		assert(status == CL_SUCCESS);
+
+		/* Now create & dispatch particle buffers and kernel. */
+		if (num_filaments % CVTX_WORKGROUP_SIZE) {
+			n_zeroed_particles = CVTX_WORKGROUP_SIZE
+				- num_filaments % CVTX_WORKGROUP_SIZE;
+		}
+		n_modelled_filaments = CVTX_WORKGROUP_SIZE * num_filament_groups;
+		fil_start_buff_data = malloc(n_modelled_filaments * sizeof(cl_float3));
+		fil_end_buff_data = malloc(n_modelled_filaments * sizeof(cl_float3));
+		fil_strength_buff_data = malloc(n_modelled_filaments * sizeof(cl_float));
+		for (i = 0; i < num_filaments; ++i) {
+			fil_start_buff_data[i].x = array_start[i]->start.x[0];
+			fil_start_buff_data[i].y = array_start[i]->start.x[1];
+			fil_start_buff_data[i].z = array_start[i]->start.x[2];
+			fil_end_buff_data[i].x = array_start[i]->end.x[0];
+			fil_end_buff_data[i].y = array_start[i]->end.x[1];
+			fil_end_buff_data[i].z = array_start[i]->end.x[2];
+			fil_strength_buff_data[i] = array_start[i]->strength;
+		}
+		/* We need this so that we always have the minimum workgroup size. */
+		for (i = num_filaments; i < n_modelled_filaments; ++i) {
+			fil_start_buff_data[i].x = (float)0.0;
+			fil_start_buff_data[i].y = (float)0.0;
+			fil_start_buff_data[i].z = (float)0.0;
+			fil_end_buff_data[i].x = (float)0.0;
+			fil_end_buff_data[i].y = (float)0.0;
+			fil_end_buff_data[i].z = (float)0.0;
+			fil_strength_buff_data[i] = (float)0.0;
+		}
+		fil_start_buff = clCreateBuffer(context,
+			CL_MEM_READ_ONLY, n_modelled_filaments * sizeof(cl_float3), NULL, &status);
+		status = clEnqueueWriteBuffer(
+			queue, fil_start_buff, CL_FALSE,
+			0, n_modelled_filaments * sizeof(cl_float3), fil_start_buff_data, 0, NULL, NULL);
+		assert(status == CL_SUCCESS);
+		status = clSetKernelArg(cl_kernel, 0, sizeof(cl_mem), &fil_start_buff);
+
+		fil_end_buff = clCreateBuffer(context,
+			CL_MEM_READ_ONLY, n_modelled_filaments * sizeof(cl_float3), NULL, &status);
+		status = clEnqueueWriteBuffer(
+			queue, fil_end_buff, CL_FALSE,
+			0, n_modelled_filaments * sizeof(cl_float3), fil_end_buff_data, 0, NULL, NULL);
+		assert(status == CL_SUCCESS);
+		status = clSetKernelArg(cl_kernel, 1, sizeof(cl_mem), &fil_end_buff);
+
+		fil_strength_buff = clCreateBuffer(context,
+			CL_MEM_READ_ONLY, n_modelled_filaments * sizeof(cl_float), NULL, &status);
+		status = clEnqueueWriteBuffer(
+			queue, fil_strength_buff, CL_FALSE,
+			0, n_modelled_filaments * sizeof(cl_float), fil_strength_buff_data, 0, NULL, NULL);
+		assert(status == CL_SUCCESS);
+		status = clSetKernelArg(cl_kernel, 2, sizeof(cl_mem), &fil_strength_buff);
+
+		clFinish(queue);
+		status = clEnqueueNDRangeKernel(queue, cl_kernel, 2,
+			NULL, global_work_size, workgroup_size, 0, NULL, NULL);
+		assert(status == CL_SUCCESS);
+
+		/* Read back our results! */
+		clFinish(queue);
+		clEnqueueReadBuffer(queue, res_buff, CL_TRUE, 0,
+			sizeof(cl_float3) * num_mes * num_filament_groups, res_buff_data, 0,
+			NULL, NULL);
+		for (i = 0; i < num_mes; ++i) {
+			result_array[i].x[0] = res_buff_data[i].x;
+			result_array[i].x[1] = res_buff_data[i].y;
+			result_array[i].x[2] = res_buff_data[i].z;
+		}
+		for (i = num_mes; i < num_mes * num_filament_groups; ++i) {
+			result_array[i % num_mes].x[0] += res_buff_data[i].x;
+			result_array[i % num_mes].x[1] += res_buff_data[i].y;
+			result_array[i % num_mes].x[2] += res_buff_data[i].z;
+		}
+		free(res_buff_data);
+
 		free(fil_start_buff_data);
 		free(fil_end_buff_data);
 		free(fil_strength_buff_data);

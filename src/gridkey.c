@@ -186,3 +186,40 @@ int comp_Gridkey3D_by_idx(void* context, const void* p1, const void* p2) {
 	}
 	return ret;
 }
+
+struct MortonKey2D interleave_2uints(unsigned int x, unsigned int y)
+{
+	struct MortonKey2D ret = { 0x0, 0x0 };
+	unsigned char tmpx, tmpy;
+	unsigned short tmpr;
+	size_t uintbytes = sizeof(unsigned int);
+	int i;
+	unsigned int mask = 0xFF, tmpmask;
+	for (i = 0; i < (int)uintbytes; ++i) {
+		tmpmask = mask << i * 8;
+		tmpx = (unsigned char)(x & mask);
+		tmpy = (unsigned char)(y & mask);
+		tmpr = interleave_2uchars(tmpx, tmpy);
+		if (i < (int)uintbytes / 2) {
+			ret.k1 |= ((unsigned int)tmpr) << 8 * (i % (uintbytes / 2));
+		}
+		else
+		{
+			ret.k2 |= ((unsigned int)tmpr) << 8 * (i % (uintbytes / 2));
+		}
+	}
+	return ret;
+}
+
+unsigned short interleave_2uchars(unsigned char x, unsigned char y) 
+{
+	/* Based on public domain code at
+	https://graphics.stanford.edu/~seander/bithacks.html#Interleave64bitOps
+	*/
+	unsigned short z;
+	z = ((x * 0x0101010101010101ULL & 0x8040201008040201ULL) *
+		0x0102040810204081ULL >> 49) & 0x5555 |
+		((y * 0x0101010101010101ULL & 0x8040201008040201ULL) *
+			0x0102040810204081ULL >> 48) & 0xAAAA;
+	return z;
+}
