@@ -302,7 +302,7 @@ int opencl_brute_force_P2D_M2sM_vel_impl(
 		/* This has to match the opencl kernels, so be careful with fiddling */
 		workgroup_size[0] = CVTX_WORKGROUP_SIZE;	/* Particles per group */
 		workgroup_size[1] = 1;	/* Only 1 measure pos per workgroup. */
-		global_work_size[0] = CVTX_WORKGROUP_SIZE;	/* We use multiple particle buffers */
+		global_work_size[0] = CVTX_WORKGROUP_SIZE;
 		/* We're doing reduction both on the device side (in CVTX_WORKGROUP_SIZE groups)
 		and on the host side in n_particle_groups. */
 		global_work_size[1] = num_mes * n_particle_groups;

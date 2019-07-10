@@ -236,12 +236,26 @@ Definitions for the repeated body of kernels
 "	/* Particle idx, mes_pnt idx and local work item idx */			\\\n"
 "	uint pidx, midx, widx, loop_idx;								\\\n"
 "	midx = get_global_id(1);										\\\n"
-"	widx = get_global_id(0) + CVTX_CL_WORKGROUP_SIZE * (midx / num_mes);\\\n"
-"	pidx = widx;													\\\n"
+"	widx = get_global_id(0);										\\\n"
+"	pidx = widx + CVTX_CL_WORKGROUP_SIZE * (midx / num_mes);		\\\n"
 "	rad = mes_locs[midx] - particle_locs[pidx];						\\\n"
 "	radd = length(rad);												\\\n"
 "	rho = radd * recip_reg_rad;    									\n"
-/* Then finish as with non-smallmes method. */
+
+"#define CVTX_P2D_SMALLMES_VEL_END 									\\\n"
+"	cor = g;	/*1/2pi term is done by host. */					\\\n"
+"	den = pown(radd, 2);											\\\n"
+"	ret.x = rad.y * (cor * particle_vorts[pidx] / den);				\\\n"
+"	ret.y = -rad.x * (cor * particle_vorts[pidx] / den);			\\\n"
+"	ret = isnormal(ret) ? ret : (float2)(0.f, 0.f);					\\\n"
+"	reduction_workspace[widx] = ret;								\\\n"
+"	local_workspace_float2_reduce(reduction_workspace);				\\\n"
+"	barrier(CLK_LOCAL_MEM_FENCE);									\\\n"
+"	if( widx == 0 ){												\\\n"
+"		results[midx] = reduction_workspace[0];						\\\n"
+"	}																\\\n"
+"	return;															\\\n"
+"}																	\n"	
 
 "#define CVTX_P2D_VISC_DVORT_START									\\\n"
 "(																	\\\n"
@@ -453,25 +467,25 @@ Definitions for the repeated body of kernels
 "	CVTX_P2D_VEL_END														\n"
 
 /* Small number of mes points. */
-"__kernel void cvtx_nb_P2D_smallmes_vel_singular\n"
+"__kernel void cvtx_nb_P2D_smallmes_vel_singular							\n"
 "	CVTX_P2D_SMALLMES_VEL_START												\n"
 "	g = 1.f;																\n"
-"	CVTX_P2D_VEL_END														\n"
+"	CVTX_P2D_SMALLMES_VEL_END												\n"
 
 "__kernel void cvtx_nb_P2D_smallmes_vel_winckelmans							\n"
 "	CVTX_P2D_SMALLMES_VEL_START												\n"
 "	g = (rho * rho + 2.0f) * rho * rho * pown(rho * rho + 1.f, -2);			\n"
-"	CVTX_P2D_VEL_END														\n"
+"	CVTX_P2D_SMALLMES_VEL_END												\n"
 
 "__kernel void cvtx_nb_P2D_smallmes_vel_planetary							\n"
 "	CVTX_P2D_SMALLMES_VEL_START												\n"
 "	g = rho < 1.f ? rho * rho : 1.f;										\n"
-"	CVTX_P2D_VEL_END														\n"
+"	CVTX_P2D_SMALLMES_VEL_END												\n"
 
 "__kernel void cvtx_nb_P2D_smallmes_vel_gaussian							\n"
 "	CVTX_P2D_SMALLMES_VEL_START												\n"
 "	g = 1.f - exp(-rho * rho * 0.5f);										\n"
-"	CVTX_P2D_VEL_END														\n"
+"	CVTX_P2D_SMALLMES_VEL_END												\n"
 
 /* ###########################################################
 	2D viscous ind Dvort calculation kernels here:
