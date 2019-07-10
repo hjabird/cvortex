@@ -3,7 +3,7 @@ nbody.cl
 
 OpenCL implementation of vortex particle N-Body problem using brute force.
 
-Copyright(c) 2018 HJA Bird
+Copyright(c) 2018-2019 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the \"Software\"), to deal
@@ -220,7 +220,30 @@ Definitions for the repeated body of kernels
 "	return;															\\\n"
 "}																	\n"	
 
-"#define CVTX_P2D_VISC_DVORT_START								\\\n"
+/*	P2D vel for small numbers of measurement points */
+"#define CVTX_P2D_SMALLMES_VEL_START 								\\\n"
+"(																	\\\n"
+"	__global float2* particle_locs,									\\\n"
+"	__global float* particle_vorts,									\\\n"
+"	float    recip_reg_rad,								            \\\n"
+"	__global float2* mes_locs,										\\\n"
+"	__global float2* results,										\\\n"
+"	unsigned int num_mes)											\\\n"
+"{																	\\\n"
+"	float2 rad, ret;												\\\n"
+"	float cor, den, rho, g, radd;									\\\n"
+"	__local float2 reduction_workspace[CVTX_CL_WORKGROUP_SIZE];		\\\n"
+"	/* Particle idx, mes_pnt idx and local work item idx */			\\\n"
+"	uint pidx, midx, widx, loop_idx;								\\\n"
+"	midx = get_global_id(1);										\\\n"
+"	widx = get_global_id(0) + CVTX_CL_WORKGROUP_SIZE * (midx / num_mes);\\\n"
+"	pidx = widx;													\\\n"
+"	rad = mes_locs[midx] - particle_locs[pidx];						\\\n"
+"	radd = length(rad);												\\\n"
+"	rho = radd * recip_reg_rad;    									\n"
+/* Then finish as with non-smallmes method. */
+
+"#define CVTX_P2D_VISC_DVORT_START									\\\n"
 "(																	\\\n"
 "	__global float2* particle_locs,									\\\n"
 "	__global float* particle_vorts,									\\\n"
@@ -414,21 +437,39 @@ Definitions for the repeated body of kernels
 "	g = 1.f;																\n"
 "	CVTX_P2D_VEL_END														\n"
 
-
 "__kernel void cvtx_nb_P2D_vel_winckelmans									\n"
 "	CVTX_P2D_VEL_START														\n"
 "	g = (rho * rho + 2.0f) * rho * rho * pown(rho * rho + 1.f, -2);			\n"
 "	CVTX_P2D_VEL_END														\n"
-
 
 "__kernel void cvtx_nb_P2D_vel_planetary									\n"
 "	CVTX_P2D_VEL_START														\n"
 "	g = rho < 1.f ? rho * rho : 1.f;										\n"
 "	CVTX_P2D_VEL_END														\n"
 
-
 "__kernel void cvtx_nb_P2D_vel_gaussian										\n"
 "	CVTX_P2D_VEL_START														\n"
+"	g = 1.f - exp(-rho * rho * 0.5f);										\n"
+"	CVTX_P2D_VEL_END														\n"
+
+/* Small number of mes points. */
+"__kernel void cvtx_nb_P2D_smallmes_vel_singular\n"
+"	CVTX_P2D_SMALLMES_VEL_START												\n"
+"	g = 1.f;																\n"
+"	CVTX_P2D_VEL_END														\n"
+
+"__kernel void cvtx_nb_P2D_smallmes_vel_winckelmans							\n"
+"	CVTX_P2D_SMALLMES_VEL_START												\n"
+"	g = (rho * rho + 2.0f) * rho * rho * pown(rho * rho + 1.f, -2);			\n"
+"	CVTX_P2D_VEL_END														\n"
+
+"__kernel void cvtx_nb_P2D_smallmes_vel_planetary							\n"
+"	CVTX_P2D_SMALLMES_VEL_START												\n"
+"	g = rho < 1.f ? rho * rho : 1.f;										\n"
+"	CVTX_P2D_VEL_END														\n"
+
+"__kernel void cvtx_nb_P2D_smallmes_vel_gaussian							\n"
+"	CVTX_P2D_SMALLMES_VEL_START												\n"
 "	g = 1.f - exp(-rho * rho * 0.5f);										\n"
 "	CVTX_P2D_VEL_END														\n"
 
@@ -506,10 +547,10 @@ Definitions for the repeated body of kernels
 "	float3 ret, r0, r1, r2;															\n"
 "	float t1, t2, t21, t22;															\n"
 "	const float pi_f = (float)3.14159265359;										\n"
-"	/* fidx: filament index, midx: measurement index */								\n"
+/* fidx: filament index, midx: measurement index */	
 "	uint fidx, midx, loop_idx;														\n"
 "	midx = get_global_id(1);														\n"
-"	fidx = get_global_id(0) + CVTX_CL_WORKGROUP_SIZE * midx / num_mes;				\n"
+"	fidx = get_global_id(0) + CVTX_CL_WORKGROUP_SIZE * (midx / num_mes);			\n"
 "	r1 = mes_pnts[midx] - fil_starts[fidx];											\n"
 "	r2 = mes_pnts[midx] - fil_ends[fidx];											\n"
 "	r0 = r1 - r2;																	\n"
@@ -545,7 +586,7 @@ Definitions for the repeated body of kernels
 "	float3 ret, r0, r1, r2, t211, A, tmp;											\n"
 "	float t1, t2121, t2122, t221, t2221, t2222, B;									\n"
 "	const float pi_f = (float)3.14159265359;										\n"
-"	/* fidx: filament index, pidx: particle index */								\n"
+/* fidx: filament index, pidx: particle index */
 "	uint fidx, pidx, loop_idx;														\n"
 "	fidx = get_global_id(0);														\n"
 "	pidx = get_global_id(1);														\n"

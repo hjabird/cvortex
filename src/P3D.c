@@ -237,7 +237,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_vel(
 #ifdef CVTX_USING_OPENCL
 	if (num_particles < 256
 		|| num_mes < 256
-		|| strcmp(kernel->cl_kernel_name_ext, "")
+		|| !strcmp(kernel->cl_kernel_name_ext, "")
 		|| opencl_brute_force_P3D_M2M_vel(
 			array_start, num_particles, mes_start,
 			num_mes, result_array, kernel, regularisation_radius) != 0)
@@ -281,7 +281,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_dvort(
 #ifdef CVTX_USING_OPENCL
 	if (	num_particles < 256
 		||	num_induced < 256
-		||	strcmp(kernel->cl_kernel_name_ext, "")
+		||	!strcmp(kernel->cl_kernel_name_ext, "")
 		||	opencl_brute_force_P3D_M2M_dvort(
 				array_start, num_particles, induced_start,
 				num_induced, result_array, kernel, regularisation_radius) != 0)
@@ -327,7 +327,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
 #ifdef CVTX_USING_OPENCL
 	if (	num_particles < 256
 		||	num_induced < 256
-		||	strcmp(kernel->cl_kernel_name_ext, "")
+		||	!strcmp(kernel->cl_kernel_name_ext, "")
 		||	opencl_brute_force_P3D_M2M_visc_dvort(
 				array_start, num_particles, induced_start,
 				num_induced, result_array, kernel, regularisation_radius, kinematic_visc) != 0)

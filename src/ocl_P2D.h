@@ -59,6 +59,19 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 	cl_command_queue queue,
 	cl_context context);
 
+/* For small number of measurement points. */
+int opencl_brute_force_P2D_M2sM_vel_impl(
+	const cvtx_P2D **array_start,
+	const int num_particles,
+	const bsv_V2f *mes_start,
+	const int num_mes,
+	bsv_V2f *result_array,
+	const cvtx_VortFunc *kernel,
+	float regularisation_radius,
+	cl_program program,
+	cl_command_queue queue,
+	cl_context context);
+
 int opencl_brute_force_P2D_M2M_visc_dvort_impl(
 	const cvtx_P2D **array_start,
 	const int num_particles,
