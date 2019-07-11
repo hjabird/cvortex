@@ -128,9 +128,7 @@ CVTX_EXPORT void cvtx_P2D_M2M_vel(
 	float regularisation_radius)
 {
 #ifdef CVTX_USING_OPENCL
-	if (num_particles < 256
-		|| num_mes * num_particles < 2048
-		|| !strcmp(kernel->cl_kernel_name_ext, "")
+	if (!strcmp(kernel->cl_kernel_name_ext, "")
 		|| opencl_brute_force_P2D_M2M_vel(
 			array_start, num_particles, mes_start,
 			num_mes, result_array, kernel, regularisation_radius) != 0)
