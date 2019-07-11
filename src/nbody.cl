@@ -521,7 +521,7 @@ Definitions for the repeated body of kernels
 "	float3 ret, r0, r1, r2;															\n"
 "	float t1, t2, t21, t22;															\n"
 "	const float pi_f = (float)3.14159265359;										\n"
-"	/* fidx: filament index, midx: measurement index */								\n"
+/* fidx: filament index, midx: measurement index */
 "	uint fidx, midx, loop_idx;														\n"
 "	fidx = get_global_id(0);														\n"
 "	midx = get_global_id(1);														\n"
@@ -580,7 +580,7 @@ Definitions for the repeated body of kernels
 "		ret.z = 0.0f;																\n"
 "	}																				\n"
 "	__local float3 reduction_workspace[CVTX_CL_WORKGROUP_SIZE];						\n"
-"	reduction_workspace[fidx] = ret;												\n"
+"	reduction_workspace[gidx] = ret;												\n"
 "	local_workspace_float3_reduce(reduction_workspace);								\n"
 "	barrier(CLK_LOCAL_MEM_FENCE);													\n"
 "	if( gidx == 0 ){																\n"
