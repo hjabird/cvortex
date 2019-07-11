@@ -161,9 +161,7 @@ CVTX_EXPORT void cvtx_F3D_M2M_vel(
 	bsv_V3f *result_array)
 {
 #ifdef CVTX_USING_OPENCL
-	if (num_filaments < 256
-		|| num_mes * num_filaments < 2048
-		|| opencl_brute_force_F3D_M2M_vel(
+	if (opencl_brute_force_F3D_M2M_vel(
 			array_start, num_filaments, mes_start,
 			num_mes, result_array) != 0)
 #endif

@@ -56,7 +56,7 @@ int opencl_brute_force_P2D_M2M_vel(
 
 	if (!cpubetter && opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
-		if (num_mes < 256) {
+		if (num_mes < CVTX_WORKGROUP_SIZE) {
 			return opencl_brute_force_P2D_M2sM_vel_impl(
 				array_start, num_particles, mes_start,
 				num_mes, result_array, kernel, regularisation_radius,
