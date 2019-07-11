@@ -164,6 +164,8 @@ Definitions for the repeated body of kernels
 "	return;															\\\n"
 "}																	\n"
 
+/* 	Summation of local array of float3 of length CVTX_CL_WORKGROUP_SIZE
+	with result left in array[0]	*/
 "inline void local_workspace_float3_reduce(									\n"
 "	__local float3* reduction_workspace)									\n"
 "{																			\n"
@@ -304,6 +306,8 @@ Definitions for the repeated body of kernels
 "	return;															\\\n"
 "}																	\n"
 
+/* 	Summation of local array of float2 of length CVTX_CL_WORKGROUP_SIZE
+	with result left in array[0]	*/
 "inline void local_workspace_float2_reduce(									\n"
 "	__local float2* reduction_workspace)									\n"
 "{																			\n"
@@ -321,6 +325,8 @@ Definitions for the repeated body of kernels
 "	return;																	\n"
 "}																			\n"
 
+/* 	Summation of local array of float of length CVTX_CL_WORKGROUP_SIZE
+	with result left in array[0]	*/
 "inline void local_workspace_float_reduce(									\n"
 "	__local float* reduction_workspace)										\n"
 "{																			\n"
@@ -611,7 +617,7 @@ Definitions for the repeated body of kernels
 "	t1 = fil_strengths[fidx] / (4 * pi_f);											\n"
 "	t211 = r0 / (-pown(length(cross(r1, r0)), 2));									\n"
 "	t2121 = dot(r0, r1) / length(r1);												\n"
-"	t2122 = -dot(r0, r1) / length(r2);												\n"
+"	t2122 = -dot(r0, r2) / length(r2);												\n"
 " 	t221 = (float)3.0 / length(r0);													\n"
 "	t2221 = length(cross(r0, r1)) / length(r1);										\n"
 "	t2222 = -length(cross(r0, r1)) / length(r2);									\n"

@@ -318,16 +318,8 @@ int opencl_brute_force_F3D_M2sM_vel_impl(
 
 		/* Generate a results buffer */
 		res_buff_data = malloc(num_mes * num_filament_groups * sizeof(cl_float3));
-		res_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
+		res_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
 			sizeof(cl_float3) * num_mes * num_filament_groups, NULL, &status);
-		for (i = 0; i < num_mes * num_filament_groups; ++i) {
-			res_buff_data[i].x = 0;
-			res_buff_data[i].y = 0;
-			res_buff_data[i].z = 0;
-		}
-		status = clEnqueueWriteBuffer(
-			queue, res_buff, CL_FALSE, 0, 
-			num_mes * num_filament_groups * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
 		if (status != CL_SUCCESS) {
 			assert(false);
 			printf("OPENCL:\tFailed to enqueue write buffer.");
@@ -358,9 +350,9 @@ int opencl_brute_force_F3D_M2sM_vel_impl(
 			fil_start_buff_data[i].x = 0.0f;
 			fil_start_buff_data[i].y = 0.0f;
 			fil_start_buff_data[i].z = 0.0f;
-			fil_end_buff_data[i].x = 0.0f;
-			fil_end_buff_data[i].y = 0.0f;
-			fil_end_buff_data[i].z = 0.0f;
+			fil_end_buff_data[i].x = 1.0f;
+			fil_end_buff_data[i].y = 1.0f;
+			fil_end_buff_data[i].z = 1.0f;
 			fil_strength_buff_data[i] = 0.0f;
 		}
 		fil_start_buff = clCreateBuffer(context,
