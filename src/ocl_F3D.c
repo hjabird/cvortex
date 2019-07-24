@@ -42,12 +42,12 @@ int opencl_brute_force_F3D_M2M_vel(
 
 	/* Right now we just use the first active device. */
 	assert(opencl_is_init());
-	int cpubetter;
+	long long cpubetter;
 	cl_program prog;
 	cl_context cont;
 	cl_command_queue queue;
-	cpubetter = num_filaments * num_mes <
-		num_filaments * num_mes / 20 + 5000 + 300 * num_mes ?
+	cpubetter = (long long)num_filaments * (long long)num_mes <
+		(long long)num_filaments * (long long)num_mes / 20 + 5000 + 300 * num_mes ?
 		1 : 0;
 
 	if (!cpubetter && opencl_num_active_devices() > 0 &&

@@ -45,14 +45,14 @@ int opencl_brute_force_P2D_M2M_vel(
 {
 	/* Right now we just use the first active device. */
 	assert(opencl_is_init());
-	int cpubetter;
+	long long cpubetter;
 	cl_program prog;
 	cl_context cont;
 	cl_command_queue queue;
 	/* A loosey goosey way of estimating whether we'd do better
 	using the cpu to solve the problem: */
-	cpubetter = 20000 + num_particles * num_mes / 20 
-		< num_particles * num_mes ? 0 : 1;
+	cpubetter = 20000 + (long long)num_particles * (long long)num_mes / 20
+		< (long long)num_particles * (long long)num_mes ? 0 : 1;
 
 	if (!cpubetter && opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
