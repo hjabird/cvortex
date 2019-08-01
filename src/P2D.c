@@ -166,7 +166,7 @@ CVTX_EXPORT float cvtx_P2D_S2S_visc_dvort(
 		t211 = self->vorticity * induced_particle->area;
 		t212 = -induced_particle->vorticity * self->area;
 		t21 = t211 + t212;
-		t22 = kernel->eta_3D(rho);
+		t22 = kernel->eta_2D(rho);
 		t2 = t21* t22;
 		ret = t2 * t1;
 	}
