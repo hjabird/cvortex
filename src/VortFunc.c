@@ -4,7 +4,7 @@ VortFunc.c
 
 Common functions used to regularise vortex particles.
 
-Copyright(c) 2018 HJA Bird
+Copyright(c) 2018-2019 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -114,12 +114,12 @@ static float eta_winckel_2D(float rho) {
 
 static float g_planetary_3D(float rho) {
 	assert(rho >= 0 && "Rho should not be -ve");
-	return rho < (float)1. ? rho * rho * rho : (float)1.;
+	return rho < 1.f ? rho * rho * rho : 1.f;
 }
 
 static float zeta_planetary_3D(float rho){
 	assert(rho >= 0 && "Rho should not be -ve");
-	return rho < (float)1. ? (float)2 : (float)0;
+	return rho < 1.f ? 3.f : 0.f;
 }
 
 static void combined_planetary_3D(float rho, float* g, float* zeta) {
@@ -224,3 +224,4 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void){
 	strcpy(ret.cl_kernel_name_ext, "gaussian");
 	return ret;
 }
+

@@ -6,7 +6,7 @@ testparticle.h
 
 Test functionality of vortex particle & methods.
 
-Copyright(c) 2018 HJA Bird
+Copyright(c) 2018-2019 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -29,13 +29,40 @@ SOFTWARE.
 #include "../include/cvortex/libcvtx.h"
 
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 int testAccelerators(){
     SECTION("Accelerators");
-    
+    int i, status;
+
     TEST(cvtx_num_accelerators() >= 0);
-	TEST(cvtx_num_accelerators() == 1);
-    
+	/* This is test system dependent. 
+	Who has more that 3 gpus though? */
+	TEST(cvtx_num_accelerators() < 4);
+	if(cvtx_num_accelerators() == 0){
+		printf("WARNING: cvtx found no accelerators. "
+			"If this build is using CVTX_USE_OPENCL \n"
+			"and you're expecting to find GPUs, "
+			"something is wrong!\n");
+	}
+	for(i = 0; i < cvtx_num_accelerators(); ++i){
+		TEST(cvtx_accelerator_name(i) != NULL);
+		status = cvtx_accelerator_enabled(i);
+		TEST((status == 1) || (status == 0));
+		if(status == 1){
+			cvtx_accelerator_disable(i);
+			TEST(cvtx_accelerator_enabled(i) == 0);
+			cvtx_accelerator_enable(i);
+		} 
+		else
+		{
+			cvtx_accelerator_enable(i);
+			TEST(cvtx_accelerator_enabled(i) == 0);
+			cvtx_accelerator_disable(i);
+		} 
+	}
+
     return 0;
 }
 
