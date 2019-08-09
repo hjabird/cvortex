@@ -42,7 +42,7 @@ SOFTWARE.
 
 /* The induced velocity for a particle excluding the constant
 coefficient 1 / 4pi */
-inline bsv_V2f P2D_vel_inner(
+static inline bsv_V2f P2D_vel_inner(
 	const cvtx_P2D * self,
 	const bsv_V2f mes_point,
 	const cvtx_VortFunc * kernel,

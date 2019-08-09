@@ -25,6 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 #include <assert.h>
+#include <stdlib.h>	/* Required for not CVTX_USING_OPENCL */
 #include "opencl_acc.h"
 
 CVTX_EXPORT void cvtx_initialise() {
