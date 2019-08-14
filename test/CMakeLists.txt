@@ -7,7 +7,7 @@ if (${CMAKE_C_COMPILER_ID} STREQUAL "GNU")
 endif()
 
 # Find all of our tests sources
-file (GLOB TESTCVTX_SOURCE  "*.c")
+file (GLOB TESTCVTX_SOURCE  "*.[ch]")
 source_group("cvtx_test_source" FILES ${TESTCVTX_SOURCE})
 
 

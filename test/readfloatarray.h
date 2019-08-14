@@ -45,7 +45,7 @@ SOFTWARE.
 #include <stdlib.h>
 
 int readfloatarray(char* filename, float* array, int max_floats){
-	assert(num_floats > 0);
+	assert(max_floats > 0);
 	assert(array != NULL);
 	FILE* f = fopen(filename, "rb");
 	unsigned char ftype;
