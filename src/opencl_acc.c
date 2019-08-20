@@ -401,7 +401,8 @@ static int create_platform_context_and_program(struct ocl_platform_state *plat) 
 #		include "nbody.cl"
 		;	/* Including in source makes it easier to distribute a shared lib. */
 	sprintf(tmp, "%i", CVTX_WORKGROUP_SIZE);
-	strcat(compile_options, " -cl-fast-relaxed-math -D CVTX_CL_WORKGROUP_SIZE=");
+	/* -cl-fast-relaxed-math is too dangerous - it ruins our NaNs on Nvidia/ */
+	strcat(compile_options, " -cl-unsafe-math-optimizations -D CVTX_CL_WORKGROUP_SIZE=");
 	strcat(compile_options, tmp);
 	sprintf(tmp, "%i", (int)log2(CVTX_WORKGROUP_SIZE));
 	strcat(compile_options, " -D CVTX_CL_LOG2_WORKGROUP_SIZE=");
