@@ -177,7 +177,7 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 			queue, res_buff, CL_FALSE,
 			0, num_mes * sizeof(cl_float2), res_buff_data, 0, NULL, NULL);
 		if (status != CL_SUCCESS) {
-			assert(false);
+			assert(0);
 		}
 		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &res_buff);
 		assert(status == CL_SUCCESS);
@@ -345,7 +345,7 @@ int opencl_brute_force_P2D_M2sM_vel_impl(
 		res_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
 			sizeof(cl_float2) * num_mes * n_particle_groups, NULL, &status);
 		if (status != CL_SUCCESS) {
-			assert(false);
+			assert(0);
 		}
 		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &res_buff);
 		assert(status == CL_SUCCESS);
@@ -509,7 +509,7 @@ int opencl_brute_force_P2D_M2M_visc_dvort_impl(
 			queue, res_buff, CL_TRUE,
 			0, num_induced * sizeof(cl_float), res_buff_data, 0, NULL, NULL);
 		if (status != CL_SUCCESS) {
-			assert(false);
+			assert(0);
 		}
 		status = clSetKernelArg(cl_kernel, 6, sizeof(cl_mem), &res_buff);
 		assert(status == CL_SUCCESS);

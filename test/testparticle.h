@@ -97,10 +97,10 @@ int testParticle(){
     cvtx_P3D pyz = {0,0,1, 0,1,0, 1};
     cvtx_P3D pzz = {0,0,1, 0,0,1, 1};
     TEST(cvtx_P3D_S2S_dvort(&p2, &pxz, &vfs, 1).x[0] == 0);
-    TEST(cvtx_P3D_S2S_dvort(&p2, &pxz, &vfs, 1).x[1] > 0);
+    TEST(cvtx_P3D_S2S_dvort(&p2, &pxz, &vfs, 1).x[1] < 0);
     TEST(cvtx_P3D_S2S_dvort(&p2, &pxz, &vfs, 1).x[2] == 0);
 
-    TEST(cvtx_P3D_S2S_dvort(&p2, &pyz, &vfs, 1).x[0] < 0);
+    TEST(cvtx_P3D_S2S_dvort(&p2, &pyz, &vfs, 1).x[0] > 0);
     TEST(cvtx_P3D_S2S_dvort(&p2, &pyz, &vfs, 1).x[1] == 0);
     TEST(cvtx_P3D_S2S_dvort(&p2, &pyz, &vfs, 1).x[2] == 0);
 

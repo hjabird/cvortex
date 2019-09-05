@@ -193,7 +193,7 @@ int opencl_brute_force_P3D_M2M_vel_impl(
 			queue, res_buff, CL_FALSE,
 			0, num_mes * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
 		if (status != CL_SUCCESS) {
-			assert(false);
+			assert(0);
 		}
 		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &res_buff);
 		assert(status == CL_SUCCESS);
@@ -370,7 +370,7 @@ int opencl_brute_force_P3D_M2M_dvort_impl(
 			queue, res_buff, CL_FALSE,
 			0, num_induced * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
 		if (status != CL_SUCCESS) {
-			assert(false);
+			assert(0);
 		}
 		status = clSetKernelArg(cl_kernel, 5, sizeof(cl_mem), &res_buff);
 		assert(status == CL_SUCCESS);
@@ -567,7 +567,7 @@ int opencl_brute_force_P3D_M2M_visc_dvort_impl(
 			queue, res_buff, CL_TRUE,
 			0, num_induced * sizeof(cl_float3), res_buff_data, 0, NULL, NULL);
 		if (status != CL_SUCCESS) {
-			assert(false);
+			assert(0);
 		}
 		status = clSetKernelArg(cl_kernel, 6, sizeof(cl_mem), &res_buff);
 		assert(status == CL_SUCCESS);

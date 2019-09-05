@@ -129,7 +129,7 @@ void opencl_deindex_device(int index, int *plat_idx, int *dev_idx) {
 	*plat_idx = -1;
 	*dev_idx = -1;
 	int np, i, nd, acc;
-	if (ocl_state.initialised == 1 || index < 0) {
+	if (ocl_state.initialised == 1 && index >= 0) {
 		np = ocl_state.num_platforms;
 		acc = 0;
 		for (i = 0; i < np; ++i) {

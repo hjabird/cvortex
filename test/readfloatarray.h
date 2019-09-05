@@ -76,7 +76,7 @@ int readfloatarray(char* filename, float* array, int max_floats){
 	if(ftype == 0)
 	{	/* The ASCII version */
 		if(!fscanf(f, "%f", &nfloatsf)){
-			nfloatsf = -1.4;
+			nfloatsf = -1.4f;
 		}
 		nfloats = (int)nfloatsf;
 		if(	(nfloats < 0 ) ||
@@ -103,7 +103,7 @@ int readfloatarray(char* filename, float* array, int max_floats){
 	else
 	{	/* The BINARY version */
 		if(fread(&nfloatsf, sizeof(float), 1, f) != sizeof(float)){
-			nfloatsf = -1.4;
+			nfloatsf = -1.4f;
 		}
 		nfloats = (int)nfloatsf;
 		if((nfloats < 0 ) ||
@@ -114,7 +114,7 @@ int readfloatarray(char* filename, float* array, int max_floats){
 			return -1;
 		}
 
-		status = fread(array, sizeof(float), nfloats, f);		
+		status = (int)fread(array, sizeof(float), nfloats, f);		
 		if(status != nfloats * sizeof(float)){
 			printf("Badly formatted test reference file %s. "
 				"Incorrect number of floats value.\n", filename);
