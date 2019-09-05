@@ -79,8 +79,11 @@ CVTX_EXPORT int cvtx_accelerator_enabled(int accelerator_id) {
 CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id) {
 #ifdef CVTX_USING_OPENCL
 	assert(opencl_is_init() == 1);
+	assert(accelerator_id < cvtx_num_accelerators());
 	int pidx, didx;
 	opencl_deindex_device(accelerator_id, &pidx, &didx);
+	assert(pidx >= 0);
+	assert(didx >= 0);
 	opencl_add_active_device(pidx, didx);
 #endif
 	return;
@@ -89,8 +92,11 @@ CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id) {
 CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id) {
 #ifdef CVTX_USING_OPENCL
 	assert(opencl_is_init() == 1);
+	assert(accelerator_id < cvtx_num_accelerators());
 	int pidx, didx;
 	opencl_deindex_device(accelerator_id, &pidx, &didx);
+	assert(pidx >= 0);
+	assert(didx >= 0);
 	opencl_remove_active_device(pidx, didx);
 #endif
 	return;
