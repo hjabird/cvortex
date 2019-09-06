@@ -72,14 +72,16 @@ int print_summary() {
 #include "testaccelerators.h"
 #include "testparticle.h"
 #include "testvortfunc.h"
-#include "testsamecpugpuresult.h"
+#include "testsamecpugpuresultsingle.h"
+#include "testsamecpugpuresultmany.h"
 
 int main(int argc, char* argv[]){
 	cvtx_initialise();
 	testAccelerators();
     testVortFunc();
     testParticle();
-	testSameCpuGpuRes();
+	testSameCpuGpuResSingle();
+	testSameCpuGpuResMany();
 	cvtx_finalise();
 	SECTION("");
 	return print_summary();
