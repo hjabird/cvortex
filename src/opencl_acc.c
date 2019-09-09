@@ -400,6 +400,7 @@ static int create_platform_context_and_program(struct ocl_platform_state *plat) 
 	const char *program_source =
 #		include "nbody.cl"
 		;	/* Including in source makes it easier to distribute a shared lib. */
+	size_t length;
 	sprintf(tmp, "%i", CVTX_WORKGROUP_SIZE);
 	/* -cl-fast-relaxed-math is too dangerous - it ruins our NaNs on Nvidia/ */
 	strcat(compile_options, " -cl-unsafe-math-optimizations -D CVTX_CL_WORKGROUP_SIZE=");
@@ -420,15 +421,15 @@ static int create_platform_context_and_program(struct ocl_platform_state *plat) 
 		plat->devices, compile_options, NULL, NULL);
 	if (status != CL_SUCCESS) {
 		plat->good = 0;
-		size_t length;
-		status = clGetProgramBuildInfo(
-			plat->program, plat->devices[0], CL_PROGRAM_BUILD_LOG, 0, 
-			NULL, &length);
-		plat->program_build_log = malloc(length);
-		status = clGetProgramBuildInfo(
-			plat->program, plat->devices[0], CL_PROGRAM_BUILD_LOG, length, 
-			plat->program_build_log, &length);
 	}
+	/* It can be useful to have the buildlog even for good builds. */
+	status = clGetProgramBuildInfo(
+		plat->program, plat->devices[0], CL_PROGRAM_BUILD_LOG, 0, 
+		NULL, &length);
+	plat->program_build_log = malloc(length);
+	status = clGetProgramBuildInfo(
+		plat->program, plat->devices[0], CL_PROGRAM_BUILD_LOG, length, 
+		plat->program_build_log, &length);
 	return plat->good;
 }
 
