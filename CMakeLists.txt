@@ -53,8 +53,8 @@ find_package(bsv CONFIG REQUIRED)
 target_link_libraries(cvortex PUBLIC bsv)
 target_include_directories(cvortex PUBLIC bsv)
 
-if (${CMAKE_C_COMPILER_ID} STREQUAL "GNU")
-    link_libraries(cvortex m)   # Maths std library.
+if (${CMAKE_C_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_C_COMPILER_ID} STREQUAL "Clang")
+    target_link_libraries(cvortex PUBLIC m)   # Maths std library.
 endif()
 						
 set_property(TARGET cvortex PROPERTY FOLDER "libraries")
