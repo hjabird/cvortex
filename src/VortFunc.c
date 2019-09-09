@@ -137,10 +137,10 @@ static float g_planetary_2D(float rho) {
 static float g_gaussian_3D(float rho){
 	/* = 1 to 8sf for rho ~>6. Taylor expansion otherwise */
 	assert(rho >= 0 && "Rho should not be -ve");
+	const float pi = 3.14159265359f;
 	if(rho > (float)6.){
 		return (float)1.;
 	} else {
-		const float pi = 3.14159265359f;
 		/* Approximate erf using Abramowitz and Stegan 1.7.26 */
 		float a1 = 0.3480242f, a2 = -0.0958798f, a3 = 0.7478556f, p = 0.47047f;
 		float rho_sr2 = rho / sqrtf(2);
@@ -204,6 +204,7 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void)
 {
 	cvtx_VortFunc ret;
 	ret.g_3D = &g_planetary_3D;
+	ret.g_2D = &g_planetary_2D;
 	ret.zeta_3D = &zeta_planetary_3D;
 	ret.eta_3D = &warn_bad_eta_fn; /* Not possible for planetary vortex */
 	ret.eta_2D = &warn_bad_eta_fn;
