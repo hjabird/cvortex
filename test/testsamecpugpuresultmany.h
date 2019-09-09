@@ -103,7 +103,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M vel singular");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
@@ -117,7 +117,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M dvort singular");
 			/* (No viscous method) */
 
 			/* Planetary */
@@ -135,7 +135,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M vel planetary");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
@@ -149,7 +149,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M dvort planetary");
 			/* No viscous method. */
 
 			/* Gaussian */
@@ -167,7 +167,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M vel gaussian");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
@@ -181,7 +181,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M dvort gaussian");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
@@ -195,7 +195,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M visc dvort gaussian");
 
 			/* Winckelmans */
 			func = cvtx_VortFunc_winckelmans();
@@ -212,7 +212,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M vel winckelmans");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
@@ -226,7 +226,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M dvort winckelmans");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
@@ -240,7 +240,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M visc dvort winckelmans");
 
 			/* Vortex filaments */
 			cvtx_accelerator_enable(0);
@@ -256,7 +256,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "F3D M2M vel");
 			cvtx_accelerator_enable(0);
 			cvtx_F3D_M2M_dvort(pfils, num_obj, pparticles, num_obj, presult);
 			cvtx_accelerator_disable(0);
@@ -270,7 +270,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "F3D M2M dvort");
 		}
 
 
@@ -298,7 +298,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M vel singular");
 
 			/* Planetary */
 			func = cvtx_VortFunc_planetary();
@@ -315,7 +315,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M vel planetary");
 
 			/* Gaussian */
 			func = cvtx_VortFunc_gaussian();
@@ -332,7 +332,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M vel gaussian");
 			cvtx_accelerator_enable(0);
 			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
@@ -346,7 +346,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M visc dvort gaussian");
 
 			/* Winckelmans */
 			func = cvtx_VortFunc_winckelmans();
@@ -363,7 +363,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M vel winckelmans");
 			cvtx_accelerator_enable(0);
 			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
@@ -377,7 +377,7 @@ int testSameCpuGpuResMany() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M visc dvort winckelmans");
 		}
 	}
 	free(particles);
