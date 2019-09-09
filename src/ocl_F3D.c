@@ -496,13 +496,15 @@ int opencl_brute_force_F3D_M2M_dvort_impl(
 			queue, part_pos_buff, CL_FALSE,
 			0, num_induced * sizeof(cl_float3), part_pos_buff_data, 0, NULL, NULL);
 		assert(status == CL_SUCCESS);
+		status = clSetKernelArg(cl_kernel, 3, sizeof(cl_mem), &part_pos_buff);
+		assert(status == CL_SUCCESS);
 		part_vort_buff = clCreateBuffer(context,
 			CL_MEM_READ_ONLY, num_induced * sizeof(cl_float3), NULL, &status);
 		status = clEnqueueWriteBuffer(
 			queue, part_vort_buff, CL_FALSE,
 			0, num_induced * sizeof(cl_float3), part_vort_buff_data, 0, NULL, NULL);
 		assert(status == CL_SUCCESS);
-		status = clSetKernelArg(cl_kernel, 3, sizeof(cl_mem), &part_vort_buff);
+		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &part_vort_buff);
 		if (status != CL_SUCCESS) {
 			free(part_pos_buff_data);
 			free(part_vort_buff_data);
@@ -528,7 +530,7 @@ int opencl_brute_force_F3D_M2M_dvort_impl(
 			assert(0);
 			printf("OPENCL:\tFailed to enqueue write buffer.");
 		}
-		status = clSetKernelArg(cl_kernel, 4, sizeof(cl_mem), &res_buff);
+		status = clSetKernelArg(cl_kernel, 5, sizeof(cl_mem), &res_buff);
 		assert(status == CL_SUCCESS);
 
 		/* Now create & dispatch particle buffers and kernel. */
@@ -594,11 +596,11 @@ int opencl_brute_force_F3D_M2M_dvort_impl(
 			assert(status == CL_SUCCESS);
 			status = clSetKernelArg(cl_kernel, 1, sizeof(cl_mem), fil_end_buff + i);
 			assert(status == CL_SUCCESS);
-			status = clSetKernelArg(cl_kernel, 1, sizeof(cl_mem), fil_strength_buff + i);
+			status = clSetKernelArg(cl_kernel, 2, sizeof(cl_mem), fil_strength_buff + i);
 			assert(status == CL_SUCCESS);
 			if (i == 0) {
 				status = clEnqueueNDRangeKernel(queue, cl_kernel, 2,
-					NULL, global_work_size, workgroup_size, 3, event_chain, event_chain + 4 * i + 3);
+					NULL, global_work_size, workgroup_size, 3, event_chain, event_chain + 3);
 			}
 			else {
 				status = clEnqueueNDRangeKernel(queue, cl_kernel, 2,
