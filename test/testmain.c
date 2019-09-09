@@ -28,6 +28,7 @@ SOFTWARE.
 #include <assert.h>
 
 #define TEST(X) test(__FILE__, __LINE__, X)
+#define NAMED_TEST(X, Y) named_test(__FILE__, __LINE__, X, Y)
 
 #define SECTION(X) section(X)
 
@@ -40,6 +41,19 @@ char working_section_name[512] = "";
 void test(char* file_name, int line_no, int passed) {
 	if (!passed) {
 		printf("Test failed:\n\t%s\n\tLine %i\n", file_name, line_no);
+		assert(0);
+	}
+	else {
+		section_tests_passed += 1;
+	}
+	section_tests_completed += 1;
+	return;
+}
+
+void named_test(char* file_name, int line_no, int passed, char* test_name) {
+	if (!passed) {
+		printf("Test failed:\n\t%s\n\t%s\n\tLine %i\n", test_name, 
+			file_name, line_no);
 		assert(0);
 	}
 	else {

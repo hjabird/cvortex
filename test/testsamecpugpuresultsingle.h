@@ -39,7 +39,7 @@ int testSameCpuGpuResSingle() {
 	float max_float = 10;
 	float rel_acc = 1e-5f;
 	int i;
-	int repeat, max_repeats=1;	/* Random input can change the results... */
+	int repeat, max_repeats=5;	/* Random input can change the results... */
 	int good;
 	float reg_rad = 0.3f; /* Big enough we should have some overlapping particles */
 
@@ -121,7 +121,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M vel singular (single object with vorticity)");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
@@ -135,7 +135,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M dvort singular (single object with vorticity)");
 			/* (No viscous method) */
 
 			/* Planetary */
@@ -153,7 +153,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M vel planetary (single object with vorticity)");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
@@ -167,7 +167,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M dvort planetary (single object with vorticity)");
 			/* No viscous method. */
 
 			/* Gaussian */
@@ -185,7 +185,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M vel guassian (single object with vorticity)");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
@@ -199,7 +199,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M dvort gaussian (single object with vorticity)");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
@@ -213,7 +213,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M visc dvort gaussian (single object with vorticity)");
 
 			/* Winckelmans */
 			func = cvtx_VortFunc_winckelmans();
@@ -230,7 +230,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M vel winckelmans (single object with vorticity)");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
@@ -244,7 +244,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M dvort winckelmans (single object with vorticity)");
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
@@ -258,7 +258,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P3D M2M visc dvort winckelmans (single object with vorticity)");
 
 			/* Vortex filaments */
 			cvtx_accelerator_enable(0);
@@ -274,7 +274,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "F3D M2M vel (single object with vorticity)");
 			cvtx_accelerator_enable(0);
 			cvtx_F3D_M2M_dvort(pfils, num_obj, pparticles, num_obj, presult);
 			cvtx_accelerator_disable(0);
@@ -288,7 +288,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "F3D M2M dvort (single object with vorticity)");
 		}
 
 
@@ -321,7 +321,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M vel singular (single object with vorticity)");
 
 			/* Planetary */
 			func = cvtx_VortFunc_planetary();
@@ -338,7 +338,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M vel planetary (single object with vorticity)");
 
 			/* Gaussian */
 			func = cvtx_VortFunc_gaussian();
@@ -355,7 +355,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M vel gaussian (single object with vorticity)");
 			cvtx_accelerator_enable(0);
 			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
@@ -369,7 +369,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M visc dvort gaussian (single object with vorticity)");
 
 			/* Winckelmans */
 			func = cvtx_VortFunc_winckelmans();
@@ -386,7 +386,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M vel winckelmans (single object with vorticity)");
 			cvtx_accelerator_enable(0);
 			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
@@ -400,7 +400,7 @@ int testSameCpuGpuResSingle() {
 					break;
 				}
 			}
-			TEST(good);
+			NAMED_TEST(good, "P2D M2M visc dvort winckelmans (single object with vorticity)");
 		}
 	}
 	free(particles);
