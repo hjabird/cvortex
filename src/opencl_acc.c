@@ -118,7 +118,9 @@ int opencl_num_devices() {
 		if (ocl_state.platforms != NULL) {
 			for (i = 0; i < n_plat; ++i)
 			{
-				count += ocl_state.platforms[i].num_devices;
+				if (ocl_state.platforms[i].good) {
+					count += ocl_state.platforms[i].num_devices;
+				}
 			}
 		}
 	}
@@ -133,6 +135,7 @@ void opencl_deindex_device(int index, int *plat_idx, int *dev_idx) {
 		np = ocl_state.num_platforms;
 		acc = 0;
 		for (i = 0; i < np; ++i) {
+			if (!ocl_state.platforms[i].good) { continue; }
 			nd = ocl_state.platforms[i].num_devices;
 			if (acc + nd > index) {
 				*plat_idx = i;
@@ -150,6 +153,7 @@ void opencl_index_device(int *index, int plat_idx, int dev_idx) {
 	*index = -1;
 	int i, acc = 0;
 	if (ocl_state.initialised == 1 && plat_idx < ocl_state.num_platforms
+		&& ocl_state.platforms[plat_idx].good
 		&& ocl_state.platforms[plat_idx].num_devices < dev_idx) {
 		for (i = 0; i < plat_idx - 1; ++i) {
 			acc += ocl_state.platforms[i].num_devices;
@@ -430,6 +434,17 @@ static int create_platform_context_and_program(struct ocl_platform_state *plat) 
 	status = clGetProgramBuildInfo(
 		plat->program, plat->devices[0], CL_PROGRAM_BUILD_LOG, length, 
 		plat->program_build_log, &length);
+#ifdef _DEBUG
+	if (!plat->good) {
+		printf("ERROR:\tFailed to build CVortex OpenCL kernel.\n"
+			"\tOn platform: %s\n"
+			"\tGives build log:\n\n%s", 
+			plat->platform_name, plat->program_build_log);
+	}
+#endif
+	/* If the platform isn't `good` its almost certainly a failing of the library
+	that ought to be fixed. */
+	assert(plat->good);
 	return plat->good;
 }
 
