@@ -38,7 +38,7 @@ int testSameCpuGpuResMany() {
 	float max_float = 10;
 	float rel_acc = 1e-5f;
 	int i;
-	int repeat, max_repeats=1;	/* Random input can change the results... */
+	int repeat, max_repeats=10;	/* Random input can change the results... */
 	int good;
 	float reg_rad = 0.3f; /* Big enough we should have some overlapping particles */
 
@@ -98,7 +98,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -112,7 +112,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -130,7 +130,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -144,7 +144,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -162,7 +162,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -176,7 +176,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -190,7 +190,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -207,7 +207,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -221,7 +221,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -235,7 +235,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -251,7 +251,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -265,7 +265,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -293,7 +293,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -310,7 +310,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -327,7 +327,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -341,7 +341,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = fabsf(fres[i] - fres2[i]);
 				tmpp = fabsf(fres[i] + fres2[i]);
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -358,7 +358,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -372,7 +372,7 @@ int testSameCpuGpuResMany() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = fabsf(fres[i] - fres2[i]);
 				tmpp = fabsf(fres[i] + fres2[i]);
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}

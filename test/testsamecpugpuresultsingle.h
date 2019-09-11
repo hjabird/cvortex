@@ -39,17 +39,18 @@ int testSameCpuGpuResSingle() {
 	float max_float = 10;
 	float rel_acc = 1e-5f;
 	int i;
-	int repeat, max_repeats=5;	/* Random input can change the results... */
+	int repeat, max_repeats=10;	/* Random input can change the results... */
 	int good;
 	float reg_rad = 0.3f; /* Big enough we should have some overlapping particles */
 
 	bsv_V3f *pmes, *presult, *presult2;
 	bsv_V2f *p2mes, *p2dres, *p2dres2;
-	cvtx_P3D *particles, **pparticles;
+	cvtx_P3D *particles, **pparticles, *targps, **ptargps;
 	cvtx_P2D *p2ds, **pp2ds;
 	cvtx_F3D *fils, **pfils;
 	cvtx_VortFunc func;
-	float tmpp, tmpm, *fres, *fres2;
+	float *fres, *fres2;
+	double tmpp, tmpm;
 	particles = malloc(sizeof(cvtx_P3D) * num_obj);
 	pparticles = malloc(sizeof(cvtx_P3D*) * num_obj);
 	pmes = malloc(sizeof(bsv_V3f) * num_obj);
@@ -63,7 +64,9 @@ int testSameCpuGpuResSingle() {
 	fils = malloc(sizeof(cvtx_F3D) * num_obj);
 	pfils = malloc(sizeof(cvtx_F3D*) * num_obj);
 	fres = malloc(sizeof(float) * num_obj);
-	fres2 = malloc(sizeof(float) * num_obj);
+	fres2 = malloc(sizeof(float) * num_obj); 
+	targps = malloc(sizeof(cvtx_P3D) * num_obj);
+	ptargps = malloc(sizeof(cvtx_P3D*) * num_obj);
 
 	for (repeat = 0; repeat < max_repeats; ++repeat) {
 		/* 3D PROBLEMS!!!!! */
@@ -76,6 +79,8 @@ int testSameCpuGpuResSingle() {
 		particles[0].vorticity.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
 		particles[0].volume = (float)rand() / (float)(RAND_MAX / 0.01);
 		pparticles[0] = &(particles[0]);
+		targps[0] = particles[0];
+		ptargps[0] = &(targps[0]);
 		for (i = 1; i < num_obj; ++i) {
 			particles[i].coord.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
 			particles[i].coord.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
@@ -86,6 +91,11 @@ int testSameCpuGpuResSingle() {
 			particles[i].vorticity.x[2] = 0.f;
 			particles[i].volume = (float)rand() / (float)(RAND_MAX / 0.01);
 			pparticles[i] = &(particles[i]);
+			targps[i] = particles[i];
+			targps[i].vorticity.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
+			targps[i].vorticity.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
+			targps[i].vorticity.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
+			ptargps[i] = &(targps[i]);
 		}
 		fils[0].start.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
 		fils[0].start.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
@@ -116,21 +126,21 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
 			}
 			NAMED_TEST(good, "P3D M2M vel singular (single object with vorticity)");
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(pparticles, num_obj, ptargps, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(pparticles, num_obj, ptargps, num_obj, presult2, &func, reg_rad);
 			good = 1;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -148,21 +158,21 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
 			}
 			NAMED_TEST(good, "P3D M2M vel planetary (single object with vorticity)");
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(pparticles, num_obj, ptargps, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(pparticles, num_obj, ptargps, num_obj, presult2, &func, reg_rad);
 			good = 1;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -180,35 +190,35 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
 			}
 			NAMED_TEST(good, "P3D M2M vel guassian (single object with vorticity)");
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(pparticles, num_obj, ptargps, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(pparticles, num_obj, ptargps, num_obj, presult2, &func, reg_rad);
 			good = 1;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
 			}
 			NAMED_TEST(good, "P3D M2M dvort gaussian (single object with vorticity)");
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad, 0.1f);
+			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, ptargps, num_obj, presult, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad, 0.1f);
+			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, ptargps, num_obj, presult2, &func, reg_rad, 0.1f);
 			good = 1;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -225,35 +235,35 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
 			}
 			NAMED_TEST(good, "P3D M2M vel winckelmans (single object with vorticity)");
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(pparticles, num_obj, ptargps, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(pparticles, num_obj, ptargps, num_obj, presult2, &func, reg_rad);
 			good = 1;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
 			}
 			NAMED_TEST(good, "P3D M2M dvort winckelmans (single object with vorticity)");
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad, 0.1f);
+			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, ptargps, num_obj, presult, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad, 0.1f);
+			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, ptargps, num_obj, presult2, &func, reg_rad, 0.1f);
 			good = 1;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -269,21 +279,21 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
 			}
 			NAMED_TEST(good, "F3D M2M vel (single object with vorticity)");
 			cvtx_accelerator_enable(0);
-			cvtx_F3D_M2M_dvort(pfils, num_obj, pparticles, num_obj, presult);
+			cvtx_F3D_M2M_dvort(pfils, num_obj, ptargps, num_obj, presult);
 			cvtx_accelerator_disable(0);
-			cvtx_F3D_M2M_dvort(pfils, num_obj, pparticles, num_obj, presult2);
+			cvtx_F3D_M2M_dvort(pfils, num_obj, ptargps, num_obj, presult2);
 			good = 1;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -316,7 +326,7 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -333,7 +343,7 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -350,7 +360,7 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -364,7 +374,7 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = fabsf(fres[i] - fres2[i]);
 				tmpp = fabsf(fres[i] + fres2[i]);
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -381,7 +391,7 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -395,7 +405,7 @@ int testSameCpuGpuResSingle() {
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = fabsf(fres[i] - fres2[i]);
 				tmpp = fabsf(fres[i] + fres2[i]);
-				if (tmpm / tmpp > rel_acc) {
+				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
 					good = 0;
 					break;
 				}
@@ -417,6 +427,8 @@ int testSameCpuGpuResSingle() {
 	free(pfils);
 	free(fres);
 	free(fres2);
+	free(targps);
+	free(ptargps);
 	return 0;
 }
 
