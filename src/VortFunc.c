@@ -138,8 +138,9 @@ static float g_gaussian_3D(float rho){
 	/* = 1 to 8sf for rho ~>6. Taylor expansion otherwise */
 	assert(rho >= 0 && "Rho should not be -ve");
 	const float pi = 3.14159265359f;
+	float ret;
 	if(rho > 6.f){
-		return 1.f;
+		ret = 1.f;
 	} else {
 		/* Approximate erf using Abramowitz and Stegan 1.7.26 */
 		float a1 = 0.3480242f, a2 = -0.0958798f, a3 = 0.7478556f, p = 0.47047f;
@@ -147,8 +148,9 @@ static float g_gaussian_3D(float rho){
 		float t = 1.f / (1.f + p * rho_sr2);
 		float erf = 1.f-t * (a1 + t * (a2 + t * a3)) * expf(-rho_sr2 * rho_sr2);
 		float term2 = rho * sqrtf(2.f / pi) * expf(-rho_sr2 * rho_sr2);
-		return erf - term2;
+		ret = erf - term2;
 	}
+	return ret;
 }
 
 static float zeta_gaussian_3D(float rho){
@@ -208,7 +210,7 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void)
 	ret.zeta_3D = &zeta_planetary_3D;
 	ret.eta_3D = &warn_bad_eta_fn; /* Not possible for planetary vortex */
 	ret.eta_2D = &warn_bad_eta_fn;
-	ret.combined_3D = &combined_winckel_3D;
+	ret.combined_3D = &combined_planetary_3D;
 	strcpy(ret.cl_kernel_name_ext, "planetary");
 	return ret;
 }
@@ -221,7 +223,7 @@ CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void){
 	ret.eta_3D = &zeta_gaussian_3D; 
 	ret.eta_2D = &zeta_gaussian_2D;
 	/* See Winckelmans et al., C. R. Physique 6 (2005), around eq (28) */
-	ret.combined_3D = &combined_winckel_3D;
+	ret.combined_3D = &combined_gaussian_3D;
 	strcpy(ret.cl_kernel_name_ext, "gaussian");
 	return ret;
 }
