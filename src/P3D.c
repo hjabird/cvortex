@@ -93,12 +93,12 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_dvort(
 		rho = fabsf(radd / regularisation_radius);
 		kernel->combined_3D(rho, &g, &f);
 		cross_om = bsv_V3f_cross(induced_particle->vorticity, self->vorticity);
-		t1 = (float)1. / ((float)4. * (float)acos(-1) * powf(regularisation_radius, 3));
+		t1 = 1.f / (4.f * acosf(-1) * powf(regularisation_radius, 3));
 		t21n = bsv_V3f_mult(cross_om, g);
 		t21d = rho * rho * rho;
 		t21 = bsv_V3f_div(t21n, t21d);
-		t221 = (float)-1. / (radd * radd);
-		t222 = (3 * g) / (rho * rho * rho) - f;
+		t221 = -1.f / (radd * radd);
+		t222 = (3 * g) / t21d - f;
 		t223 = bsv_V3f_dot(rad, cross_om);
 		t22 = bsv_V3f_mult(rad, t221 * t222 * t223);
 		t2 = bsv_V3f_plus(t21, t22);
