@@ -14,9 +14,11 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 file (GLOB CVORTEX_INCLUDE "include/cvortex/libcvtx.h") # So shoot me for GLOBing.
 file (GLOB CVORTEX_SOURCE  "src/*.[ch]")
+file (GLOB CVORTEX_OPENCL  "src/*.cl")
 source_group("" FILES ${cvortex})
 source_group("include" FILES ${CVORTEX_INCLUDE})
 source_group("source" FILES ${CVORTEX_SOURCE})
+source_group("opencl" FILES ${CVORTEX_OPENCL})
 
 include_directories (include/cvortex)
 if(BUILD_STATIC_LIBRARY)
