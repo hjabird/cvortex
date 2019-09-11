@@ -48,7 +48,7 @@ CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_vel(
 	t22 = bsv_V3f_dot(r2, r0) / bsv_V3f_abs(r2);
 	t2 = t21 - t22;
 	/* (NaN != NaN) == TRUE*/
-	return fabsf(t1 * t2) <= 3.40282346e38 ? bsv_V3f_mult(crosstmp, t1 * t2) : bsv_V3f_zero();
+	return fabsf(t1) <= 3.40282346e38f ? bsv_V3f_mult(crosstmp, t1 * t2) : bsv_V3f_zero();
 }
 
 CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_dvort(
