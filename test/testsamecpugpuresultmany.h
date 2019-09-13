@@ -48,7 +48,7 @@ int testSameCpuGpuResMany() {
 	cvtx_P2D *p2ds, **pp2ds;
 	cvtx_F3D *fils, **pfils;
 	cvtx_VortFunc func;
-	float tmpp, tmpm, *fres, *fres2;
+	float tmpp, tmpm, *fres, *fres2, maxerr, aveerr;
 	particles = malloc(sizeof(cvtx_P3D) * num_obj);
 	pparticles = malloc(sizeof(cvtx_P3D*) * num_obj);
 	pmes = malloc(sizeof(bsv_V3f) * num_obj);
@@ -95,6 +95,7 @@ int testSameCpuGpuResMany() {
 			cvtx_accelerator_disable(0);
 			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult2, &func, reg_rad);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
@@ -104,20 +105,26 @@ int testSameCpuGpuResMany() {
 				}
 			}
 			NAMED_TEST(good, "P3D M2M vel singular");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
-			good = 1;
+			good = 1; 
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P3D M2M dvort singular");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			/* (No viscous method) */
 
 			/* Planetary */
@@ -127,29 +134,39 @@ int testSameCpuGpuResMany() {
 			cvtx_accelerator_disable(0);
 			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult2, &func, reg_rad);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P3D M2M vel planetary");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
-			good = 1;
+			good = 1; 
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P3D M2M dvort planetary");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			/* No viscous method. */
 
 			/* Gaussian */
@@ -159,43 +176,58 @@ int testSameCpuGpuResMany() {
 			cvtx_accelerator_disable(0);
 			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult2, &func, reg_rad);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P3D M2M vel gaussian");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P3D M2M dvort gaussian");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
 			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad, 0.1f);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P3D M2M visc dvort gaussian");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 
 			/* Winckelmans */
 			func = cvtx_VortFunc_winckelmans();
@@ -204,43 +236,58 @@ int testSameCpuGpuResMany() {
 			cvtx_accelerator_disable(0);
 			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult2, &func, reg_rad);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P3D M2M vel winckelmans");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
 			cvtx_accelerator_disable(0);
 			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P3D M2M dvort winckelmans");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
 			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
 			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad, 0.1f);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P3D M2M visc dvort winckelmans");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 
 			/* Vortex filaments */
 			cvtx_accelerator_enable(0);
@@ -248,29 +295,39 @@ int testSameCpuGpuResMany() {
 			cvtx_accelerator_disable(0);
 			cvtx_F3D_M2M_vel(pfils, num_obj, pmes, num_obj, presult2);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "F3D M2M vel");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
 			cvtx_F3D_M2M_dvort(pfils, num_obj, pparticles, num_obj, presult);
 			cvtx_accelerator_disable(0);
 			cvtx_F3D_M2M_dvort(pfils, num_obj, pparticles, num_obj, presult2);
-			good = 1;
+			good = 1; 
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(presult[i], presult2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(presult[i], presult2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "F3D M2M dvort");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 		}
 
 
@@ -290,15 +347,20 @@ int testSameCpuGpuResMany() {
 			cvtx_accelerator_disable(0);
 			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres2, &func, reg_rad);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P2D M2M vel singular");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 
 			/* Planetary */
 			func = cvtx_VortFunc_planetary();
@@ -307,15 +369,20 @@ int testSameCpuGpuResMany() {
 			cvtx_accelerator_disable(0);
 			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres2, &func, reg_rad);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P2D M2M vel planetary");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 
 			/* Gaussian */
 			func = cvtx_VortFunc_gaussian();
@@ -324,29 +391,40 @@ int testSameCpuGpuResMany() {
 			cvtx_accelerator_disable(0);
 			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres2, &func, reg_rad);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
-			NAMED_TEST(good, "P2D M2M vel gaussian");
+			NAMED_TEST(good, "P2D M2M vel gaussian"); 
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
+
 			cvtx_accelerator_enable(0);
 			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
 			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres2, &func, reg_rad, 0.1f);
 			good = 1;
+			maxerr = aveerr = 0.f;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = fabsf(fres[i] - fres2[i]);
 				tmpp = fabsf(fres[i] + fres2[i]);
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P2D M2M visc dvort gaussian");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 
 			/* Winckelmans */
 			func = cvtx_VortFunc_winckelmans();
@@ -355,29 +433,39 @@ int testSameCpuGpuResMany() {
 			cvtx_accelerator_disable(0);
 			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres2, &func, reg_rad);
 			good = 1;
+			maxerr = aveerr = 0.f;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V2f_abs(bsv_V2f_minus(p2dres[i], p2dres2[i]));
 				tmpp = bsv_V2f_abs(bsv_V2f_plus(p2dres[i], p2dres2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f){
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P2D M2M vel winckelmans");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr/num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
 			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres, &func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
 			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres2, &func, reg_rad, 0.1f);
 			good = 1;
+			maxerr = aveerr = 0.f;
 			for (i = 0; i < num_obj; ++i) {
-				tmpm = fabsf(fres[i] - fres2[i]);
+				tmpm = fabsf(fres[i] - fres2[i]); 
 				tmpp = fabsf(fres[i] + fres2[i]);
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					maxerr = fabsf(tmpm / tmpp) > maxerr ? fabsf(tmpm / tmpp) : maxerr;
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "P2D M2M visc dvort winckelmans");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr/num_obj, maxerr); }
 		}
 	}
 	free(particles);

@@ -49,7 +49,7 @@ int testSameCpuGpuResSingle() {
 	cvtx_P2D *p2ds, **p2ds_ptrs, *targ_p2ds, **targ_p2ds_ptrs;
 	cvtx_F3D *fils, **fils_ptrs;
 	cvtx_VortFunc func;
-	float *fres, *fres2;
+	float *fres, *fres2, maxerr, aveerr, mtmpp, mtmpm;
 	double tmpp, tmpm;
 	p3ds = malloc(sizeof(cvtx_P3D) * num_obj);
 	p3ds_ptrs = malloc(sizeof(cvtx_P3D*) * num_obj);
@@ -278,29 +278,45 @@ int testSameCpuGpuResSingle() {
 			cvtx_accelerator_disable(0);
 			cvtx_F3D_M2M_vel(fils_ptrs, num_obj, mes_pts3d, num_obj, res3d2);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(res3d[i], res3d2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(res3d[i], res3d2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					if (fabsf(tmpm / tmpp) > maxerr) {
+						maxerr = fabsf(tmpm / tmpp);
+						mtmpm = tmpm; mtmpp = tmpp;
+					}
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "F3D M2M vel (single object with vorticity)");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e, Max Sum = %.2e, Max Diff = %.2e\n", aveerr / num_obj, maxerr, mtmpp, mtmpm); }
 			cvtx_accelerator_enable(0);
 			cvtx_F3D_M2M_dvort(fils_ptrs, num_obj, targ_p3ds_ptrs, num_obj, res3d);
 			cvtx_accelerator_disable(0);
 			cvtx_F3D_M2M_dvort(fils_ptrs, num_obj, targ_p3ds_ptrs, num_obj, res3d2);
 			good = 1;
+			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
 				tmpm = bsv_V3f_abs(bsv_V3f_minus(res3d[i], res3d2[i]));
 				tmpp = bsv_V3f_abs(bsv_V3f_plus(res3d[i], res3d2[i]));
-				if (tmpp > 2e-35f && tmpm / tmpp > rel_acc) {
-					good = 0;
-					break;
+				if (tmpp > 2e-35f) {
+					aveerr += fabsf(tmpm / tmpp);
+					if (fabsf(tmpm / tmpp) > maxerr) {
+						maxerr = fabsf(tmpm / tmpp);
+						mtmpm = tmpm; mtmpp = tmpp;
+					}
+					if (tmpm / tmpp > rel_acc) {
+						good = 0;
+					}
 				}
 			}
 			NAMED_TEST(good, "F3D M2M dvort (single object with vorticity)");
+			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e, Max Sum = %.2e, Max Diff = %.2e\n", aveerr / num_obj, maxerr, mtmpp, mtmpm); }
 		}
 
 
