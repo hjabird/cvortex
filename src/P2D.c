@@ -181,15 +181,15 @@ CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(
 	float regularisation_radius,
 	float kinematic_visc)
 {
-	float dvort = 0.f;
+	double dvort = 0.;
 	long i;
 	assert(num_particles >= 0);
 #pragma omp parallel for reduction(+:dvort)
 	for (i = 0; i < num_particles; ++i) {
-		dvort += cvtx_P2D_S2S_visc_dvort(array_start[i],
+		dvort += (double)cvtx_P2D_S2S_visc_dvort(array_start[i],
 			induced_particle, kernel, regularisation_radius, kinematic_visc);
 	}
-	return dvort;
+	return (float)dvort;
 }
 
 void cpu_brute_force_P2D_M2M_visc_dvort(
