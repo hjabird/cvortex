@@ -76,7 +76,7 @@ static int finalise_platform(struct ocl_platform_state *plat);
 int opencl_init() {
 	static int tried_init = 0;
 	static int good = 0;
-	if (tried_init == 0) {
+	if (tried_init == 0 || (tried_init==1 && ocl_state.initialised == 0)) {
 		tried_init = 1;
 		ocl_state.initialised = 1;
 		ocl_state.num_platforms = 0;
