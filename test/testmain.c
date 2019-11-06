@@ -24,6 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -81,6 +82,13 @@ int print_summary() {
 		total_tests_passed, total_tests_completed,
 		total_tests_completed - total_tests_passed);
 	return total_tests_completed - total_tests_passed;
+}
+
+int mrand(void)
+{	/* We want randomish, but reproducable tests. */
+	static mrandv = 0xF0F0F0F0;
+	return (((mrandv = mrandv * 214013L + 2531011L) >> 16) &
+		0x7fff)%RAND_MAX;
 }
 
 #include "testaccelerators.h"

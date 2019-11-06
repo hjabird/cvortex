@@ -72,49 +72,49 @@ int testSameCpuGpuResSingle() {
 
 	for (repeat = 0; repeat < max_repeats; ++repeat) {
 		/* 3D PROBLEMS!!!!! */
-		p3ds[0].coord.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-		p3ds[0].coord.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-		p3ds[0].coord.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
+		p3ds[0].coord.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+		p3ds[0].coord.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+		p3ds[0].coord.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
 		mes_pts3d[0] = p3ds[0].coord;
-		p3ds[0].vorticity.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-		p3ds[0].vorticity.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-		p3ds[0].vorticity.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
-		p3ds[0].volume = (float)rand() / (float)(RAND_MAX / 0.01);
+		p3ds[0].vorticity.x[0] = (float)mrand() / (float)(RAND_MAX / max_float) - max_float / 2.f;
+		p3ds[0].vorticity.x[1] = (float)mrand() / (float)(RAND_MAX / max_float) - max_float / 2.f;
+		p3ds[0].vorticity.x[2] = (float)mrand() / (float)(RAND_MAX / max_float) - max_float / 2.f;
+		p3ds[0].volume = (float)mrand() / (float)(RAND_MAX / 0.01);
 		p3ds_ptrs[0] = &(p3ds[0]);
 		targ_p3ds[0] = p3ds[0];
 		targ_p3ds_ptrs[0] = &(targ_p3ds[0]);
 		for (i = 1; i < num_obj; ++i) {
-			p3ds[i].coord.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-			p3ds[i].coord.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-			p3ds[i].coord.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
+			p3ds[i].coord.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+			p3ds[i].coord.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+			p3ds[i].coord.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
 			mes_pts3d[i] = p3ds[i].coord;
 			p3ds[i].vorticity.x[0] = 0.f;
 			p3ds[i].vorticity.x[1] = 0.f;
 			p3ds[i].vorticity.x[2] = 0.f;
-			p3ds[i].volume = (float)rand() / (float)(RAND_MAX / 0.01);
+			p3ds[i].volume = (float)mrand() / (float)(RAND_MAX / 0.01);
 			p3ds_ptrs[i] = &(p3ds[i]);
 			targ_p3ds[i] = p3ds[i];
-			targ_p3ds[i].vorticity.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-			targ_p3ds[i].vorticity.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-			targ_p3ds[i].vorticity.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
+			targ_p3ds[i].vorticity.x[0] = (float)mrand() / (float)(RAND_MAX / max_float) - max_float / 2.f;
+			targ_p3ds[i].vorticity.x[1] = (float)mrand() / (float)(RAND_MAX / max_float) - max_float / 2.f;
+			targ_p3ds[i].vorticity.x[2] = (float)mrand() / (float)(RAND_MAX / max_float) - max_float / 2.f;
 			targ_p3ds_ptrs[i] = &(targ_p3ds[i]);
 		}
-		fils[0].start.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-		fils[0].start.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-		fils[0].start.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
-		fils[0].end.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-		fils[0].end.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-		fils[0].end.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
-		fils[0].strength = (float)rand() / (float)(RAND_MAX / max_float);
+		fils[0].start.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+		fils[0].start.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+		fils[0].start.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
+		fils[0].end.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+		fils[0].end.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+		fils[0].end.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
+		fils[0].strength = (float)mrand() / (float)(RAND_MAX / max_float) - max_float / 2.f;
 		fils_ptrs[0] = &(fils[0]);
 		for (i = 1; i < num_obj; ++i) {
-			fils[i].start.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].start.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].start.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].end.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].end.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].end.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].strength = 0.f;;
+			fils[i].start.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].start.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].start.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].end.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].end.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].end.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].strength = 0.f;
 			fils_ptrs[i] = &(fils[i]);
 		}
 		if (cvtx_num_accelerators() > 0) {
@@ -305,21 +305,21 @@ int testSameCpuGpuResSingle() {
 
 
 		/* 2D PROBLEMS!!!!! */
-		p2ds[0].coord.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-		p2ds[0].coord.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-		p2ds[0].vorticity = (float)rand() / (float)(RAND_MAX / max_float);
-		p2ds[0].area = (float)rand() / (float)(RAND_MAX / 0.01);
+		p2ds[0].coord.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+		p2ds[0].coord.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+		p2ds[0].vorticity = (float)mrand() / (float)(RAND_MAX / max_float) - max_float / 2.f;
+		p2ds[0].area = (float)mrand() / (float)(RAND_MAX / 0.01);
 		p2ds_ptrs[0] = &(p2ds[0]);
 		targ_p2ds[0] = p2ds[0];
 		targ_p2ds_ptrs[0] = &(targ_p2ds[0]);
 		for (i = 1; i < num_obj; ++i) {
-			p2ds[i].coord.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-			p2ds[i].coord.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
+			p2ds[i].coord.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+			p2ds[i].coord.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
 			p2ds[i].vorticity = 0.f;
-			p2ds[i].area = (float)rand() / (float)(RAND_MAX / 0.01);
+			p2ds[i].area = (float)mrand() / (float)(RAND_MAX / 0.01);
 			p2ds_ptrs[i] = &(p2ds[i]);
 			targ_p2ds[i] = p2ds[i];
-			targ_p2ds[i].vorticity = (float)rand() / (float)(RAND_MAX / max_float);
+			targ_p2ds[i].vorticity = (float)mrand() / (float)(RAND_MAX / max_float);
 			targ_p2ds_ptrs[i] = &(targ_p2ds[i]);
 		}
 		if (cvtx_num_accelerators() > 0) {

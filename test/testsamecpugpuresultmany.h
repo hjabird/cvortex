@@ -67,24 +67,24 @@ int testSameCpuGpuResMany() {
 	for (repeat = 0; repeat < max_repeats; ++repeat) {
 		/* 3D PROBLEMS!!!!! */
 		for (i = 0; i < num_obj; ++i) {
-			particles[i].coord.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-			particles[i].coord.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-			particles[i].coord.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
+			particles[i].coord.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+			particles[i].coord.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+			particles[i].coord.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
 			pmes[i] = particles[i].coord;
-			particles[i].vorticity.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-			particles[i].vorticity.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-			particles[i].vorticity.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
-			particles[i].volume = (float)rand() / (float)(RAND_MAX / 0.01);
+			particles[i].vorticity.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+			particles[i].vorticity.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+			particles[i].vorticity.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
+			particles[i].volume = (float)mrand() / (float)(RAND_MAX / 0.01);
 			pparticles[i] = &(particles[i]);
 		}
 		for (i = 0; i < num_obj; ++i) {
-			fils[i].start.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].start.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].start.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].end.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].end.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].end.x[2] = (float)rand() / (float)(RAND_MAX / max_float);
-			fils[i].strength = (float)rand() / (float)(RAND_MAX / max_float);
+			fils[i].start.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].start.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].start.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].end.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].end.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].end.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].strength = (float)mrand() / (float)(RAND_MAX / max_float);
 			pfils[i] = &(fils[i]);
 		}
 		if (cvtx_num_accelerators() > 0) {
@@ -276,10 +276,10 @@ int testSameCpuGpuResMany() {
 
 		/* 2D PROBLEMS!!!!! */
 		for (i = 0; i < num_obj; ++i) {
-			p2ds[i].coord.x[0] = (float)rand() / (float)(RAND_MAX / max_float);
-			p2ds[i].coord.x[1] = (float)rand() / (float)(RAND_MAX / max_float);
-			p2ds[i].vorticity = (float)rand() / (float)(RAND_MAX / max_float);
-			p2ds[i].area = (float)rand() / (float)(RAND_MAX / 0.01);
+			p2ds[i].coord.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
+			p2ds[i].coord.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
+			p2ds[i].vorticity = (float)mrand() / (float)(RAND_MAX / max_float);
+			p2ds[i].area = (float)mrand() / (float)(RAND_MAX / 0.01);
 			pp2ds[i] = &(p2ds[i]);
 		}
 		if (cvtx_num_accelerators() > 0) {
