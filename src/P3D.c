@@ -120,7 +120,6 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_visc_dvort(
 		"that did have a defined eta function");
 	if(bsv_V3f_isequal(self->coord, induced_particle->coord)){
 		ret = bsv_V3f_zero();
-		
 	} else {
 		rad = bsv_V3f_minus(self->coord, induced_particle->coord);
 		radd = bsv_V3f_abs(rad);
