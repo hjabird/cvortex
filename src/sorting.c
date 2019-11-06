@@ -36,6 +36,25 @@ void sort_uintkey_by_uivar_radix(
 	unsigned char* ui_start, size_t uibytes,
 	unsigned int* key_start, size_t num_items) {
 
+	/* A parallel radix sort where only the permutation of
+	the sort is recorded.
+	
+	key_start[:] is changed. ui_start[:] is not.
+
+	During sorting, ordering is obtained from the working array ("wa")
+	and the new order output into the output array ("oa"). On each pass
+	the working array and output array are swapped.
+
+	The radix sort works 1 byte at a time by:
+	[loop] for each byte:
+		[parallel]	count number of each value (ui_start[])
+		[serial]	combine counts
+		[serial]	compute offsets for data from counts
+		[parallel]	reorder index data using offset
+	[end loop]
+	[serial]	make sure data is in the key_start array.
+	*/
+
 	assert(uibytes > 0);
 	assert(num_items >= 0);
 	assert(ui_start != NULL);
@@ -55,7 +74,7 @@ void sort_uintkey_by_uivar_radix(
 	unsigned int *counts, *offsets, info_size = sizeof(unsigned int) * n_para;
 	/* swap = what are we writing the result of this iter into? */
 	unsigned int bit = 0, byte = 0, swap = 0, uini = (unsigned int)num_items;
-	buffer = malloc(num_items * uibytes);
+	buffer = malloc(num_items * sizeof(unsigned int));
 	counts = malloc(info_size * nthreads);
 	offsets = malloc(info_size * nthreads);
 
@@ -122,7 +141,7 @@ void sort_uintkey_by_uivar_radix(
 	/* If we wrote our solution into the buffer, we need to copy
 	it back. */
 	if (!swap) {
-		memcpy(key_start, buffer, num_items);
+		memcpy(key_start, buffer, num_items * sizeof(unsigned int));
 	}
 	free(buffer);
 	free(counts);
