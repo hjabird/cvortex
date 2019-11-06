@@ -186,7 +186,7 @@ CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(
 	assert(num_particles >= 0);
 #pragma omp parallel for reduction(+:dvort)
 	for (i = 0; i < num_particles; ++i) {
-		dvort += cvtx_P2D_S2S_visc_dvort(array_start[i],
+		dvort += (double)cvtx_P2D_S2S_visc_dvort(array_start[i],
 			induced_particle, kernel, regularisation_radius, kinematic_visc);
 	}
 	return (float)dvort;

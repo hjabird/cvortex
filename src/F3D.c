@@ -39,6 +39,7 @@ CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_vel(
 	assert(self != NULL);
 	bsv_V3f r0, r1, r2, crosstmp;
 	float t1, t2, t21, t22;
+	const float bigvar = 3.40282346e38f;
 	r1 = bsv_V3f_minus(mes_point, self->start);
 	r2 = bsv_V3f_minus(mes_point, self->end);
 	r0 = bsv_V3f_minus(r1, r2);
@@ -48,7 +49,8 @@ CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_vel(
 	t22 = bsv_V3f_dot(r2, r0) / bsv_V3f_abs(r2);
 	t2 = t21 - t22;
 	/* (NaN != NaN) == TRUE*/
-	return fabsf(t1) <= 3.40282346e38f ? bsv_V3f_mult(crosstmp, t1 * t2) : bsv_V3f_zero();
+	return fabsf(t1) <= bigvar && fabsf(t2) <= bigvar ? 
+		bsv_V3f_mult(crosstmp, t1 * t2) : bsv_V3f_zero();
 }
 
 CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_dvort(
@@ -88,6 +90,7 @@ CVTX_EXPORT bsv_V3f cvtx_F3D_M2S_vel(
 	assert(num_particles >= 0);
 	assert(array_start != NULL);
 	bsv_V3f vel;
+	/* Using Neumaier summation has no effect on result. */
 	double rx = 0, ry = 0, rz = 0;
 	long i;
 	for (i = 0; i < num_particles; ++i) {

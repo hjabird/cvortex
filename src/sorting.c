@@ -64,11 +64,11 @@ void sort_uintkey_by_uivar_radix(
 		memset(offsets, 0, info_size * nthreads);
 		wa = swap ? buffer : key_start;
 		oa = swap ? key_start : buffer;
-		size_t i = 0, j = 0, m = 0, n = 0;
+		int i = 0, j = 0, m = 0, n = 0;
 
 		/* Counting pass */
 #pragma omp parallel for private(m, n, j)
-		for (i = 0; i < nthreads; ++i) {
+		for (i = 0; i < (int)nthreads; ++i) {
 #ifdef CVTX_USING_OPENMP
 			unsigned int threadid = omp_get_thread_num();
 #else
@@ -85,9 +85,9 @@ void sort_uintkey_by_uivar_radix(
 		}
 		/* Compute offsets */
 #pragma omp parallel for private(n, j, i)
-		for (m = 0; m < nthreads; ++m) {
-			for (n = 0; n < n_para; ++n) {
-				for (j = 0; j < nthreads; ++j) {
+		for (m = 0; m < (int)nthreads; ++m) {
+			for (n = 0; n < (int)n_para; ++n) {
+				for (j = 0; j < (int)nthreads; ++j) {
 					for (i = 0; i < n; ++i) {
 						offsets[n + m * n_para] +=
 							counts[i + j * n_para];
@@ -101,7 +101,7 @@ void sort_uintkey_by_uivar_radix(
 		}
 		/* Reorder pass*/
 #pragma omp parallel for private(m, n, j)
-		for (i = 0; i < nthreads; ++i) {
+		for (i = 0; i < (int)nthreads; ++i) {
 #ifdef CVTX_USING_OPENMP
 			unsigned int threadid = omp_get_thread_num();
 #else
