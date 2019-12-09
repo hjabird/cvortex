@@ -35,9 +35,9 @@ SOFTWARE.
 #endif
 
 /*
-"Sort" an array of indices by the variables they refer to.
+Get the permutation of the indecies needed to sort an array.
 START:	UI		= [3, 2, 6, 4]
-		KEYS	= [0, 1, 2, 3]
+		KEYS	= [0, 0, 0, 0]
 END:	UI		= [3, 2, 6, 4]
 		KEYS	= [1, 0, 3, 2]
 UI is assumed to be array of unsigned integers of
@@ -47,7 +47,7 @@ Uses parallel radix-8 sorting method.
 ui_start is an array of uibytes * num_items bytes long.
 key_start is an array of unsigned ints num_items long.
 */
-void sort_uintkey_by_uivar_radix(
+void sort_perm_multibyte_radix8(
 	unsigned char* ui_start, size_t uibytes,
 	unsigned int* key_start, size_t num_items);
 
