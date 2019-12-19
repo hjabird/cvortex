@@ -72,10 +72,12 @@ void named_bench(char* file_name, int line_no, char* name, void (func)(int), int
 int parse_command_args(int argc, char* argv[]) {
 	char available_types[] = "P2D P3D F3D init";
 	char available_funcs[] =
-		"vel-gauss-cpu vel-gauss-gpu dvort-gauss-cpu dvort-gauss-gpu "
+		"vel-gaussian-cpu vel-gaussian-gpu dvort-gaussian-cpu dvort-gaussian-gpu "
 		"vel-singular-cpu vel-singular-gpu dvort-singular-cpu dvort-singular-gpu "
 		"vel-planetary-cpu vel-planetary-gpu dvort-planetary-cpu dvort-planetary-gpu "
 		"vel-winckelmans-cpu vel-winckelmans-gpu dvort-winckelmans-cpu dvort-winckelmans-gpu "
+		"viscdvort-winckelmans-cpu viscdvort-winckelmans-gpu "
+		"viscdvort-gaussian-cpu viscdvort-gaussian-gpu "
 		"redistribute-lambda0 redistribute-lambda1 redistribute-lambda2 redistribute-lambda3 "
 		"redistribute-m4p cold_initialisation reinitialisation cold reinit";
 	char available_scales[] = "vsmall small medium large vlarge huge";
@@ -171,7 +173,10 @@ int parse_command_args(int argc, char* argv[]) {
 	if (good != 1) {
 		printf("Bad arguments!\n"
 			"Expecting to see:\n"
-			"\tTO DO!\n\n");
+			"\tall_bench -types [types] -funcs [funcs] -scales [scales] -repeats 10\n\n"
+			"Where available types are:\n"
+			"%s\n\nAvailable funcs are:\n%s\n\nAvailable scales are:\n%s\n\n",
+			available_types, available_funcs, available_scales);
 	}
 	return good;
 }

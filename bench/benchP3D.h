@@ -1,9 +1,9 @@
-#ifndef CVTX_BENCHPARTICLESETUP_H
-#define CVTX_BENCHPARTICLESETUP_H
+#ifndef CVTX_BENCHP3D_H
+#define CVTX_BENCHP3D_H
 /*============================================================================
-benchparticlesetup.h
+benchP3D.h
 
-Set up big random arrays of particles for benchmarking purposes.
+Benchmark 3D particles for cvortex.
 
 Copyright(c) 2018-2019 HJA Bird
 
@@ -25,20 +25,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#include "libcvtx.h"
 
-void create_particles_3D(int np, float maxf, float vol);
-void create_particles_3D_outarr(int np);
-void create_particles_2D(int np, float maxf, float area);
-void create_particles_2D_outarr(int np);
-void destroy_particles_3D();
-void destroy_particles_2D();
+void run_P3D_bench(void);
 
-cvtx_P3D** particle_3D_pptr(void);
-cvtx_P3D* oparticle_3D_ptr(void);
-cvtx_P3D* particle_3D_ptr(void);
-cvtx_P2D** particle_2D_pptr(void);
-cvtx_P2D* oparticle_2D_ptr(void);
-cvtx_P2D* particle_2D_ptr(void);
-
-#endif
+#endif 

@@ -1,8 +1,8 @@
-#include "benchparticlesetup.h"
+#include "bencharraysetup.h"
 /*============================================================================
-benchparticlesetup.h
+bencharraysetup.h
 
-Set up big random arrays of particles for benchmarking purposes.
+Set up big random arrays for IO of benchmark functions.
 
 Copyright(c) 2018-2019 HJA Bird
 
@@ -34,10 +34,13 @@ static cvtx_P2D* particles_2D = NULL;
 static cvtx_P2D* oparticles_2D = NULL;
 static cvtx_P2D** pparticles_2D = NULL;
 
+static bsv_V3f* m_v3f_arr1 = NULL;
+static bsv_V3f* m_v3f_arr2 = NULL;
+static bsv_V2f* m_v2f_arr1 = NULL;
+static bsv_V2f* m_v2f_arr2 = NULL;
+
 /* Setup / teardown. */
 void create_particles_3D(int np, float maxf, float vol) {
-	free(particles_3D);
-	free(pparticles_3D);
 	particles_3D = malloc(sizeof(cvtx_P3D) * np);
 	pparticles_3D = malloc(sizeof(cvtx_P3D*) * np);
 	int i;
@@ -55,7 +58,6 @@ void create_particles_3D(int np, float maxf, float vol) {
 }
 
 void create_particles_3D_outarr(int np) {
-	free(oparticles_3D);
 	oparticles_3D = malloc(sizeof(cvtx_P3D) * np);
 }
 
@@ -66,8 +68,6 @@ void destroy_particles_3D() {
 }
 
 void create_particles_2D(int np, float maxf, float area) {
-	free(particles_2D);
-	free(pparticles_2D);
 	particles_2D = malloc(sizeof(cvtx_P2D) * np);
 	pparticles_2D = malloc(sizeof(cvtx_P2D*) * np);
 	int i;
@@ -84,13 +84,72 @@ void create_particles_2D(int np, float maxf, float area) {
 
 
 void create_particles_2D_outarr(int np) {
-	free(oparticles_2D);
 	oparticles_2D = malloc(sizeof(cvtx_P2D) * np);
 }
 
 void destroy_particles_2D() {
-	free(particles_2D);
-	free(pparticles_2D);
+	return;
+}
+
+void create_V3f_arr(int n, float maxf) {
+	m_v3f_arr1 = malloc(sizeof(bsv_V3f) * n);
+	int i;
+	for (i = 0; i < n; ++i) {
+		m_v3f_arr1[i].x[0] = mrandf(maxf);
+		m_v3f_arr1[i].x[1] = mrandf(maxf);
+		m_v3f_arr1[i].x[2] = mrandf(maxf);
+	}
+	return;
+}
+
+void create_V3f_arr2(int n, float maxf) {
+	m_v3f_arr2 = malloc(sizeof(bsv_V3f) * n);
+	int i;
+	for (i = 0; i < n; ++i) {
+		m_v3f_arr2[i].x[0] = mrandf(maxf);
+		m_v3f_arr2[i].x[1] = mrandf(maxf);
+		m_v3f_arr2[i].x[2] = mrandf(maxf);
+	}
+	return;
+}
+
+void destroy_V3f_arr() {
+	free(m_v3f_arr1);
+	return;
+}
+
+void destroy_V3f_arr2() {
+	free(m_v3f_arr2);
+	return;
+}
+
+void create_V2f_arr(int n, float maxf) {
+	m_v2f_arr1 = malloc(sizeof(bsv_V2f) * n);
+	int i;
+	for (i = 0; i < n; ++i) {
+		m_v2f_arr1[i].x[0] = mrandf(maxf);
+		m_v2f_arr1[i].x[1] = mrandf(maxf);
+	}
+	return;
+}
+
+void create_V2f_arr2(int n, float maxf) {
+	m_v2f_arr2 = malloc(sizeof(bsv_V2f) * n);
+	int i;
+	for (i = 0; i < n; ++i) {
+		m_v2f_arr2[i].x[0] = mrandf(maxf);
+		m_v2f_arr2[i].x[1] = mrandf(maxf);
+	}
+	return;
+}
+
+void destroy_V2f_arr() {
+	free(m_v2f_arr1);
+	return;
+}
+
+void destroy_V2f_arr2() {
+	free(m_v2f_arr2);
 	return;
 }
 
@@ -116,4 +175,20 @@ cvtx_P2D* oparticle_2D_ptr(void) {
 
 cvtx_P2D* particle_2D_ptr(void) {
 	return particles_2D;
+}
+
+bsv_V3f* v3f_arr(void) {
+	return m_v3f_arr1;
+}
+
+bsv_V3f* v3f_arr2(void) {
+	return m_v3f_arr2;
+}
+
+bsv_V2f* v2f_arr(void) {
+	return m_v2f_arr1;
+}
+
+bsv_V2f* v2f_arr2(void) {
+	return m_v2f_arr2;
 }
