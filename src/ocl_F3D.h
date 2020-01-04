@@ -1,3 +1,5 @@
+#ifndef CVTX_OCL_F3D_H
+#define CVTX_OCL_F3D_H
 #include "libcvtx.h"
 /*============================================================================
 ocl_filament.h
@@ -74,3 +76,4 @@ int opencl_brute_force_F3D_M2M_dvort_impl(
 	cl_context context);
 
 #endif /* CVTX_USING_OPENCL */
+#endif /* CVTX_OCL_F3D_H */

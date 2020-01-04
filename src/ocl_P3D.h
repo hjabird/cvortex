@@ -1,3 +1,5 @@
+#ifndef CVTX_OCL_P3D_H
+#define CVTX_OCL_P3D_H
 #include "libcvtx.h"
 /*============================================================================
 ocl_P3D.h
@@ -94,3 +96,4 @@ int opencl_brute_force_P3D_M2M_visc_dvort_impl(
 	cl_context context);
 
 #endif /* CVTX_USING_OPENCL */
+#endif /* CVTX_OCL_P3D_H */
