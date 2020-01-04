@@ -33,6 +33,7 @@ SOFTWARE.
 
 #include "gridkey.h"
 #include "sorting.h"
+#include "redistribution_helper_funcs.h"
 
 #ifdef CVTX_USING_OPENCL
 #	include "ocl_P2D.h"
@@ -238,6 +239,9 @@ CVTX_EXPORT void cvtx_P2D_M2M_visc_dvort(
 }
 
 /* Particle redistribution -------------------------------------------------*/
+static int cvtx_remove_particles_under_str_threshold_2d(
+	cvtx_P2D* io_arr, float* strs, int n_inpt_partices, 
+	float threshold, int max_keepable_particles);
 
 CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	const cvtx_P2D **input_array_start,
@@ -266,8 +270,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	float *nvort_array = NULL, *nnvort_array = NULL;
 	unsigned int *nidx_array = NULL;
 	/* For particle removal: */
-	float ave_particle_str, min_keepable_particle, vorticity_deficit, 
-		maxv, minv;
+	float min_keepable_particle;
 
 	/* Generate grid keys for existing particles. */
 	minmax_xy_posn(input_array_start, n_input_particles, &minx, NULL, &miny, NULL);
@@ -282,8 +285,6 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 		okey_array[i] = g_P2D_gridkey2D(input_array_start[i],
 			grid_density, minx, miny);
 	}
-	/* Sort our key indexs by gridkey (makes later array much faster to sort) */
-	/*qsort_r(oidx_array, n_input_particles, sizeof(unsigned int), comp_Gridkey2D_by_idx, okey_array);*/
 	
 	/* Now we make new particles based on grid. */
 	/* ppop = Particles per orginal particle. */
@@ -313,7 +314,6 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 				vortfrac = redistributor->func(U) * redistributor->func(W);
 				np_idx = k + grid_radius + 
 					(j + grid_radius) * (2 * grid_radius + 1) + widx * ppop;
-				nidx_array[np_idx] = np_idx;
 				nkey_array[np_idx].xk = okx + j;
 				nkey_array[np_idx].yk = oky + k;
 				nvort_array[np_idx] = vortfrac * p_vort;
@@ -324,9 +324,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	free(okey_array);
 
 	/* Now merge our new particles */
-	/*qsort_r(nidx_array, n_input_particles * ppop, sizeof(unsigned int), 
-		comp_Gridkey2D_by_idx, nkey_array);*/
-	sort_uintkey_by_uivar_radix((unsigned char*)nkey_array,
+	sort_perm_multibyte_radix8((unsigned char*)nkey_array,
 		sizeof(struct Gridkey2D), nidx_array, n_input_particles * ppop);
 
 	nnkey_array = malloc(sizeof(struct Gridkey2D) * n_input_particles * ppop);
@@ -356,99 +354,82 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	free(nnvort_array);
 	n_created_particles = (j < ppop * n_input_particles ? j : 0);
 
+	/* Go back to array of particles. */
+	cvtx_P2D* created_particles = NULL;
+	created_particles = malloc(n_created_particles * sizeof(cvtx_P2D));
+#pragma omp parallel for
+	for (i = 0; i < n_created_particles; ++i) {
+		created_particles[i].area = grid_density * grid_density;
+		created_particles[i].vorticity = nvort_array[i];
+		created_particles[i].coord.x[0] = minx + nkey_array[i].xk * grid_density;
+		created_particles[i].coord.x[1] = miny + nkey_array[i].yk * grid_density;
+	}
+	free(nkey_array);
+	free(nvort_array);
+	free(nidx_array);
+
 	/* Remove particles with neglidgible vorticity. */
-	ave_particle_str = 0.f;
-	for (i = 0; i < n_created_particles; ++i) { 
-		ave_particle_str += fabsf(nvort_array[i]); 
-	}
-	ave_particle_str /= n_created_particles;
-	min_keepable_particle = ave_particle_str * negligible_vort;
-	j = 0; vorticity_deficit = 0;
+	float* strengths = malloc(sizeof(float) * n_created_particles);
+#pragma omp parallel for
 	for (i = 0; i < n_created_particles; ++i) {
-		if (fabsf(nvort_array[i]) >= min_keepable_particle) {
-			nvort_array[j] = nvort_array[i];
-			nkey_array[j] = nkey_array[i];
-			++j;
-		}
-		else {
-			vorticity_deficit += nvort_array[i];	/* For vorticity conservation. */
-		}
+		strengths[i] = fabs(created_particles[i].vorticity);
 	}
-	n_created_particles = j;
+	farray_info(strengths, n_created_particles, &min_keepable_particle, NULL, NULL);
+	n_created_particles = cvtx_remove_particles_under_str_threshold_2d(
+		created_particles, strengths, n_created_particles, 
+		min_keepable_particle, n_created_particles);
+	/* The strengths are modified to keep total vorticity constant. */
+#pragma omp parallel for
 	for (i = 0; i < n_created_particles; ++i) {
-		nvort_array[i] += vorticity_deficit / n_created_particles;
+		strengths[i] = fabs(created_particles[i].vorticity);
 	}
 
 	/* Now to handle what we return to the caller */
 	if (output_particles != NULL) {
 		if (n_created_particles > max_output_particles) {
-			/* We need to remove more particles... */
-			minv = maxv = fabsf(nvort_array[0]);
-			ave_particle_str = 0.f;
-			for (i = 0; i < n_created_particles; ++i) {
-				minv = minv < fabsf(nvort_array[i]) ? minv : fabsf(nvort_array[i]);
-				maxv = maxv > fabsf(nvort_array[i]) ? maxv : fabsf(nvort_array[i]);
-				ave_particle_str += fabsf(nvort_array[i]);
-			}
-			ave_particle_str /= n_created_particles;
-
-			/* Guess vorticity thresholds and count the kept particles.*/
-			float guesses[NG_FOR_REDUCING_PARICLES];
-			int grms[NG_FOR_REDUCING_PARICLES];
-			while (1) {
-				for (i = 0; i < NG_FOR_REDUCING_PARICLES; ++i) {
-					grms[i] = 0;
-					guesses[i] = minv + i * (maxv - minv) / (float)NG_FOR_REDUCING_PARICLES;
-				}
-				for (i = 0; i < n_created_particles; ++i) {
-					for (j = 0; j < NG_FOR_REDUCING_PARICLES; ++j) {
-						grms[j] += fabsf(nvort_array[i]) < guesses[j] ? 0 : 1;
-					}
-				}
-				for (i = 1; i < NG_FOR_REDUCING_PARICLES; ++i) {
-					maxv = guesses[i];
-					minv = guesses[i - 1];
-					if (grms[i] < max_output_particles) { 
-						k = i;
-						break;
-					}
-				}
-				/* Termination condition. */
-				if (minv == maxv || grms[k] == grms[k + 1] || 
-					((float)(max_output_particles - grms[k]) 
-						/ ((float)max_output_particles)) < 0.01) {
-					break;
-				}
-			}
-			min_keepable_particle = guesses[k];
-			j = 0;
-			for (i = 0; i < n_created_particles; ++i) {
-				if (fabsf(nvort_array[i]) >= min_keepable_particle) {
-					nvort_array[j] = nvort_array[i];
-					nkey_array[j] = nkey_array[i];
-					++j;
-				}
-				else {
-					vorticity_deficit += nvort_array[i];	/* For vorticity conservation. */
-				}
-			}
-			n_created_particles = j;
-			for (i = 0; i < n_created_particles; ++i) {
-				nvort_array[i] += vorticity_deficit / n_created_particles;
-			}
+			min_keepable_particle = get_strength_threshold(
+				strengths, n_created_particles, max_output_particles);
+			n_created_particles = cvtx_remove_particles_under_str_threshold_2d(
+				created_particles, strengths, n_created_particles,
+				min_keepable_particle, max_output_particles);
 		}
 		/* And now make an array to return to our caller. */
-		for (i = 0; i < n_created_particles; ++i) {
-			output_particles[i].area = grid_density * grid_density;
-			output_particles[i].vorticity = nvort_array[i];
-			output_particles[i].coord.x[0] = minx + nkey_array[i].xk * grid_density;
-			output_particles[i].coord.x[1] = miny + nkey_array[i].yk * grid_density;
+		memcpy(output_particles, created_particles, sizeof(cvtx_P2D) * n_created_particles);
+	}
+	/* Free remaining arrays. */
+	free(created_particles);
+	return n_created_particles;
+}
+
+
+int cvtx_remove_particles_under_str_threshold_2d(
+	cvtx_P2D* io_arr, float* strs,
+	int n_inpt_partices, float min_keepable_str,
+	int max_keepable_particles) {
+
+	float vorticity_deficit;
+	int n_output_particles;
+	int i, j;
+
+	j = 0;
+	vorticity_deficit = 0.f;
+
+	for (i = 0; i < n_inpt_partices; ++i) {
+		if (strs[i] >= min_keepable_str && i < max_keepable_particles) {
+			io_arr[j] = io_arr[i];
+			++j;
+		}
+		else {
+			/* For vorticity conservation. */
+			vorticity_deficit = io_arr[i].vorticity + vorticity_deficit;
 		}
 	}
 
-	/* Free remaining arrays. */
-	free(nidx_array);
-	free(nkey_array);
-	free(nvort_array);
-	return n_created_particles;
+	n_output_particles = j;
+	vorticity_deficit = vorticity_deficit / (float)n_output_particles;
+	for (i = 0; i < n_output_particles; ++i) {
+		io_arr[i].vorticity = io_arr[i].vorticity + vorticity_deficit;
+	}
+	return n_output_particles;
 }
+
