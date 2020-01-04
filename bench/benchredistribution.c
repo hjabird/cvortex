@@ -47,6 +47,7 @@ void redistribution_2D_lambda3(int);
 
 void run_redistribution_tests(void) {
 	create_particles_3D(1000000, 1., 8e-6);
+	create_particles_3D_outarr(8 * 1000000);
 	meshsize = cbrt(2. / 1000.);
 	BENCH("P3D redistribute-m4p vsmall", redistribution_3D_m4, test_repeats(), 1000);
 	BENCH("P3D redistribute-lambda0 vsmall", redistribution_3D_lambda0, test_repeats(), 1000);
@@ -84,8 +85,10 @@ void run_redistribution_tests(void) {
 	BENCH("P3D redistribute-lambda2 huge", redistribution_3D_lambda2, test_repeats(), 1000000);
 	BENCH("P3D redistribute-lambda3 huge", redistribution_3D_lambda3, test_repeats(), 1000000);
 	destroy_particles_3D();
+	destroy_oparticles_3D();
 
-	create_particles_3D(1000000, 8 * 1000000, 1., 4e-6);
+	create_particles_2D(1000000, 1., 4e-6);
+	create_particles_2D_outarr(8 * 1000000);
 	meshsize = cbrt(2. / 1000.);
 	BENCH("P2D redistribute-m4p vsmall", redistribution_2D_m4, test_repeats(), 1000);
 	BENCH("P2D redistribute-lambda0 vsmall", redistribution_2D_lambda0, test_repeats(), 1000);
@@ -123,6 +126,7 @@ void run_redistribution_tests(void) {
 	BENCH("P2D redistribute-lambda2 huge", redistribution_2D_lambda2, test_repeats(), 1000000);
 	BENCH("P2D redistribute-lambda3 huge", redistribution_2D_lambda3, test_repeats(), 1000000);
 	destroy_particles_2D();
+	destroy_oparticles_2D();
 	return;
 }
 

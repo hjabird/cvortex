@@ -67,6 +67,10 @@ void destroy_particles_3D() {
 	return;
 }
 
+void destroy_oparticles_3D() {
+	free(oparticles_3D);
+}
+
 void create_particles_2D(int np, float maxf, float area) {
 	particles_2D = malloc(sizeof(cvtx_P2D) * np);
 	pparticles_2D = malloc(sizeof(cvtx_P2D*) * np);
@@ -88,6 +92,13 @@ void create_particles_2D_outarr(int np) {
 }
 
 void destroy_particles_2D() {
+	free(particles_2D);
+	free(pparticles_2D);
+	return;
+}
+
+void destroy_oparticles_2D() {
+	free(oparticles_2D);
 	return;
 }
 

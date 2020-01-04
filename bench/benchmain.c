@@ -35,6 +35,7 @@ SOFTWARE.
 #include "benchinitilisation.h"
 #include "benchredistribution.h"
 #include "benchP3D.h"
+#include "benchP2D.h"
 
 int main(int argc, char* argv[]){
 	if (!parse_command_args(argc, argv)) {
@@ -46,6 +47,7 @@ int main(int argc, char* argv[]){
 	BENCH("init reinit", bench_reinitialisation, 6, 1);
 	run_redistribution_tests();
 	run_P3D_bench();
+	run_P2D_bench();
 
 	cvtx_finalise();
 	return;

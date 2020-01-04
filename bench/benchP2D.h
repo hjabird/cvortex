@@ -1,9 +1,9 @@
-#ifndef CVTX_BENCHARRAYSETUP_H
-#define CVTX_BENCHARRAYSETUP_H
+#ifndef CVTX_BENCHP2D_H
+#define CVTX_BENCHP2D_H
 /*============================================================================
-bencharraysetup.h
+benchP2D.h
 
-Set up big random arrays for IO of benchmark functions.
+Benchmark 2D particles for cvortex.
 
 Copyright(c) 2018-2019 HJA Bird
 
@@ -25,40 +25,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#include "libcvtx.h"
-#include <bsv/bsv.h>
 
-void create_particles_3D(int np, float maxf, float vol);
-void create_particles_3D_outarr(int np);
-void destroy_particles_3D();
-void destroy_oparticles_3D();
+void run_P2D_bench(void);
 
-void create_particles_2D(int np, float maxf, float area);
-void create_particles_2D_outarr(int np);
-void destroy_particles_2D();
-void destroy_oparticles_2D();
-
-void create_V3f_arr(int n, float maxf);
-void create_V3f_arr2(int n, float maxf);
-void destroy_V3f_arr();
-void destroy_V3f_arr2();
-
-void create_V2f_arr(int n, float maxf);
-void create_V2f_arr2(int n, float maxf);
-void destroy_V2f_arr();
-void destroy_V2f_arr2();
-
-cvtx_P3D** particle_3D_pptr(void);
-cvtx_P3D* oparticle_3D_ptr(void);
-cvtx_P3D* particle_3D_ptr(void);
-
-cvtx_P2D** particle_2D_pptr(void);
-cvtx_P2D* oparticle_2D_ptr(void);
-cvtx_P2D* particle_2D_ptr(void);
-
-bsv_V3f* v3f_arr(void);
-bsv_V3f* v3f_arr2(void);
-bsv_V2f* v2f_arr(void);
-bsv_V2f* v2f_arr2(void);
-
-#endif
+#endif 

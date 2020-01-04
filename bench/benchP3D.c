@@ -1,3 +1,4 @@
+#include "benchP3D.h"
 /*============================================================================
 benchP3D.h
 
@@ -48,7 +49,7 @@ void run_P3D_bench(void) {
 	/* Run first with GPUs enabled. */
 	int i, n;
 	n = cvtx_num_accelerators();
-	for (i = 0; i < n; ++n) {
+	for (i = 0; i < n; ++i) {
 		cvtx_accelerator_enable(i);
 	}
 
@@ -127,7 +128,7 @@ void run_P3D_bench(void) {
 
 
 	/* Now use the CPU, disabling accelerators. */
-	for (i = 0; i < n; ++n) {
+	for (i = 0; i < n; ++i) {
 		cvtx_accelerator_disable(i);
 	}
 
@@ -204,7 +205,7 @@ void run_P3D_bench(void) {
 	BENCH("P3D viscdvort-gaussian-cpu huge", bench_P3D_viscdvort_gaussian, test_repeats(), 1000000);
 	BENCH("P3D viscdvort-winckelmans-cpu huge", bench_P3D_viscdvort_winckelmans, test_repeats(), 1000000);
 	/* Re-enable GPUs. */
-	for (i = 0; i < n; ++n) {
+	for (i = 0; i < n; ++i) {
 		cvtx_accelerator_enable(i);
 	}
 	destroy_particles_3D();
