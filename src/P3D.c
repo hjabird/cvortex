@@ -474,7 +474,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	}
 	free(nnkey_array);
 	free(nnvort_array);
-	n_created_particles = (j < ppop * n_input_particles ? j : 0);
+	n_created_particles = (j < ppop * n_input_particles ? j + 1 : 0);
 
 	/* Go back to array of particles. */
 	cvtx_P3D *created_particles = NULL;
@@ -498,6 +498,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 		strengths[i] = bsv_V3f_abs(created_particles[i].vorticity);
 	}
 	farray_info(strengths, n_created_particles, &min_keepable_particle, NULL, NULL);
+	min_keepable_particle = min_keepable_particle * negligible_vort;
 	n_created_particles = cvtx_remove_particles_under_str_threshold(
 		created_particles, strengths, n_created_particles, 
 		min_keepable_particle, n_created_particles);
@@ -536,7 +537,7 @@ int cvtx_remove_particles_under_str_threshold(
 	vorticity_deficit = bsv_V3f_zero();
 
 	for (i = 0; i < n_inpt_partices; ++i) {
-		if (strs[i] >= min_keepable_str && i < max_keepable) {
+		if (strs[i] > min_keepable_str && i < max_keepable) {
 			io_arr[j] = io_arr[i];
 			++j;
 		}
