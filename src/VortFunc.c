@@ -75,7 +75,7 @@ static float zeta_winckel_3D(float rho) {
 	assert(rho >= 0 && "Rho should not be -ve");
 	a = rho * rho + 1;
 	b = powf(a, 3.5f);
-	c = (float)7.5 / b;
+	c = 7.5f / b;
 	return c;
 }
 
@@ -105,10 +105,11 @@ static float g_winckel_2D(float rho) {
 
 static float eta_winckel_2D(float rho) {
 	assert(rho >= 0 && "Rho should not be -ve");
-	float a, b, c;
+	float a, b, c, a3;
 	a = rho * rho + 1.f;
-	b = powf(a, 4);
-	c = 24.f * expf(4.f / powf(a, 3));
+	a3 = a * a * a;
+	b = a3 * a;
+	c = 24.f * expf(4.f / a3);
 	return c / b;
 }
 
