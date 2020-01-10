@@ -33,7 +33,6 @@ SOFTWARE.
 
 #include "uintkey.h"
 #include "redistribution_helper_funcs.h"
-#include "sorting.h"
 
 #ifdef CVTX_USING_OPENCL
 #	include "ocl_P3D.h"
@@ -445,8 +444,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	free(okey_array);
 
 	/* Now merge our new particles */
-	sort_perm_multibyte_radix8((unsigned char*)nkey_array,
-		sizeof(struct UInt32Key3D), nidx_array, n_input_particles* ppop);
+	sort_perm_UInt32Key3D(nkey_array, nidx_array, n_input_particles* ppop);
 
 	nnkey_array = malloc(sizeof(struct UInt32Key3D) * n_input_particles * ppop);
 	nnvort_array = malloc(sizeof(bsv_V3f) * n_input_particles * ppop);

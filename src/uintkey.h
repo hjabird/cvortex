@@ -30,17 +30,17 @@ SOFTWARE.
 #include <stdint.h>
 
 /* A coordinate on a grid in 2D. */
-struct UInt32Key2D {
+typedef struct UInt32Key2D {
 	uint32_t xk;
 	uint32_t yk;
-};
+} UInt32Key2D;
 
 /* A coordinate on a grid in 3D. */
-struct UInt32Key3D {
+typedef struct UInt32Key3D {
 	uint32_t xk;
 	uint32_t yk;
 	uint32_t zk;
-};
+} UInt32Key3D;
 
 void minmax_xy_posn(
 	const cvtx_P2D **array_start, const int nparticles,
@@ -50,6 +50,14 @@ void minmax_xyz_posn(
 	const cvtx_P3D **array_start, const int nparticles,
 	float *xmin, float *xmax, float *ymin, float *ymax,
 	float *zmin, float *zmax);
+
+void sort_perm_UInt32Key2D(
+	UInt32Key2D *gridkeys,
+	unsigned int* key_start, size_t num_items);
+
+void sort_perm_UInt32Key3D(
+	UInt32Key3D *gridkeys,
+	unsigned int* key_start, size_t num_items);
 
 /* Return a location on a grid with origin minx and miny of a 
 2D particle. */
