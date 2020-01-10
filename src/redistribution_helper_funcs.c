@@ -26,6 +26,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 
+#include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -82,7 +83,6 @@ float get_strength_threshold(
 	free(g_counts);
 	return (float)minv;
 }
-
 
 void farray_info(
 	float* strs, int n_inpt_partices,

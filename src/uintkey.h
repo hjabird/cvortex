@@ -1,12 +1,12 @@
-#ifndef CVTX_GRIDKEY_H
-#define CVTX_GRIDKEY_H
+#ifndef CVTX_UINTKEY_H
+#define CVTX_UINTKEY_H
 #include "libcvtx.h"
 /*============================================================================
-gridkey.h
+uintkey.h
 
-Helper functions for working with grids.
+uint32 based keys in 2D and 3D for working with grids
 
-Copyright(c) 2019 HJA Bird
+Copyright(c) 2019-2020 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -27,23 +27,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 
+#include <stdint.h>
+
 /* A coordinate on a grid in 2D. */
-struct Gridkey2D {
-	unsigned int xk;
-	unsigned int yk;
+struct UInt32Key2D {
+	uint32_t xk;
+	uint32_t yk;
 };
 
 /* A coordinate on a grid in 3D. */
-struct Gridkey3D {
-	unsigned int xk;
-	unsigned int yk;
-	unsigned int zk;
-};
-
-/* A coordinate in an oct-tree in 2D. */
-struct MortonKey2D {
-	unsigned int k1;
-	unsigned int k2;
+struct UInt32Key3D {
+	uint32_t xk;
+	uint32_t yk;
+	uint32_t zk;
 };
 
 void minmax_xy_posn(
@@ -57,47 +53,16 @@ void minmax_xyz_posn(
 
 /* Return a location on a grid with origin minx and miny of a 
 2D particle. */
-struct Gridkey2D g_P2D_gridkey2D(
+struct UInt32Key2D g_P2D_gridkey2D(
 	const cvtx_P2D *particle,
 	float grid_density,
 	float minx, float miny);
 
 /* Return a location on a grid with origin minx and miny of a
 2D particle. */
-struct Gridkey3D g_P3D_gridkey3D(
+struct UInt32Key3D g_P3D_gridkey3D(
 	const cvtx_P3D *particle,
 	float grid_density,
 	float minx, float miny, float minz);
 
-/*
-Takes two indexes, p1 & p2 that index an array of Gridkey2D s.
-Array is of Gridkey2D is given by context.
-Compares an Gridkey2D by x key then y key. */
-int comp_Gridkey2D_by_idx(void* context, const void* p1, const void* p2);
-
-/*
-Takes two indexes, p1 & p2 that index an array of Gridkey2D s.
-Array is of Gridkey3D is given by context.
-Compares an Gridkey3D by x key then y key then z key. */
-int comp_Gridkey3D_by_idx(void* context, const void* p1, const void* p2);
-
-/*
-Interleave 2 uint32s.
-x & y are interleaved such that all of the bits of x
-are in even positions and all the bits of y are in the 
-odd positions. Returns a 2 uints wrapped up in
-a MortonKey2D structure.
-*/
-struct MortonKey2D interleave_2uints(unsigned int x, unsigned int y);
-
-/*
-Interleave bits of (8-bit) x and y, so that all of the
-bits of x are in the even positions and y in the odd;
-returns the resulting 16-bit Morton Number.
-
-Based on public domain code from
-https://graphics.stanford.edu/~seander/bithacks.html#Interleave64bitOps
-*/
-unsigned short interleave_2uchars(unsigned char x, unsigned char y);
-
-#endif /* CVTX_GRIDKEY_H */
+#endif /* CVTX_UINTKEY_H */

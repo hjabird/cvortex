@@ -1,10 +1,10 @@
-#include "gridkey.h"
+#include "uintkey.h"
 /*============================================================================
-gridkey.c
+uintkey.c
 
-Helper functions for working with grids.
+uint32 based keys in 2D and 3D for working with grids
 
-Copyright(c) 2019 HJA Bird
+Copyright(c) 2019-2020 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -100,14 +100,14 @@ void minmax_xyz_posn(
 	return;
 }
 
-struct Gridkey2D g_P2D_gridkey2D(
+struct UInt32Key2D g_P2D_gridkey2D(
 	const cvtx_P2D *particle,
 	float grid_density,
 	float minx, float miny) {
 	assert(particle != NULL);
 	assert(grid_density > 0.f);
 
-	struct Gridkey2D ret;
+	struct UInt32Key2D ret;
 	float x, y;
 	x = particle->coord.x[0];
 	y = particle->coord.x[1];
@@ -120,14 +120,14 @@ struct Gridkey2D g_P2D_gridkey2D(
 	return ret;
 }
 
-struct Gridkey3D g_P3D_gridkey3D(
+struct UInt32Key3D g_P3D_gridkey3D(
 	const cvtx_P3D *particle,
 	float grid_density,
 	float minx, float miny, float minz) {
 	assert(particle != NULL);
 	assert(grid_density > 0.f);
 
-	struct Gridkey3D ret;
+	struct UInt32Key3D ret;
 	float x, y, z;
 	x = particle->coord.x[0];
 	y = particle->coord.x[1];
@@ -144,82 +144,3 @@ struct Gridkey3D g_P3D_gridkey3D(
 	return ret;
 }
 
-int comp_Gridkey2D_by_idx(void* context, const void* p1, const void* p2) {
-	unsigned int x1, x2, y1, y2, pp1, pp2;
-	int ret;
-	pp1 = *(unsigned int*)p1;
-	pp2 = *(unsigned int*)p2;
-	x1 = ((struct Gridkey2D*)context)[pp1].xk;
-	x2 = ((struct Gridkey2D*)context)[pp2].xk;
-	y1 = ((struct Gridkey2D*)context)[pp1].yk;
-	y2 = ((struct Gridkey2D*)context)[pp2].yk;
-	if (x1 != x2) {
-		ret = x1 < x2 ? -1 : 1;
-	}
-	else {
-		ret = (y1 == y2 ? 0 : (y1 < y2 ? -1 : 1));
-	}
-	return ret;
-}
-
-int comp_Gridkey3D_by_idx(void* context, const void* p1, const void* p2) {
-	unsigned int x1, x2, y1, y2, z1, z2, pp1, pp2;
-	int ret;
-	pp1 = *(unsigned int*)p1;
-	pp2 = *(unsigned int*)p2;
-	x1 = ((struct Gridkey3D*)context)[pp1].xk;
-	x2 = ((struct Gridkey3D*)context)[pp2].xk;
-	y1 = ((struct Gridkey3D*)context)[pp1].yk;
-	y2 = ((struct Gridkey3D*)context)[pp2].yk;
-	z1 = ((struct Gridkey3D*)context)[pp1].zk;
-	z2 = ((struct Gridkey3D*)context)[pp2].zk;
-	if (x1 != x2) {
-		ret = x1 < x2 ? -1 : 1;
-	}
-	else {
-		if (y1 != y2) {
-			ret = y1 < y2 ? -1 : 1;
-		}
-		else {
-			ret = z1 < z2 ? -1 : 1;
-		}
-	}
-	return ret;
-}
-
-struct MortonKey2D interleave_2uints(unsigned int x, unsigned int y)
-{
-	struct MortonKey2D ret = { 0x0, 0x0 };
-	unsigned char tmpx, tmpy;
-	unsigned short tmpr;
-	size_t uintbytes = sizeof(unsigned int);
-	int i;
-	unsigned int mask = 0xFF, tmpmask;
-	for (i = 0; i < (int)uintbytes; ++i) {
-		tmpmask = mask << i * 8;
-		tmpx = (unsigned char)(x & mask);
-		tmpy = (unsigned char)(y & mask);
-		tmpr = interleave_2uchars(tmpx, tmpy);
-		if (i < (int)uintbytes / 2) {
-			ret.k1 |= ((unsigned int)tmpr) << 8 * (i % (uintbytes / 2));
-		}
-		else
-		{
-			ret.k2 |= ((unsigned int)tmpr) << 8 * (i % (uintbytes / 2));
-		}
-	}
-	return ret;
-}
-
-unsigned short interleave_2uchars(unsigned char x, unsigned char y) 
-{
-	/* Based on public domain code at
-	https://graphics.stanford.edu/~seander/bithacks.html#Interleave64bitOps
-	*/
-	unsigned short z;
-	z = ((x * 0x0101010101010101ULL & 0x8040201008040201ULL) *
-		0x0102040810204081ULL >> 49) & 0x5555 |
-		((y * 0x0101010101010101ULL & 0x8040201008040201ULL) *
-			0x0102040810204081ULL >> 48) & 0xAAAA;
-	return z;
-}

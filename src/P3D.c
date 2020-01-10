@@ -4,7 +4,7 @@ P3D.c
 
 Vortex particle in 2D with CPU based code.
 
-Copyright(c) 2019 HJA Bird
+Copyright(c) 2019-2020 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -31,7 +31,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
-#include "gridkey.h"
+#include "uintkey.h"
 #include "redistribution_helper_funcs.h"
 #include "sorting.h"
 
@@ -371,9 +371,9 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	float minx, miny, minz;			/* Bounds of the particle box.		*/
 	/* Index array and grid location array of input particles.			*/
 	unsigned int *oidx_array = NULL;
-	struct Gridkey3D *okey_array = NULL;
+	struct UInt32Key3D *okey_array = NULL;
 	/* Index, grid location and vorticity arrays of new particles.		*/
-	struct Gridkey3D *nkey_array = NULL, *nnkey_array = NULL;
+	struct UInt32Key3D *nkey_array = NULL, *nnkey_array = NULL;
 	bsv_V3f *nvort_array = NULL, *nnvort_array = NULL;
 	unsigned int *nidx_array = NULL;
 	/* For particle removal: */
@@ -389,7 +389,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	minz -= (grid_radius + (float)rand() / (float)(RAND_MAX)) * grid_density;
 
 	oidx_array = malloc(sizeof(unsigned int) * n_input_particles);
-	okey_array = malloc(sizeof(struct Gridkey3D) * n_input_particles);
+	okey_array = malloc(sizeof(struct UInt32Key3D) * n_input_particles);
 #pragma omp parallel for schedule(static)
 	for (i = 0; i < n_input_particles; ++i) {
 		oidx_array[i] = i;
@@ -401,7 +401,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	/* ppop = Particles per orginal particle. */
 	ppop = (grid_radius * 2 + 1) * (grid_radius * 2 + 1) 
 		* (grid_radius * 2 + 1);
-	nkey_array = malloc(sizeof(struct Gridkey3D) * ppop * n_input_particles);
+	nkey_array = malloc(sizeof(struct UInt32Key3D) * ppop * n_input_particles);
 	nvort_array = malloc(sizeof(bsv_V3f) * ppop * n_input_particles);
 	nidx_array = malloc(sizeof(unsigned int) * ppop * n_input_particles);
 #pragma omp parallel for schedule(static) private(j, k, m)
@@ -446,9 +446,9 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 
 	/* Now merge our new particles */
 	sort_perm_multibyte_radix8((unsigned char*)nkey_array,
-		sizeof(struct Gridkey3D), nidx_array, n_input_particles* ppop);
+		sizeof(struct UInt32Key3D), nidx_array, n_input_particles* ppop);
 
-	nnkey_array = malloc(sizeof(struct Gridkey3D) * n_input_particles * ppop);
+	nnkey_array = malloc(sizeof(struct UInt32Key3D) * n_input_particles * ppop);
 	nnvort_array = malloc(sizeof(bsv_V3f) * n_input_particles * ppop);
 	for (i = 0; i < ppop * n_input_particles; ++i) {
 		nnkey_array[i] = nkey_array[nidx_array[i]];

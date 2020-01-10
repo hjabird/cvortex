@@ -4,7 +4,7 @@ P2D.c
 
 Vortex particle in 2D with CPU based code.
 
-Copyright(c) 2019 HJA Bird
+Copyright(c) 2019-2020 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -31,7 +31,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
-#include "gridkey.h"
+#include "uintkey.h"
 #include "sorting.h"
 #include "redistribution_helper_funcs.h"
 
@@ -264,9 +264,9 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	float minx, miny;				/* Bounds of the particle box.		*/
 	/* Index array and grid location array of input particles.			*/
 	unsigned int *oidx_array = NULL;
-	struct Gridkey2D *okey_array = NULL;
+	struct UInt32Key2D *okey_array = NULL;
 	/* Index, grid location and vorticity arrays of new particles.		*/
-	struct Gridkey2D *nkey_array = NULL, *nnkey_array = NULL;
+	struct UInt32Key2D *nkey_array = NULL, *nnkey_array = NULL;
 	float *nvort_array = NULL, *nnvort_array = NULL;
 	unsigned int *nidx_array = NULL;
 	/* For particle removal: */
@@ -279,7 +279,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	miny -= grid_radius * grid_density;
 
 	oidx_array = malloc(sizeof(unsigned int) * n_input_particles);
-	okey_array = malloc(sizeof(struct Gridkey2D) * n_input_particles);
+	okey_array = malloc(sizeof(struct UInt32Key2D) * n_input_particles);
 	for (i = 0; i < n_input_particles; ++i) {
 		oidx_array[i] = i;
 		okey_array[i] = g_P2D_gridkey2D(input_array_start[i],
@@ -289,7 +289,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	/* Now we make new particles based on grid. */
 	/* ppop = Particles per orginal particle. */
 	ppop = (grid_radius * 2 + 1) * (grid_radius * 2 + 1);
-	nkey_array = malloc(sizeof(struct Gridkey2D) * ppop * n_input_particles);
+	nkey_array = malloc(sizeof(struct UInt32Key2D) * ppop * n_input_particles);
 	nvort_array = malloc(sizeof(float) * ppop * n_input_particles); 
 	nidx_array = malloc(sizeof(unsigned int) * ppop * n_input_particles);
 	for (i = 0; i < n_input_particles; ++i) {
@@ -325,9 +325,9 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 
 	/* Now merge our new particles */
 	sort_perm_multibyte_radix8((unsigned char*)nkey_array,
-		sizeof(struct Gridkey2D), nidx_array, n_input_particles * ppop);
+		sizeof(struct UInt32Key2D), nidx_array, n_input_particles * ppop);
 
-	nnkey_array = malloc(sizeof(struct Gridkey2D) * n_input_particles * ppop);
+	nnkey_array = malloc(sizeof(struct UInt32Key2D) * n_input_particles * ppop);
 	nnvort_array = malloc(sizeof(float) * n_input_particles * ppop);
 	for (i = 0; i < ppop * n_input_particles; ++i) {
 		nnkey_array[i] = nkey_array[nidx_array[i]];
