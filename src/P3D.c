@@ -365,7 +365,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	assert(negligible_vort >= 0.f);
 	assert(negligible_vort < 1.f);
 
-	int i, j, k, m, n_created_particles;
+	int i, j, k, m, n_created_particles; (void)m; (void)k; /* Avoid msvc err*/
 	int grid_radius;				/* Value of U that returns zero.	*/
 	int ppop;						/* Particles per input particle.	*/
 	float minx, miny, minz;			/* Bounds of the particle box.		*/

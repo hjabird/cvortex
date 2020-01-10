@@ -372,7 +372,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	float* strengths = malloc(sizeof(float) * n_created_particles);
 #pragma omp parallel for
 	for (i = 0; i < n_created_particles; ++i) {
-		strengths[i] = fabs(created_particles[i].vorticity);
+		strengths[i] = fabsf(created_particles[i].vorticity);
 	}
 	farray_info(strengths, n_created_particles, &min_keepable_particle, NULL, NULL);
 	min_keepable_particle = min_keepable_particle * negligible_vort;
@@ -382,7 +382,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	/* The strengths are modified to keep total vorticity constant. */
 #pragma omp parallel for
 	for (i = 0; i < n_created_particles; ++i) {
-		strengths[i] = fabs(created_particles[i].vorticity);
+		strengths[i] = fabsf(created_particles[i].vorticity);
 	}
 
 	/* Now to handle what we return to the caller */

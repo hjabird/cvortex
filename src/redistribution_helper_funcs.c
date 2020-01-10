@@ -34,7 +34,7 @@ float get_strength_threshold(
 	float* strs, int n_inpt_particles, int n_desired_particles) {
 
 	double minv, maxv, range;
-	float fminv, fmaxv, tol = 0.01, * guesses;
+	float fminv, fmaxv, tol = 0.01f, * guesses;
 	const int n_guesses = 1024;
 	int* g_counts, i, k = 0, interp;
 	farray_info(strs, n_inpt_particles, NULL, &fminv, &fmaxv);
@@ -42,7 +42,7 @@ float get_strength_threshold(
 	range = maxv - minv;
 
 	if (n_inpt_particles < n_desired_particles) {
-		return maxv * 1.05;
+		return (float)(maxv * 1.05);
 	}
 
 	/* Guess vorticity thresholds and count the kept particles.*/
