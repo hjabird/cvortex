@@ -370,9 +370,9 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	float minx, miny, minz;			/* Bounds of the particle box.		*/
 	/* Index array and grid location array of input particles.			*/
 	unsigned int *oidx_array = NULL;
-	struct UInt32Key3D *okey_array = NULL;
+	UInt32Key3D *okey_array = NULL;
 	/* Index, grid location and vorticity arrays of new particles.		*/
-	struct UInt32Key3D *nkey_array = NULL, *nnkey_array = NULL;
+	UInt32Key3D *nkey_array = NULL, *nnkey_array = NULL;
 	bsv_V3f *nvort_array = NULL, *nnvort_array = NULL;
 	unsigned int *nidx_array = NULL;
 	/* For particle removal: */
@@ -388,7 +388,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	minz -= (grid_radius + (float)rand() / (float)(RAND_MAX)) * grid_density;
 
 	oidx_array = malloc(sizeof(unsigned int) * n_input_particles);
-	okey_array = malloc(sizeof(struct UInt32Key3D) * n_input_particles);
+	okey_array = malloc(sizeof(UInt32Key3D) * n_input_particles);
 #pragma omp parallel for schedule(static)
 	for (i = 0; i < n_input_particles; ++i) {
 		oidx_array[i] = i;
@@ -400,7 +400,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	/* ppop = Particles per orginal particle. */
 	ppop = (grid_radius * 2 + 1) * (grid_radius * 2 + 1) 
 		* (grid_radius * 2 + 1);
-	nkey_array = malloc(sizeof(struct UInt32Key3D) * ppop * n_input_particles);
+	nkey_array = malloc(sizeof(UInt32Key3D) * ppop * n_input_particles);
 	nvort_array = malloc(sizeof(bsv_V3f) * ppop * n_input_particles);
 	nidx_array = malloc(sizeof(unsigned int) * ppop * n_input_particles);
 #pragma omp parallel for schedule(static) private(j, k, m)
@@ -408,9 +408,9 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 		int widx = oidx_array[i];
 		unsigned int okx, oky, okz;
 		bsv_V3f p_coord, p_vort;
-		okx = okey_array[widx].xk;
-		oky = okey_array[widx].yk;
-		okz = okey_array[widx].zk;
+		okx = okey_array[widx].k.x;
+		oky = okey_array[widx].k.y;
+		okz = okey_array[widx].k.z;
 		p_coord = input_array_start[widx]->coord;
 		p_vort = input_array_start[widx]->vorticity;
 		for (j = -grid_radius; j <= grid_radius; ++j) {
@@ -432,9 +432,9 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 						(k + grid_radius) * (2 * grid_radius + 1) +
 						(j + grid_radius) * (2 * grid_radius + 1) 
 						* (2 * grid_radius + 1) + widx * ppop;
-					nkey_array[np_idx].xk = okx + j;
-					nkey_array[np_idx].yk = oky + k;
-					nkey_array[np_idx].zk = okz + m;
+					nkey_array[np_idx].k.x = okx + j;
+					nkey_array[np_idx].k.y = oky + k;
+					nkey_array[np_idx].k.z = okz + m;
 					nvort_array[np_idx] = bsv_V3f_mult(p_vort, vortfrac);
 				}
 			}
@@ -446,7 +446,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	/* Now merge our new particles */
 	sort_perm_UInt32Key3D(nkey_array, nidx_array, n_input_particles* ppop);
 
-	nnkey_array = malloc(sizeof(struct UInt32Key3D) * n_input_particles * ppop);
+	nnkey_array = malloc(sizeof(UInt32Key3D) * n_input_particles * ppop);
 	nnvort_array = malloc(sizeof(bsv_V3f) * n_input_particles * ppop);
 	for (i = 0; i < ppop * n_input_particles; ++i) {
 		nnkey_array[i] = nkey_array[nidx_array[i]];
@@ -458,9 +458,9 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 		nvort_array[0] = nvort_array[0];
 	}
 	for (i = 1; i < ppop * n_input_particles; ++i) {
-		if (nnkey_array[i].xk == nkey_array[j].xk &&
-			nnkey_array[i].yk == nkey_array[j].yk &&
-			nnkey_array[i].zk == nkey_array[j].zk) {
+		if (nnkey_array[i].k.x == nkey_array[j].k.x &&
+			nnkey_array[i].k.y == nkey_array[j].k.y &&
+			nnkey_array[i].k.z == nkey_array[j].k.z) {
 			nvort_array[j] = bsv_V3f_plus(nnvort_array[i], nvort_array[j]);
 		}
 		else
@@ -481,9 +481,9 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	for (i = 0; i < n_created_particles; ++i) {
 		created_particles[i].volume = grid_density * grid_density * grid_density;
 		created_particles[i].vorticity = nvort_array[i];
-		created_particles[i].coord.x[0] = minx + nkey_array[i].xk * grid_density;
-		created_particles[i].coord.x[1] = miny + nkey_array[i].yk * grid_density;
-		created_particles[i].coord.x[2] = minz + nkey_array[i].zk * grid_density;
+		created_particles[i].coord.x[0] = minx + nkey_array[i].k.x * grid_density;
+		created_particles[i].coord.x[1] = miny + nkey_array[i].k.y * grid_density;
+		created_particles[i].coord.x[2] = minz + nkey_array[i].k.z * grid_density;
 	}
 	free(nkey_array);
 	free(nvort_array);

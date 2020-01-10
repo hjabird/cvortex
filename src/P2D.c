@@ -263,9 +263,9 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	float minx, miny;				/* Bounds of the particle box.		*/
 	/* Index array and grid location array of input particles.			*/
 	unsigned int *oidx_array = NULL;
-	struct UInt32Key2D *okey_array = NULL;
+	UInt32Key2D *okey_array = NULL;
 	/* Index, grid location and vorticity arrays of new particles.		*/
-	struct UInt32Key2D *nkey_array = NULL, *nnkey_array = NULL;
+	UInt32Key2D *nkey_array = NULL, *nnkey_array = NULL;
 	float *nvort_array = NULL, *nnvort_array = NULL;
 	unsigned int *nidx_array = NULL;
 	/* For particle removal: */
@@ -278,7 +278,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	miny -= grid_radius * grid_density;
 
 	oidx_array = malloc(sizeof(unsigned int) * n_input_particles);
-	okey_array = malloc(sizeof(struct UInt32Key2D) * n_input_particles);
+	okey_array = malloc(sizeof(UInt32Key2D) * n_input_particles);
 	for (i = 0; i < n_input_particles; ++i) {
 		oidx_array[i] = i;
 		okey_array[i] = g_P2D_gridkey2D(input_array_start[i],
@@ -288,7 +288,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	/* Now we make new particles based on grid. */
 	/* ppop = Particles per orginal particle. */
 	ppop = (grid_radius * 2 + 1) * (grid_radius * 2 + 1);
-	nkey_array = malloc(sizeof(struct UInt32Key2D) * ppop * n_input_particles);
+	nkey_array = malloc(sizeof(UInt32Key2D) * ppop * n_input_particles);
 	nvort_array = malloc(sizeof(float) * ppop * n_input_particles); 
 	nidx_array = malloc(sizeof(unsigned int) * ppop * n_input_particles);
 	for (i = 0; i < n_input_particles; ++i) {
@@ -296,8 +296,8 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 		unsigned int okx, oky;
 		bsv_V2f p_coord;
 		float p_vort;
-		okx = okey_array[widx].xk;
-		oky = okey_array[widx].yk;
+		okx = okey_array[widx].k.x;
+		oky = okey_array[widx].k.y;
 		p_coord = input_array_start[widx]->coord;
 		p_vort = input_array_start[widx]->vorticity;
 		for (j = -grid_radius; j <= grid_radius; ++j) {
@@ -313,8 +313,8 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 				vortfrac = redistributor->func(U) * redistributor->func(W);
 				np_idx = k + grid_radius + 
 					(j + grid_radius) * (2 * grid_radius + 1) + widx * ppop;
-				nkey_array[np_idx].xk = okx + j;
-				nkey_array[np_idx].yk = oky + k;
+				nkey_array[np_idx].k.x = okx + j;
+				nkey_array[np_idx].k.y = oky + k;
 				nvort_array[np_idx] = vortfrac * p_vort;
 			}
 		}
@@ -325,7 +325,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	/* Now merge our new particles */
 	sort_perm_UInt32Key2D(nkey_array, nidx_array, n_input_particles * ppop);
 
-	nnkey_array = malloc(sizeof(struct UInt32Key2D) * n_input_particles * ppop);
+	nnkey_array = malloc(sizeof(UInt32Key2D) * n_input_particles * ppop);
 	nnvort_array = malloc(sizeof(float) * n_input_particles * ppop);
 	for (i = 0; i < ppop * n_input_particles; ++i) {
 		nnkey_array[i] = nkey_array[nidx_array[i]];
@@ -337,8 +337,8 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 		nvort_array[0] = nvort_array[0];
 	}
 	for (i = 1; i < ppop * n_input_particles; ++i) {
-		if (nnkey_array[i].xk == nkey_array[j].xk &&
-			nnkey_array[i].yk == nkey_array[j].yk) {
+		if (nnkey_array[i].k.x == nkey_array[j].k.x &&
+			nnkey_array[i].k.y == nkey_array[j].k.y) {
 			nvort_array[j] += nnvort_array[i];
 		}
 		else
@@ -359,8 +359,8 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	for (i = 0; i < n_created_particles; ++i) {
 		created_particles[i].area = grid_density * grid_density;
 		created_particles[i].vorticity = nvort_array[i];
-		created_particles[i].coord.x[0] = minx + nkey_array[i].xk * grid_density;
-		created_particles[i].coord.x[1] = miny + nkey_array[i].yk * grid_density;
+		created_particles[i].coord.x[0] = minx + nkey_array[i].k.x * grid_density;
+		created_particles[i].coord.x[1] = miny + nkey_array[i].k.y * grid_density;
 	}
 	free(nkey_array);
 	free(nvort_array);

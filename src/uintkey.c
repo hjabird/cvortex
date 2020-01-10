@@ -50,7 +50,6 @@ static void sort_perm_multibyte_radix8(
 	unsigned char* ui_start, size_t uibytes,
 	unsigned int* key_start, size_t num_items);
 
-
 /*	DEFINITIONS ------------------------------------------------------------*/
 
 void minmax_xy_posn(
@@ -141,14 +140,14 @@ void sort_perm_UInt32Key3D(
 		key_start, num_items);
 }
 
-struct UInt32Key2D g_P2D_gridkey2D(
+UInt32Key2D g_P2D_gridkey2D(
 	const cvtx_P2D *particle,
 	float grid_density,
 	float minx, float miny) {
 	assert(particle != NULL);
 	assert(grid_density > 0.f);
 
-	struct UInt32Key2D ret;
+	UInt32Key2D ret;
 	float x, y;
 	x = particle->coord.x[0];
 	y = particle->coord.x[1];
@@ -156,19 +155,19 @@ struct UInt32Key2D g_P2D_gridkey2D(
 	y = (y - miny) / grid_density;
 	assert(x >= 0);
 	assert(y >= 0);
-	ret.xk = (unsigned int)(roundf(x));
-	ret.yk = (unsigned int)(roundf(y));
+	ret.k.x = (unsigned int)(roundf(x));
+	ret.k.y = (unsigned int)(roundf(y));
 	return ret;
 }
 
-struct UInt32Key3D g_P3D_gridkey3D(
+UInt32Key3D g_P3D_gridkey3D(
 	const cvtx_P3D *particle,
 	float grid_density,
 	float minx, float miny, float minz) {
 	assert(particle != NULL);
 	assert(grid_density > 0.f);
 
-	struct UInt32Key3D ret;
+	UInt32Key3D ret;
 	float x, y, z;
 	x = particle->coord.x[0];
 	y = particle->coord.x[1];
@@ -179,9 +178,9 @@ struct UInt32Key3D g_P3D_gridkey3D(
 	assert(x >= 0);
 	assert(y >= 0);
 	assert(z >= 0);
-	ret.xk = (unsigned int)(roundf(x));
-	ret.yk = (unsigned int)(roundf(y));
-	ret.zk = (unsigned int)(roundf(z));
+	ret.k.x = (unsigned int)(roundf(x));
+	ret.k.y = (unsigned int)(roundf(y));
+	ret.k.z = (unsigned int)(roundf(z));
 	return ret;
 }
 
@@ -298,5 +297,3 @@ void sort_perm_multibyte_radix8(
 #endif
 	return;
 }
-
-

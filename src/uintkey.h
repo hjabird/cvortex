@@ -30,16 +30,26 @@ SOFTWARE.
 #include <stdint.h>
 
 /* A coordinate on a grid in 2D. */
-typedef struct UInt32Key2D {
-	uint32_t xk;
-	uint32_t yk;
+typedef union UInt32Key2D {
+	struct {
+		uint32_t x;
+		uint32_t y;
+	} k;
+	uint64_t v;
 } UInt32Key2D;
 
 /* A coordinate on a grid in 3D. */
-typedef struct UInt32Key3D {
-	uint32_t xk;
-	uint32_t yk;
-	uint32_t zk;
+typedef union UInt32Key3D {
+	struct{
+		uint32_t x;
+		uint32_t y;
+		uint32_t z;
+	} k;
+	struct{
+		uint64_t lo;
+		uint32_t up;
+	} v;
+	/* Note uint32 lo, uint64 up isn't possible due to allignment. */
 } UInt32Key3D;
 
 void minmax_xy_posn(
@@ -61,14 +71,14 @@ void sort_perm_UInt32Key3D(
 
 /* Return a location on a grid with origin minx and miny of a 
 2D particle. */
-struct UInt32Key2D g_P2D_gridkey2D(
+UInt32Key2D g_P2D_gridkey2D(
 	const cvtx_P2D *particle,
 	float grid_density,
 	float minx, float miny);
 
 /* Return a location on a grid with origin minx and miny of a
 2D particle. */
-struct UInt32Key3D g_P3D_gridkey3D(
+UInt32Key3D g_P3D_gridkey3D(
 	const cvtx_P3D *particle,
 	float grid_density,
 	float minx, float miny, float minz);
