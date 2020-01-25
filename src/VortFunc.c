@@ -4,7 +4,23 @@ VortFunc.c
 
 Common functions used to regularise vortex particles.
 
-Copyright(c) 2018-2019 HJA Bird
+If we have a vorticity field omega(x) comprised of particles with vorticity
+alpha_i, regularisation zeta(rho), where rho is the distance between x_i
+and measurement point x divided by regularisation distance sigma then
+omega(x) = sum( zeta(rho_i) * alpha_i )
+
+These regularisation function are given by zeta, but exclude the 4*pi
+part - that constant is in the evaluation bits. 
+
+The velocity includes a function g(rho) defined by
+zeta(rho) = 1/rho^2 * dg/drho
+again excluding the 4 pi bit.
+
+For the particle strenght exchange schmeme another funcion eta(rho) is 
+required. 
+eta(rho) = -1/rho * (dzeta/drho)
+
+Copyright(c) 2018-2020 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
