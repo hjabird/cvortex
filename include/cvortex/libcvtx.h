@@ -137,6 +137,12 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_visc_dvort(
 	float regularisation_radius,
 	float kinematic_visc);
 
+CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vort(
+	const cvtx_P3D* self,
+	const bsv_V3f mes_point,
+	const cvtx_VortFunc* kernel,
+	float regularisation_radius);
+
 CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(
 	const cvtx_P3D **array_start,
 	const int num_particles,
@@ -158,6 +164,13 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
 	float kinematic_visc);
+
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vort(
+	const cvtx_P3D** array_start,
+	const int num_particles,
+	const bsv_V3f mes_point,
+	const cvtx_VortFunc* kernel,
+	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P3D_M2M_vel(
 	const cvtx_P3D **array_start,
@@ -186,6 +199,15 @@ CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
 	const cvtx_VortFunc *kernel,
 	float regularisation_radius,
 	float kinematic_visc);
+
+CVTX_EXPORT void cvtx_P3D_M2M_vort(
+	const cvtx_P3D** array_start,
+	const int num_particles,
+	const bsv_V3f* mes_start,
+	const int num_mes,
+	bsv_V3f* result_array,
+	const cvtx_VortFunc* kernel,
+	float regularisation_radius);
 
 CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	const cvtx_P3D **input_array_start,

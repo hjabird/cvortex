@@ -38,7 +38,7 @@ SOFTWARE.
 #	include "ocl_P3D.h"
 #endif
 
-#define NG_FOR_REDUCING_PARICLES 64
+#define CVTX_PI_F 3.14159265359f
 
 /* The induced velocity for a particle excluding the constant
 coefficient 1 / 4pi */
@@ -74,7 +74,7 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vel(
 	bsv_V3f ret;
 	ret = P3D_vel_inner(self, mes_point, kernel, 
 		1.f/fabsf(regularisation_radius));
-	return bsv_V3f_mult(ret, 1.f / (4.f * acosf(-1.f)));
+	return bsv_V3f_mult(ret, 1.f / (4.f * CVTX_PI_F));
 }
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_dvort(
@@ -93,7 +93,7 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_dvort(
 		rho = fabsf(radd / regularisation_radius);
 		kernel->combined_3D(rho, &g, &f);
 		cross_om = bsv_V3f_cross(induced_particle->vorticity, self->vorticity);
-		t1 = 1.f / (4.f * acosf(-1) * powf(regularisation_radius, 3));
+		t1 = 1.f / (4.f * CVTX_PI_F * powf(regularisation_radius, 3));
 		t21n = bsv_V3f_mult(cross_om, g);
 		t21d = rho * rho * rho;
 		t21 = bsv_V3f_div(t21n, t21d);
@@ -137,6 +137,20 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_visc_dvort(
 	return ret;
 }
 
+CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vort(
+	const cvtx_P3D* self,
+	const bsv_V3f mes_point,
+	const cvtx_VortFunc* kernel,
+	float regularisation_radius) {
+	bsv_V3f rad, ret;
+	float radd, coeff;
+	rad = bsv_V3f_minus(self->coord, mes_point);
+	radd = bsv_V3f_abs(rad);
+	coeff = kernel->eta_3D(radd / regularisation_radius) / (4.f * CVTX_PI_F);
+	ret = bsv_V3f_mult(self->vorticity, coeff);
+	return ret;
+}
+
 CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(
 	const cvtx_P3D **array_start,
 	const int num_particles,
@@ -157,7 +171,7 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(
 		rz += vel.x[2];
 	}
 	bsv_V3f ret = {(float)rx, (float)ry, (float)rz};
-	return bsv_V3f_mult(ret, 1.f / (4.f * acosf(-1.f)));
+	return bsv_V3f_mult(ret, 1.f / (4.f * CVTX_PI_F));
 }
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_dvort(
@@ -204,6 +218,31 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(
 	bsv_V3f ret = {(float)rx, (float)ry, (float)rz};
 	return ret;
 }
+
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vort(
+	const cvtx_P3D** array_start,
+	const int num_particles,
+	const bsv_V3f mes_point,
+	const cvtx_VortFunc* kernel,
+	float regularisation_radius) {
+	float cutoff, rsigma, radd, coeff;
+	bsv_V3f rad, sum = bsv_V3f_zero();
+	long i;
+	cutoff = 5.f * regularisation_radius;
+	rsigma = 1 / regularisation_radius;
+	assert(num_particles > 0);
+	for (i = 0; i < num_particles; ++i) {
+		rad = bsv_V3f_minus(array_start[i]->coord, mes_point);
+		if (fabsf(rad.x[0]) < cutoff && fabsf(rad.x[1]) < cutoff
+			&& fabsf(rad.x[2]) < cutoff) {
+			radd = bsv_V3f_abs(rad);
+			coeff = kernel->eta_3D(radd * rsigma);
+			sum = bsv_V3f_plus(bsv_V3f_mult(array_start[i] ->vorticity, coeff), sum);
+		}
+	}
+	sum = bsv_V3f_div(sum, 4.f * CVTX_PI_F);
+	return sum;
+} 
 
 static void cpu_brute_force_P3D_M2M_vel(
 	const cvtx_P3D **array_start,
@@ -337,7 +376,24 @@ CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
 			num_induced, result_array, kernel, regularisation_radius, kinematic_visc);
 	}
 	return;
+}
 
+CVTX_EXPORT void cvtx_P3D_M2M_vort(
+	const cvtx_P3D** array_start,
+	const int num_particles,
+	const bsv_V3f* mes_start,
+	const int num_mes,
+	bsv_V3f* result_array,
+	const cvtx_VortFunc* kernel,
+	float regularisation_radius) {
+	long i;
+#pragma omp parallel for schedule(guided)
+	for (i = 0; i < num_mes; ++i) {
+		result_array[i] = cvtx_P3D_M2S_vort(
+			array_start, num_particles, mes_start[i],
+			kernel, regularisation_radius);
+	}
+	return;
 }
 
 
