@@ -50,6 +50,15 @@ static void sort_perm_multibyte_radix8(
 	unsigned char* ui_start, size_t uibytes,
 	unsigned int* key_start, size_t num_items);
 
+static int sort_perm_uint32key2d_quicksort(
+	UInt32Key2D* ui_start,
+	unsigned int* key_start, size_t num_items);
+
+static int sort_perm_uint32key3d_quicksort(
+	UInt32Key3D* ui_start,
+	unsigned int* key_start, size_t num_items);
+
+
 /*	DEFINITIONS ------------------------------------------------------------*/
 
 void minmax_xy_posn(
@@ -127,17 +136,29 @@ void minmax_xyz_posn(
 void sort_perm_UInt32Key2D(
 	UInt32Key2D *gridkeys,
 	unsigned int* key_start, size_t num_items) {
-	sort_perm_multibyte_radix8(
-		(unsigned char *)gridkeys, sizeof(UInt32Key2D), 
-		key_start, num_items);
+	if (num_items < 100000) {
+		sort_perm_uint32key2d_quicksort(gridkeys,
+			key_start, num_items);
+	}
+	else {
+		sort_perm_multibyte_radix8(
+			(unsigned char*)gridkeys, sizeof(UInt32Key2D),
+			key_start, num_items);
+	}
 }
 
 void sort_perm_UInt32Key3D(
 	UInt32Key3D *gridkeys,
 	unsigned int* key_start, size_t num_items) {
-	sort_perm_multibyte_radix8(
-		(unsigned char *)gridkeys, sizeof(UInt32Key3D),
-		key_start, num_items);
+	if (num_items < 100000) {
+		sort_perm_uint32key3d_quicksort(
+			gridkeys, key_start, num_items);
+	}
+	else {
+		sort_perm_multibyte_radix8(
+			(unsigned char *)gridkeys, sizeof(UInt32Key3D),
+			key_start, num_items);
+	}
 }
 
 UInt32Key2D g_P2D_gridkey2D(
@@ -297,3 +318,146 @@ void sort_perm_multibyte_radix8(
 #endif
 	return;
 }
+
+static int sort_perm_uint32key2d_quicksort(
+	UInt32Key2D* ui_start,
+	unsigned int* key_start, size_t num_items) {
+	
+	const int stack_max = 1024;
+	int i, good = 1, stack_pos = 0;	
+	size_t *highs, *lows, high, low, partition;
+	uint64_t piv;
+	unsigned int tmp;
+	highs = (size_t)malloc(sizeof(size_t) * stack_max);
+	lows = (size_t)malloc(sizeof(size_t) * stack_max);
+
+	for (i = 0; i < (int)num_items; ++i) {
+		key_start[i] = i;
+	}
+
+	highs[stack_pos] = num_items-1;
+	lows[stack_pos] = 0;
+	while (1) {
+		if (stack_pos < 0) { break; }
+		/* We're using the Hoare partition scheme 
+		See the internet for an explanation. */
+		high = highs[stack_pos];
+		low = lows[stack_pos];
+		assert(high > low);
+		piv = ui_start[key_start[low + (high-low) / 2]].v;
+		low--; high++;
+		while (1) {
+			do { high--; } while (ui_start[key_start [high]].v > piv);
+			do { low++; } while (ui_start[key_start[low]].v < piv);
+			if (low < high) { 
+				tmp = key_start[low];
+				key_start[low] = key_start[high];
+				key_start[high] = tmp;
+			}
+			else {
+				partition = high;
+				break;
+			}
+		}
+		if (stack_pos + 1> stack_max) {
+			assert(0);
+			good = 0;
+			break;
+		}
+		/* Put the larger "side" on top of the stack to work on first. */
+		if (highs[stack_pos] - partition - 1 > partition - lows[stack_pos]) {
+			/* highs[stack_pos] = highs[stack_pos]; */
+			highs[stack_pos + 1] = partition;
+			lows[stack_pos + 1] = lows[stack_pos];
+			lows[stack_pos] = partition+1;
+		}
+		else {
+			/* lows[stack_pos] = lows[stack_pos]; */
+			highs[stack_pos+1] = highs[stack_pos];
+			highs[stack_pos] = partition;
+			lows[stack_pos+1] = partition+1;
+		}
+		/* If the small interval we just put on top is 0 we can ignore it. */
+		if (highs[stack_pos+1] - lows[stack_pos+1] > 0) { 
+			stack_pos += 1;
+		}
+	}
+	free(highs);
+	free(lows);
+	return good;
+}
+
+static int sort_perm_uint32key3d_quicksort(
+	UInt32Key3D* ui_start,
+	unsigned int* key_start, size_t num_items) {
+
+	const int stack_max = 1024;
+	int i, good = 1, stack_pos = 0;
+	size_t* highs, * lows, high, low, partition;
+	UInt32Key3D piv, cmpv;
+	unsigned int tmp;
+	highs = (size_t)malloc(sizeof(size_t) * stack_max);
+	lows = (size_t)malloc(sizeof(size_t) * stack_max);
+
+	for (i = 0; i < (int)num_items; ++i) {
+		key_start[i] = i;
+	}
+
+	highs[stack_pos] = num_items - 1;
+	lows[stack_pos] = 0;
+	while (1) {
+		if (stack_pos < 0) { break; }
+		/* We're using the Hoare partition scheme
+		See the internet for an explanation. */
+		high = highs[stack_pos];
+		low = lows[stack_pos];
+		assert(high > low);
+		piv = ui_start[key_start[low + (high - low) / 2]];
+		low--; high++;
+		while (1) {
+			do { 
+				high--; 
+				cmpv = ui_start[key_start[high]];
+			} while (!(cmpv.v.lo < piv.v.lo && cmpv.v.up < piv.v.up));
+			do { 
+				low++;
+				cmpv = ui_start[key_start[low]];
+			} while (!(cmpv.v.lo > piv.v.lo && cmpv.v.up > piv.v.up));
+			if (low < high) {
+				tmp = key_start[low];
+				key_start[low] = key_start[high];
+				key_start[high] = tmp;
+			}
+			else {
+				partition = high;
+				break;
+			}
+		}
+		if (stack_pos + 1 > stack_max) {
+			assert(0);
+			good = 0;
+			break;
+		}
+		/* Put the larger "side" on top of the stack to work on first. */
+		if (highs[stack_pos] - partition - 1 > partition - lows[stack_pos]) {
+			/* highs[stack_pos] = highs[stack_pos]; */
+			highs[stack_pos + 1] = partition;
+			lows[stack_pos + 1] = lows[stack_pos];
+			lows[stack_pos] = partition + 1;
+		}
+		else {
+			/* lows[stack_pos] = lows[stack_pos]; */
+			highs[stack_pos + 1] = highs[stack_pos];
+			highs[stack_pos] = partition;
+			lows[stack_pos + 1] = partition + 1;
+		}
+		/* If the small interval we just put on top is 0 we can ignore it. */
+		if (highs[stack_pos + 1] - lows[stack_pos + 1] > 0) {
+			stack_pos += 1;
+		}
+	}
+	free(highs);
+	free(lows);
+	return good;
+}
+
