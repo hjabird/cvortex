@@ -218,6 +218,13 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	float grid_density,
 	float negligible_vort);
 
+CVTX_EXPORT void cvtx_P3D_pedrizzetti_relaxation(
+	cvtx_P3D** input_array_start,
+	const int n_input_particles,
+	float fdt,
+	const cvtx_VortFunc* kernel,
+	float regularisation_radius);
+
 /* cvtx_F3D straight vortex filament functions */
 CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_vel(
 	const cvtx_F3D *self,

@@ -608,3 +608,39 @@ int cvtx_remove_particles_under_str_threshold(
 	}
 	return n_output_particles;
 }
+
+/* Relaxation --------------------------------------------------------------*/
+
+CVTX_EXPORT void cvtx_P3D_pedrizzetti_relaxation(
+	cvtx_P3D** input_array_start,
+	const int n_input_particles,
+	float fdt,
+	const cvtx_VortFunc* kernel,
+	float regularisation_radius) {
+	/* Pedrizzetti relaxation scheme: 
+		alpha_new =	(1-fq * dt) * alpha_old
+					+ fq * dt * omega(x) * abs(alpha_old) / abs(omega(x)) */
+	bsv_V3f *mes_posns = NULL, *omegas = NULL;
+	int i;
+	float tmp;
+	mes_posns = malloc(sizeof(bsv_V3f) * n_input_particles);
+	omegas = malloc(sizeof(bsv_V3f) * n_input_particles);
+	cvtx_P3D_M2M_vort(input_array_start, n_input_particles, 
+		mes_posns, n_input_particles, omegas, kernel, regularisation_radius);
+
+	tmp = 1.f - fdt;
+#pragma omp parallel for
+	for (i = 0; i < n_input_particles; ++i) {
+		bsv_V3f ovort, nvort;
+		float coeff;
+		ovort = input_array_start[i]->vorticity;
+		coeff = bsv_V3f_abs(ovort) / bsv_V3f_abs(omegas[i]);
+		nvort = bsv_V3f_mult(ovort, tmp);
+		nvort = bsv_V3f_plus(nvort, bsv_V3f_mult(omegas[i], coeff));
+		input_array_start[i]->vorticity = nvort;
+	}
+
+	free(mes_posns);
+	free(omegas);
+	return;
+}
