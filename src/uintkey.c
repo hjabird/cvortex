@@ -328,8 +328,8 @@ static int sort_perm_uint32key2d_quicksort(
 	size_t *highs, *lows, high, low, partition;
 	uint64_t piv;
 	unsigned int tmp;
-	highs = (size_t)malloc(sizeof(size_t) * stack_max);
-	lows = (size_t)malloc(sizeof(size_t) * stack_max);
+	highs = (size_t*)malloc(sizeof(size_t) * stack_max);
+	lows = (size_t*)malloc(sizeof(size_t) * stack_max);
 
 	for (i = 0; i < (int)num_items; ++i) {
 		key_start[i] = i;
@@ -396,8 +396,8 @@ static int sort_perm_uint32key3d_quicksort(
 	size_t* highs, * lows, high, low, partition;
 	UInt32Key3D piv, cmpv;
 	unsigned int tmp;
-	highs = (size_t)malloc(sizeof(size_t) * stack_max);
-	lows = (size_t)malloc(sizeof(size_t) * stack_max);
+	highs = (size_t*)malloc(sizeof(size_t) * stack_max);
+	lows = (size_t*)malloc(sizeof(size_t) * stack_max);
 
 	for (i = 0; i < (int)num_items; ++i) {
 		key_start[i] = i;
