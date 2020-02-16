@@ -187,14 +187,14 @@ number of measurement points.
 ## Alternative libaries
 A lack of easy to use, cross platform and non-CUDA alternatives is why this library was written. 
 However, you may be interested in the following:
-- [EXAFMM](https://github.com/exafmm/exafmm):  A fast multipole accelerated code utilising CUDA, C++
-and MPI on Linux. Big, ambititious and fast (I'm assuming).
+- [ExaFMM-t](https://github.com/exafmm/exafmm-t):  A fast multipole accelerated code utilising CUDA, C++
+and MPI on Linux. Big, ambititious and fast (I'm assuming). Also [PyExaFMM](https://github.com/exafmm/pyexafmm) (incomplete?).
 - [PETFMM](https://bitbucket.org/petfmm/):  Superseeded by ExaFMM.
 - [KIFMM](https://github.com/jeewhanchoi/kifmm--hybrid--double-only):  A fast multipole CUDA/CPU hybrid
 code demonstrating kernal independence.
-- [FLOWVLM](https://github.com/byuflowlab/FLOWVLM):  A Julia implementation of vortex lattice 
-and vortex particle methods according to images? Impressive looking simulations of wind turbines are 
-visible on [Edo Alvarez's site](https://edoalvarezr.github.io/projects/01-aerodynamics.html).
+- [Bonsai](https://github.com/treecode/Bonsai) Barns-Hut gravity code.
+- [ChaNGa](https://github.com/N-BodyShop/changa/wiki/ChaNGa) Another Barns-Hut gravity code. But this time with lots of documentation. Appears to support MPI on Linux.
+- FLOWVPM: A closed source vortex particle code. [Edo Alvarez's site](https://edoalvarezr.github.io/projects/01-aerodynamics.html).
 
 ## Authors
 HJA Bird
