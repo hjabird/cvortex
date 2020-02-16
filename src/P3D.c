@@ -143,10 +143,13 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vort(
 	const cvtx_VortFunc* kernel,
 	float regularisation_radius) {
 	bsv_V3f rad, ret;
-	float radd, coeff;
+	float radd, coeff, divisor;
 	rad = bsv_V3f_minus(self->coord, mes_point);
 	radd = bsv_V3f_abs(rad);
-	coeff = kernel->eta_3D(radd / regularisation_radius) / (4.f * CVTX_PI_F);
+	coeff = kernel->zeta_3D(radd / regularisation_radius);
+	divisor = 4.f * CVTX_PI_F * 
+		regularisation_radius * regularisation_radius * regularisation_radius;
+	coeff = coeff / divisor;
 	ret = bsv_V3f_mult(self->vorticity, coeff);
 	return ret;
 }
@@ -236,11 +239,12 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vort(
 		if (fabsf(rad.x[0]) < cutoff && fabsf(rad.x[1]) < cutoff
 			&& fabsf(rad.x[2]) < cutoff) {
 			radd = bsv_V3f_abs(rad);
-			coeff = kernel->eta_3D(radd * rsigma);
+			coeff = kernel->zeta_3D(radd * rsigma);
 			sum = bsv_V3f_plus(bsv_V3f_mult(array_start[i] ->vorticity, coeff), sum);
 		}
 	}
-	sum = bsv_V3f_div(sum, 4.f * CVTX_PI_F);
+	sum = bsv_V3f_div(sum, 4.f * CVTX_PI_F 
+		* regularisation_radius * regularisation_radius * regularisation_radius);
 	return sum;
 } 
 
