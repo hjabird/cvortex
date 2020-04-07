@@ -78,6 +78,8 @@ int parse_command_args(int argc, char* argv[]) {
 		"vel-winckelmans-cpu vel-winckelmans-gpu dvort-winckelmans-cpu dvort-winckelmans-gpu "
 		"viscdvort-winckelmans-cpu viscdvort-winckelmans-gpu "
 		"viscdvort-gaussian-cpu viscdvort-gaussian-gpu "
+		"vort-gaussian-cpu vort-singular-cpu vort-planetary-cpu vort-winckelmans-cpu "
+		"vort-gaussian-gpu vort-singular-gpu vort-planetary-gpu vort-winckelmans-gpu "
 		"redistribute-lambda0 redistribute-lambda1 redistribute-lambda2 redistribute-lambda3 "
 		"redistribute-m4p cold_initialisation reinitialisation cold reinit";
 	char available_scales[] = "vsmall small medium large vlarge huge";

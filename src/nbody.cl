@@ -3,7 +3,7 @@ nbody.cl
 
 OpenCL implementation of vortex particle N-Body problem using brute force.
 
-Copyright(c) 2018-2019 HJA Bird
+Copyright(c) 2018-2020 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the \"Software\"), to deal
@@ -153,6 +153,41 @@ Definitions for the repeated body of kernels
 "	barrier(CLK_LOCAL_MEM_FENCE);									\\\n"
 "	if( widx == 0 ){												\\\n"
 "		results[indidx] = reduction_workspace[0] + results[indidx];	\\\n"
+"	}																\\\n"
+"	return;															\\\n"
+"}																	\n"
+
+"#define CVTX_P3D_VORT_START 										\\\n"
+"(																	\\\n"
+"	__global float3* particle_locs,									\\\n"
+"	__global float3* particle_vorts,								\\\n"
+"	float    recip_reg_rad,								            \\\n"
+"	__global float3* mes_locs,										\\\n"
+"	__global float3* results)										\\\n"
+"{																	\\\n"
+"	float3 rad, ret;												\\\n"
+"	float radd, rho, zeta;											\\\n"
+"	__local float3 reduction_workspace[CVTX_CL_WORKGROUP_SIZE];		\\\n"
+"	/* Particle idx, mes_pnt idx and local work item idx */			\\\n"
+"	uint pidx, midx, widx, loop_idx;								\\\n"
+"	midx = get_global_id(1);										\\\n"
+"	widx = get_local_id(0);											\\\n"
+"	pidx = widx;													\\\n"
+"	rad = mes_locs[midx] - particle_locs[pidx];						\\\n"
+"	radd = length(rad);												\\\n"
+"	rho = radd * recip_reg_rad;    									\n"
+
+/* Fill in zeta calc here */
+
+"#define CVTX_P3D_VORT_END 											\\\n"
+"	/* 1/(4pi sigma^3) term is done by host. */						\\\n"
+"	ret = zeta * particle_vorts[pidx];								\\\n"
+"	ret = isnormal(ret) && radd != 0.f ? ret : (float3)(0.f, 0.f, 0.f);\\\n"
+"	reduction_workspace[widx] = ret;								\\\n"
+"	local_workspace_float3_reduce(reduction_workspace);				\\\n"
+"	barrier(CLK_LOCAL_MEM_FENCE);									\\\n"
+"	if( widx == 0 ){												\\\n"
+"		results[midx] = reduction_workspace[0] + results[midx];		\\\n"
 "	}																\\\n"
 "	return;															\\\n"
 "}																	\n"
@@ -463,6 +498,35 @@ Definitions for the repeated body of kernels
 "	const float pi = 3.14159265359f;												\n"
 "	eta = sqrt(2.f / pi) * exp(-rho * rho / 2.f);									\n"
 "	CVTX_P3D_VISC_DVORT_END															\n"
+
+
+/* ###########################################################
+	3D vorticity calculation kernels here:
+	name cvtx_nb_P3D_vort_XXXXX	
+	###########################################################	*/
+
+"__kernel void cvtx_nb_P3D_vort_singular\n"/* Arguably, what is the point? */
+"	CVTX_P3D_VORT_START														\n"
+"	zeta = 0.f;																\n"
+"	CVTX_P3D_VORT_END														\n"
+
+
+"__kernel void cvtx_nb_P3D_vort_winckelmans									\n"
+"	CVTX_P3D_VORT_START														\n"
+"	zeta = 7.5f * pow(rho*rho+1, -3.5f);									\n"
+"	CVTX_P3D_VORT_END														\n"
+
+
+"__kernel void cvtx_nb_P3D_vort_planetary									\n"
+"	CVTX_P3D_VORT_START														\n"
+"	zeta = rho < 1.f ? 3.f : 0.f;											\n"
+"	CVTX_P3D_VORT_END														\n"
+
+
+"__kernel void cvtx_nb_P3D_vort_gaussian									\n"
+"	CVTX_P3D_VORT_START														\n"
+"	zeta = sqrt(2.f / 3.14159265359f) * exp(- rho * rho * 0.5f);			\n"
+"	CVTX_P3D_VORT_END														\n"
 
 
 /* 	###########################################################

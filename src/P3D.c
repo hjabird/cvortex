@@ -31,8 +31,8 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 
-#include "uintkey.h"
 #include "redistribution_helper_funcs.h"
+#include "uintkey.h"
 
 #ifdef CVTX_USING_OPENCL
 #	include "ocl_P3D.h"
@@ -382,7 +382,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
 	return;
 }
 
-CVTX_EXPORT void cvtx_P3D_M2M_vort(
+CVTX_EXPORT void cpu_brute_force_P3D_M2M_vort(
 	const cvtx_P3D** array_start,
 	const int num_particles,
 	const bsv_V3f* mes_start,
@@ -396,6 +396,30 @@ CVTX_EXPORT void cvtx_P3D_M2M_vort(
 		result_array[i] = cvtx_P3D_M2S_vort(
 			array_start, num_particles, mes_start[i],
 			kernel, regularisation_radius);
+	}
+	return;
+}
+
+CVTX_EXPORT void cvtx_P3D_M2M_vort(
+	const cvtx_P3D** array_start,
+	const int num_particles,
+	const bsv_V3f* mes_start,
+	const int num_mes,
+	bsv_V3f* result_array,
+	const cvtx_VortFunc* kernel,
+	float regularisation_radius) {
+#ifdef CVTX_USING_OPENCL
+	if (num_particles < 256
+		|| num_mes < 256
+		|| !strcmp(kernel->cl_kernel_name_ext, "")
+		|| opencl_brute_force_P3D_M2M_vort(
+			array_start, num_particles, mes_start,
+			num_mes, result_array, kernel, regularisation_radius) != 0)
+#endif
+	{
+		cpu_brute_force_P3D_M2M_vort(
+			array_start, num_particles, mes_start,
+			num_mes, result_array, kernel, regularisation_radius);
 	}
 	return;
 }

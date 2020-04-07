@@ -41,6 +41,11 @@ void bench_P3D_dvort_planetary(int np);
 void bench_P3D_viscdvort_gaussian(int np);
 void bench_P3D_viscdvort_winckelmans(int np);
 
+void bench_P3D_vort_singular(int np);
+void bench_P3D_vort_gaussian(int np);
+void bench_P3D_vort_winckelmans(int np);
+void bench_P3D_vort_planetary(int np);
+
 void run_P3D_bench(void) {
 	create_particles_3D(1000000, 10.f, 0.01);
 	create_V3f_arr(1000000, 10.f);
@@ -126,6 +131,35 @@ void run_P3D_bench(void) {
 	BENCH("P3D viscdvort-gaussian-gpu huge", bench_P3D_viscdvort_gaussian, test_repeats(), 1000000);
 	BENCH("P3D viscdvort-winckelmans-gpu huge", bench_P3D_viscdvort_winckelmans, test_repeats(), 1000000);
 
+	BENCH("P3D vort-singular-gpu vsmall", bench_P3D_vort_singular, test_repeats(), 1000);
+	BENCH("P3D vort-gaussian-gpu vsmall", bench_P3D_vort_gaussian, test_repeats(), 1000);
+	BENCH("P3D vort-winckelmans-gpu vsmall", bench_P3D_vort_winckelmans, test_repeats(), 1000);
+	BENCH("P3D vort-planetary-gpu vsmall", bench_P3D_vort_planetary, test_repeats(), 1000);
+
+	BENCH("P3D vort-singular-gpu small", bench_P3D_vort_singular, test_repeats(), 10000);
+	BENCH("P3D vort-gaussian-gpu small", bench_P3D_vort_gaussian, test_repeats(), 10000);
+	BENCH("P3D vort-winckelmans-gpu small", bench_P3D_vort_winckelmans, test_repeats(), 10000);
+	BENCH("P3D vort-planetary-gpu small", bench_P3D_vort_planetary, test_repeats(), 10000);
+
+	BENCH("P3D vort-singular-gpu medium", bench_P3D_vort_singular, test_repeats(), 80000);
+	BENCH("P3D vort-gaussian-gpu medium", bench_P3D_vort_gaussian, test_repeats(), 80000);
+	BENCH("P3D vort-winckelmans-gpu medium", bench_P3D_vort_winckelmans, test_repeats(), 80000);
+	BENCH("P3D vort-planetary-gpu medium", bench_P3D_vort_planetary, test_repeats(), 80000);
+
+	BENCH("P3D vort-singular-gpu large", bench_P3D_vort_singular, test_repeats(), 250000);
+	BENCH("P3D vort-gaussian-gpu large", bench_P3D_vort_gaussian, test_repeats(), 250000);
+	BENCH("P3D vort-winckelmans-gpu large", bench_P3D_vort_winckelmans, test_repeats(), 250000);
+	BENCH("P3D vort-planetary-gpu large", bench_P3D_vort_planetary, test_repeats(), 250000);
+
+	BENCH("P3D vort-singular-gpu vlarge", bench_P3D_vort_singular, test_repeats(), 500000);
+	BENCH("P3D vort-gaussian-gpu vlarge", bench_P3D_vort_gaussian, test_repeats(), 500000);
+	BENCH("P3D vort-winckelmans-gpu vlarge", bench_P3D_vort_winckelmans, test_repeats(), 500000);
+	BENCH("P3D vort-planetary-gpu vlarge", bench_P3D_vort_planetary, test_repeats(), 500000);
+
+	BENCH("P3D vort-singular-gpu huge", bench_P3D_vort_singular, test_repeats(), 1000000);
+	BENCH("P3D vort-gaussian-gpu huge", bench_P3D_vort_gaussian, test_repeats(), 1000000);
+	BENCH("P3D vort-winckelmans-gpu huge", bench_P3D_vort_winckelmans, test_repeats(), 1000000);
+	BENCH("P3D vort-planetary-gpu huge", bench_P3D_vort_planetary, test_repeats(), 1000000);
 
 	/* Now use the CPU, disabling accelerators. */
 	for (i = 0; i < n; ++i) {
@@ -204,6 +238,37 @@ void run_P3D_bench(void) {
 	BENCH("P3D viscdvort-winckelmans-cpu vlarge", bench_P3D_viscdvort_winckelmans, test_repeats(), 500000);
 	BENCH("P3D viscdvort-gaussian-cpu huge", bench_P3D_viscdvort_gaussian, test_repeats(), 1000000);
 	BENCH("P3D viscdvort-winckelmans-cpu huge", bench_P3D_viscdvort_winckelmans, test_repeats(), 1000000);
+
+	BENCH("P3D vort-singular-cpu vsmall", bench_P3D_vort_singular, test_repeats(), 1000);
+	BENCH("P3D vort-gaussian-cpu vsmall", bench_P3D_vort_gaussian, test_repeats(), 1000);
+	BENCH("P3D vort-winckelmans-cpu vsmall", bench_P3D_vort_winckelmans, test_repeats(), 1000);
+	BENCH("P3D vort-planetary-cpu vsmall", bench_P3D_vort_planetary, test_repeats(), 1000);
+
+	BENCH("P3D vort-singular-cpu small", bench_P3D_vort_singular, test_repeats(), 10000);
+	BENCH("P3D vort-gaussian-cpu small", bench_P3D_vort_gaussian, test_repeats(), 10000);
+	BENCH("P3D vort-winckelmans-cpu small", bench_P3D_vort_winckelmans, test_repeats(), 10000);
+	BENCH("P3D vort-planetary-cpu small", bench_P3D_vort_planetary, test_repeats(), 10000);
+
+	BENCH("P3D vort-singular-cpu medium", bench_P3D_vort_singular, test_repeats(), 80000);
+	BENCH("P3D vort-gaussian-cpu medium", bench_P3D_vort_gaussian, test_repeats(), 80000);
+	BENCH("P3D vort-winckelmans-cpu medium", bench_P3D_vort_winckelmans, test_repeats(), 80000);
+	BENCH("P3D vort-planetary-cpu medium", bench_P3D_vort_planetary, test_repeats(), 80000);
+
+	BENCH("P3D vort-singular-cpu large", bench_P3D_vort_singular, test_repeats(), 250000);
+	BENCH("P3D vort-gaussian-cpu large", bench_P3D_vort_gaussian, test_repeats(), 250000);
+	BENCH("P3D vort-winckelmans-cpu large", bench_P3D_vort_winckelmans, test_repeats(), 250000);
+	BENCH("P3D vort-planetary-cpu large", bench_P3D_vort_planetary, test_repeats(), 250000);
+
+	BENCH("P3D vort-singular-cpu vlarge", bench_P3D_vort_singular, test_repeats(), 500000);
+	BENCH("P3D vort-gaussian-cpu vlarge", bench_P3D_vort_gaussian, test_repeats(), 500000);
+	BENCH("P3D vort-winckelmans-cpu vlarge", bench_P3D_vort_winckelmans, test_repeats(), 500000);
+	BENCH("P3D vort-planetary-cpu vlarge", bench_P3D_vort_planetary, test_repeats(), 500000);
+
+	BENCH("P3D vort-singular-cpu huge", bench_P3D_vort_singular, test_repeats(), 1000000);
+	BENCH("P3D vort-gaussian-cpu huge", bench_P3D_vort_gaussian, test_repeats(), 1000000);
+	BENCH("P3D vort-winckelmans-cpu huge", bench_P3D_vort_winckelmans, test_repeats(), 1000000);
+	BENCH("P3D vort-planetary-cpu huge", bench_P3D_vort_planetary, test_repeats(), 1000000);
+
 	/* Re-enable GPUs. */
 	for (i = 0; i < n; ++i) {
 		cvtx_accelerator_enable(i);
@@ -346,5 +411,58 @@ void bench_P3D_viscdvort_winckelmans(int np) {
 		&vf,
 		0.02,
 		1.
+	);
+}
+
+/* VEL ---------------------------------------------------------------------*/
+void bench_P3D_vort_singular(int np) {
+	cvtx_VortFunc vf = cvtx_VortFunc_singular();
+	cvtx_P3D_M2M_vort(
+		particle_3D_pptr(),
+		np,
+		v3f_arr(),
+		np,
+		v3f_arr2(),
+		&vf,
+		0.02
+	);
+}
+
+void bench_P3D_vort_gaussian(int np) {
+	cvtx_VortFunc vf = cvtx_VortFunc_gaussian();
+	cvtx_P3D_M2M_vort(
+		particle_3D_pptr(),
+		np,
+		v3f_arr(),
+		np,
+		v3f_arr2(),
+		&vf,
+		0.02
+	);
+}
+
+void bench_P3D_vort_winckelmans(int np) {
+	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans();
+	cvtx_P3D_M2M_vort(
+		particle_3D_pptr(),
+		np,
+		v3f_arr(),
+		np,
+		v3f_arr2(),
+		&vf,
+		0.02
+	);
+}
+
+void bench_P3D_vort_planetary(int np) {
+	cvtx_VortFunc vf = cvtx_VortFunc_planetary();
+	cvtx_P3D_M2M_vort(
+		particle_3D_pptr(),
+		np,
+		v3f_arr(),
+		np,
+		v3f_arr2(),
+		&vf,
+		0.02
 	);
 }
