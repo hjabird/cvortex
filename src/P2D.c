@@ -41,7 +41,7 @@ SOFTWARE.
 #define NG_FOR_REDUCING_PARICLES 64
 
 /* The induced velocity for a particle excluding the constant
-coefficient 1 / 4pi */
+coefficient 1 / 2pi */
 static inline bsv_V2f P2D_vel_inner(
 	const cvtx_P2D * self,
 	const bsv_V2f mes_point,
