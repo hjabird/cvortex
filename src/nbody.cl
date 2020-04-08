@@ -31,6 +31,10 @@ SOFTWARE.
 Definitions for the repeated body of kernels
 ############################################################################*/
 
+
+"#define SQRT_2_OVER_PI 0.7978845608028654f							\n"
+"#define ONE_OVER_SQRT_TWO 0.7071067811865475f						\n"
+
 "#define CVTX_P3D_VEL_START 										\\\n"
 "(																	\\\n"
 "	__global float3* particle_locs,									\\\n"
@@ -100,7 +104,7 @@ Definitions for the repeated body of kernels
 "	t222 = 3 * g * recip_rho3 - f;									\\\n"
 "	t223 = dot(rad, cross_om);										\\\n"
 "	ret = fma(t221 * t222 * t223, rad, t21); /* 1/(4 pi reg_dist^3) is host side */\\\n"
-"	ret = isnormal(ret) && radd != 0.f ? ret : (float3)(0.f, 0.f, 0.f);\\\n"
+"	ret = isnormal(ret) && radd > 0.f ? ret : (float3)(0.f, 0.f, 0.f);\\\n"
 "	reduction_workspace[widx] = ret;								\\\n"
 "	local_workspace_float3_reduce(reduction_workspace);				\\\n"
 "	barrier(CLK_LOCAL_MEM_FENCE);									\\\n"
@@ -431,11 +435,14 @@ Definitions for the repeated body of kernels
 "__kernel void cvtx_nb_P3D_vel_gaussian												\n"
 "	CVTX_P3D_VEL_START																\n"
 "	const float pi = 3.14159265359f;												\n"
-"	float a1 = 0.3480242f, a2 = -0.0958798f, a3 = 0.7478556f, p = 0.47047f;			\n"
+"	float a1 = 0.254829592f, a2 = -0.284496736f, a3 = 1.421413741f;					\n"
+"	float a4 = -1.453152027f, a5 = 1.061405429f, p = 0.3275911f;					\n"
 "	float rho_sr2 = rho / sqrt(2.f);												\n"
 "	float t = 1.f / (1.f + p * rho_sr2);											\n"
-"	float erf = 1.f - t * (a1 + t * (a2 + t * a3)) * exp(-rho_sr2 * rho_sr2);		\n"
-"	float term2 = rho * sqrt(2.f / pi) * exp(-rho_sr2 * rho_sr2);					\n"
+"	float t2 = t * t;	float t3 = t2 * t; float t4 = t2 * t2; float t5 = t3 * t2;	\n"
+"	float erf = 1.f - (a1 * t + a2 * t2 + a3 * t3 + a4 * t4 + a5 * t5) *			\n"
+"		exp(-rho_sr2 * rho_sr2);													\n"
+"	float term2 = rho * SQRT_2_OVER_PI * exp(-rho_sr2 * rho_sr2);					\n"
 "	g = erf - term2;																\n"
 "	CVTX_P3D_VEL_END																\n"
 
@@ -470,13 +477,16 @@ Definitions for the repeated body of kernels
 "__kernel void cvtx_nb_P3D_dvort_gaussian\n"
 "	CVTX_P3D_DVORT_START															\n"
 "	const float pi = 3.14159265359f;												\n"
-"	float a1 = 0.3480242f, a2 = -0.0958798f, a3 = 0.7478556f, p = 0.47047f;			\n"
-"	float rho_sr2 = rho / sqrt(2.f);												\n"
+"	float a1 = 0.254829592f, a2 = -0.284496736f, a3 = 1.421413741f;					\n"
+"	float a4 = -1.453152027f, a5 = 1.061405429f, p = 0.3275911f;					\n"
+"	float rho_sr2 = rho * ONE_OVER_SQRT_TWO;												\n"
 "	float t = 1.f / (1.f + p * rho_sr2);											\n"
-"	float erf = 1.f - t * (a1 + t * (a2 + t * a3)) * exp(-rho_sr2 * rho_sr2);		\n"
-"	float term2 = rho * sqrt(2.f / pi) * exp(-rho_sr2 * rho_sr2);					\n"
+"	float t2 = t * t;	float t3 = t2 * t; float t4 = t2 * t2; float t5 = t3 * t2;	\n"
+"	float erf = 1.f - (a1 * t + a2 * t2 + a3 * t3 + a4 * t4 + a5 * t5) *			\n"
+"		exp(-rho_sr2 * rho_sr2);													\n"
+"	float term2 = rho * SQRT_2_OVER_PI * exp(-rho_sr2 * rho_sr2);					\n"
 "	g = erf - term2;																\n"
-"	f =  sqrt(2.f / pi) * exp(-rho * rho / 2.f);									\n"
+"	f = SQRT_2_OVER_PI * exp(-rho * rho * 0.5f);									\n"
 "	CVTX_P3D_DVORT_END																\n"
 
 
@@ -496,7 +506,7 @@ Definitions for the repeated body of kernels
 "__kernel void cvtx_nb_P3D_visc_dvort_gaussian										\n"
 "	CVTX_P3D_VISC_DVORT_START														\n"
 "	const float pi = 3.14159265359f;												\n"
-"	eta = sqrt(2.f / pi) * exp(-rho * rho / 2.f);									\n"
+"	eta = SQRT_2_OVER_PI * exp(-rho * rho * 0.5f);									\n"
 "	CVTX_P3D_VISC_DVORT_END															\n"
 
 
@@ -525,7 +535,7 @@ Definitions for the repeated body of kernels
 
 "__kernel void cvtx_nb_P3D_vort_gaussian									\n"
 "	CVTX_P3D_VORT_START														\n"
-"	zeta = sqrt(2.f / 3.14159265359f) * exp(- rho * rho * 0.5f);			\n"
+"	zeta = SQRT_2_OVER_PI * exp(-rho * rho * 0.5f);							\n"
 "	CVTX_P3D_VORT_END														\n"
 
 
@@ -584,7 +594,9 @@ Definitions for the repeated body of kernels
 
 "__kernel void cvtx_nb_P2D_visc_dvort_winckelmans									\n"
 "	CVTX_P2D_VISC_DVORT_START														\n"
-"	eta = 24.f * exp(4.f / pown(rho * rho + 1.f, 3)) / pown(rho * rho + 1.f, 4);	\n"
+"	float a = rho * rho + 1.f;														\n"
+"	float a2 = 1.f / (a * a);														\n"
+"	eta = 24.f * exp(4.f * a * (a2 * a2)) * (a2 * a2);								\n"
 "	CVTX_P2D_VISC_DVORT_END															\n"
 
 "__kernel void cvtx_nb_P2D_visc_dvort_gaussian										\n"
