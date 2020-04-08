@@ -123,12 +123,11 @@ static float g_winckel_2D(float rho) {
 
 static float eta_winckel_2D(float rho) {
 	assert(rho >= 0 && "Rho should not be -ve");
-	float a, b, c, a3;
+	float a, a2, b, c;
 	a = rho * rho + 1.f;
-	a3 = a * a * a;
-	b = a3 * a;
-	c = 24.f * expf(4.f / a3);
-	return c / b;
+	a2 = 1.f / (a * a);
+	c = 24.f * expf(4.f * a * (a2 * a2));
+	return c * (a2 * a2);
 }
 
 static float g_planetary_3D(float rho) {
@@ -163,10 +162,13 @@ static float g_gaussian_3D(float rho) {
 	}
 	else {
 		/* Approximate erf using Abramowitz and Stegan 1.7.26 */
-		float a1 = 0.3480242f, a2 = -0.0958798f, a3 = 0.7478556f, p = 0.47047f;
+		float a1 = 0.254829592f, a2 = -0.284496736, a3 = 1.421413741f;
+		float a4 = -1.453152027f, a5 = 1.061405429f, p = 0.3275911f;
 		float rho_sr2 = rho * RECIP_SQRTF_2;
 		float t = 1.f / (1.f + p * rho_sr2);
-		float erf = 1.f - t * (a1 + t * (a2 + t * a3)) * expf(-rho_sr2 * rho_sr2);
+		float t2 = t * t;	float t3 = t2 * t; float t4 = t2 * t2; float t5 = t3 * t2;
+		float erf = 1.f - (a1 * t + a2 * t2 + a3 * t3 + a4 * t4 + a5 * t5) *
+			expf(-rho_sr2 * rho_sr2);
 		float term2 = rho * SQRTF_2_OVER_PI * expf(-rho_sr2 * rho_sr2);
 		ret = erf - term2;
 	}
@@ -176,7 +178,7 @@ static float g_gaussian_3D(float rho) {
 static float zeta_gaussian_3D(float rho) {
 	assert(rho >= 0 && "Rho should not be -ve");
 	const float pi = 3.14159265359f;
-	return SQRTF_2_OVER_PI * expf(-rho * rho / 2.f);
+	return SQRTF_2_OVER_PI * expf(-rho * rho * 0.5f);
 }
 
 static void combined_gaussian_3D(float rho, float* g, float* zeta) {
