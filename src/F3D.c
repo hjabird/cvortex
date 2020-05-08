@@ -48,7 +48,7 @@ CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_vel(
 	t21 = bsv_V3f_dot(r1, r0) / bsv_V3f_abs(r1);
 	t22 = bsv_V3f_dot(r2, r0) / bsv_V3f_abs(r2);
 	t2 = t21 - t22;
-	/* (NaN != NaN) == TRUE*/
+	/* (NaN != NaN) == TRUE, (NaN == NaN) == FALSE */
 	return fabsf(t1) <= bigvar && fabsf(t2) <= bigvar ? 
 		bsv_V3f_mult(crosstmp, t1 * t2) : bsv_V3f_zero();
 }
@@ -78,7 +78,9 @@ CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_dvort(
 	ret = bsv_V3f_plus(
 			bsv_V3f_mult(induced_particle->vorticity, B),
 			bsv_V3f_cross(A, induced_particle->vorticity));
-	if ((t222 != t222) || (t212 != t212)) { ret = bsv_V3f_zero(); }
+	if (!bsv_V3f_isequal(ret, ret) || (t222 != t222) || (t212 != t212)) {
+		ret = bsv_V3f_zero(); 
+	}
 	return ret;
 };
 
