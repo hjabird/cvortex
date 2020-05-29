@@ -114,6 +114,7 @@ int testSameCpuGpuResSingle() {
 			fils[i].end.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
 			fils[i].end.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
 			fils[i].end.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
+			fils[i].end = bsv_V3f_plus(fils[i].end, bsv_V3f_mult(fils[i].start, 0.01));
 			fils[i].strength = 0.f;
 			fils_ptrs[i] = &(fils[i]);
 		}
