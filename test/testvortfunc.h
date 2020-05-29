@@ -56,7 +56,12 @@ int testVortFunc(){
 
     cvtx_VortFunc vfg = cvtx_VortFunc_gaussian();
     TEST(vfg.g_3D(0.f) == 0.f);
-    TEST(fabs(vfg.g_3D(1.f) - 0.198748043f) < 1e-4);
+	TEST(fabs(vfg.g_3D(0.5f) - 0.030859595f) < 1e-6);
+    TEST(fabs(vfg.g_3D(1.f) - 0.198748043f) < 1e-6);
+	TEST(fabs(vfg.g_3D(2.f) - 0.738535870f) < 1e-6);
+	TEST(fabs(vfg.g_3D(4.f) - 0.998866015f) < 1e-6);
+	TEST(fabs(vfg.g_3D(6.f) - 0.999999925f) < 1e-6);
+	TEST(fabs(vfg.g_3D(8.f) - 0.999999999f) < 1e-6);
     TEST(vfg.g_3D(10.f) == 1.f);
     TEST(fabs(vfg.zeta_3D(1.f) - 0.483941449f) < 1e-6);
     TEST(fabs(vfg.zeta_3D(0.5f) - 0.70413065f) < 1e-6);
