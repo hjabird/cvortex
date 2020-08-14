@@ -30,6 +30,10 @@ SOFTWARE.
 #include <string.h>
 #include <time.h>
 
+#ifdef _OPENMP
+#	include <omp.h>
+#endif
+
 #include "benchtools.h"
 
 char m_test_types[2048], m_test_funcs[2048], m_test_scale[2048];
@@ -41,30 +45,44 @@ float mrandf(float maxf)
 }
 
 void named_bench(char* file_name, int line_no, char* name, void (func)(int), int repr, int probsz) {
-	clock_t start, end, diff, sum, sqsum, min, max, ave;
-	sum = 0; sqsum = 0; min = 99999; max = 0, ave = 0;
+#if _OPENMP
+	double start, end;
+#else
+	clock_t start, end;
+#endif
+	double diff, min = 9e99, max = 0, sum = 0;
+	start = 0; end = 0;
 	int i;
 	if (!should_run_test(name)) { return; }
-
-	printf("Running test %s for problem size %i (%i repeats)...\n", name, probsz, repr);
+	
+	putchar('\n');
 	for (i = 0; i < repr; ++i) {
+		printf("\rRunning test %s for problem size %i (%i of %i repeats)...",
+			name, probsz, i+1, repr);
+		fflush(stdout);
+#if _OPENMP
+		start = omp_get_wtime();
+		func(probsz);
+		end = omp_get_wtime();
+		diff = (end - start) * 1000; 
+#else
 		start = clock();
 		func(probsz);
 		end = clock();
-		diff = end - start;
+		diff = ((double)end - (double)start) * (1000. / CLOCKS_PER_SEC);
+#endif
 		sum += diff;
-		sqsum += diff * diff;
 		min = min < diff ? min : diff;
 		max = max > diff ? max : diff;
 	}
-	printf("\tTest name:\t%s\n", name);
+	printf("\n\tTest name:\t%s\n", name);
 	printf("\tFile:\t\t%s\n", file_name);
 	printf("\tLine no.:\t%i\n", line_no);
 	printf("\tProb. size:\t%i\n", probsz);
 	printf("\tRepeats:\t%i\n", repr);
-	printf("\tAverage:\t%i (msec)\n", sum * 1000 / (CLOCKS_PER_SEC * repr));
-	printf("\tMinimum:\t%i (msec)\n", min * 1000 / CLOCKS_PER_SEC);
-	printf("\tMaximum:\t%i (msec)\n", max * 1000 / CLOCKS_PER_SEC);
+	printf("\tAverage:\t%f (msec)\n", sum / repr);
+	printf("\tMinimum:\t%f (msec)\n", min);
+	printf("\tMaximum:\t%f (msec)\n", max);
 	printf("\n");
 	return;
 }

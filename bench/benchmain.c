@@ -50,6 +50,6 @@ int main(int argc, char* argv[]){
 	run_P2D_bench();
 
 	cvtx_finalise();
-	return;
+	return 0;
 }
 
