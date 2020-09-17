@@ -1,10 +1,16 @@
 cmake_minimum_required(VERSION 3.0)
 project(cvortex C)
+set(CVORTEX_VERSION_MAJOR 0)
+set(CVORTEX_VERSION_MINOR 3)
+set(CVORTEX_VERSION_PATCH 7)
+set(CVORTEX_VERSION ${CVORTEX_VERSION_MAJOR}.${CVORTEX_VERSION_MINOR}.${CVORTEX_VERSION_PATCH})
 
 option(BUILD_UNIT_TESTS "Builds tests" OFF)
 option(BUILD_BENCHMARKS "Builds benchmarks" OFF)
 option(USE_OPENMP "Use the OpenMP multithreading" ON)
 option(USE_OPENCL "Use OpenCL gpgpu computing" ON)
+#option(USE_CPUINFO "Include CPU/platform information lib" ON)
+#option(CPUINFO_STATIC_LINKING "Link CPUINFO library statically. Otherwise dynamic." ON)
 option(BUILD_STATIC_LIBRARY "Builds static library instead of shared" OFF)
 
 # Everything is placed in the one dictionary. Life is easier.
@@ -35,7 +41,10 @@ else()
 endif(BUILD_STATIC_LIBRARY)
 # We don't want warnings...
 target_compile_definitions(cvortex PRIVATE _CRT_SECURE_NO_WARNINGS)
-
+target_compile_definitions(cvortex PRIVATE  CVORTEX_VERSION=${CVORTEX_VERSION}
+											CVORTEX_VERSION_MAJOR=${CVORTEX_VERSION_MAJOR}
+											CVORTEX_VERSION_MINOR=${CVORTEX_VERSION_MINOR}
+											CVORTEX_VERSION_PATCH=${CVORTEX_VERSION_PATCH})
 if(USE_OPENMP)
     find_package(OpenMP)
     if (OPENMP_FOUND)
@@ -51,6 +60,12 @@ if(USE_OPENCL)
     target_include_directories(cvortex PRIVATE ${OpenCL_INCLUDE_DIRS})
 	target_compile_definitions(cvortex PRIVATE CVTX_USING_OPENCL)
 endif(USE_OPENCL)
+
+#if(USE_CPUINFO)
+#	find_package(cpuinfo REQUIRED)
+#	target_link_libraries(cvortex PRIVATE cpuinfo::clog cpuinfo::cpuinfo)
+#	target_compile_definitions(cvortex PRIVATE CVTX_USING_CPUINFO)
+#endif(USE_CPUINFO)
 
 find_package(bsv CONFIG REQUIRED)
 target_link_libraries(cvortex PUBLIC bsv)
