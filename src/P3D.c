@@ -382,7 +382,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
 	return;
 }
 
-CVTX_EXPORT void cpu_brute_force_P3D_M2M_vort(
+void cpu_brute_force_P3D_M2M_vort(
 	const cvtx_P3D** array_start,
 	const int num_particles,
 	const bsv_V3f* mes_start,
@@ -652,6 +652,10 @@ CVTX_EXPORT void cvtx_P3D_pedrizzetti_relaxation(
 	int i;
 	float tmp;
 	mes_posns = malloc(sizeof(bsv_V3f) * n_input_particles);
+#pragma omp parallel for
+	for (i = 0; i < n_input_particles; ++i) {
+		mes_posns[i] = input_array_start[i]->coord;
+	}
 	omegas = malloc(sizeof(bsv_V3f) * n_input_particles);
 	cvtx_P3D_M2M_vort(input_array_start, n_input_particles, 
 		mes_posns, n_input_particles, omegas, kernel, regularisation_radius);
@@ -659,12 +663,14 @@ CVTX_EXPORT void cvtx_P3D_pedrizzetti_relaxation(
 	tmp = 1.f - fdt;
 #pragma omp parallel for
 	for (i = 0; i < n_input_particles; ++i) {
-		bsv_V3f ovort, nvort;
-		float coeff;
+		bsv_V3f ovort, nvort;	/* original & new vorts*/
+		float coeff, absomega;
 		ovort = input_array_start[i]->vorticity;
-		coeff = bsv_V3f_abs(ovort) / bsv_V3f_abs(omegas[i]);
+		absomega = bsv_V3f_abs(omegas[i]);
+		coeff = bsv_V3f_abs(ovort) / absomega;
 		nvort = bsv_V3f_mult(ovort, tmp);
-		nvort = bsv_V3f_plus(nvort, bsv_V3f_mult(omegas[i], coeff));
+		nvort = bsv_V3f_plus(nvort, bsv_V3f_mult(omegas[i], coeff * fdt)); 
+		nvort = absomega != 0.f ?  nvort : bsv_V3f_zero();
 		input_array_start[i]->vorticity = nvort;
 	}
 
