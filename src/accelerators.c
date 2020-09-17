@@ -28,16 +28,28 @@ SOFTWARE.
 #include <stdlib.h>	/* Required for not CVTX_USING_OPENCL */
 #include "opencl_acc.h"
 
+static void cvtx_info_init(void);
+static void cvtx_info_finalise(void);
+static void compiler_name_string(char*);
+
+static char* cvtx_info_string = NULL;
+
 CVTX_EXPORT void cvtx_initialise() {
 #ifdef CVTX_USING_OPENCL
 	opencl_init();
 #endif
+	cvtx_info_init();
 }
 
 CVTX_EXPORT void cvtx_finalise() {
 #ifdef CVTX_USING_OPENCL
 	opencl_finalise();
 #endif
+	cvtx_info_finalise();
+}
+
+CVTX_EXPORT char* cvtx_information() {
+	return cvtx_info_string;
 }
 
 CVTX_EXPORT int cvtx_num_accelerators() {
@@ -100,4 +112,51 @@ CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id) {
 	opencl_remove_active_device(pidx, didx);
 #endif
 	return;
+}
+
+void cvtx_info_init(void)
+{
+	int nchar;
+	const int initial_alloc = 1024 * 16;
+	cvtx_info_string = (char*)malloc(initial_alloc); /* Lots of space... */
+	char comp_name_buff[128];
+	if (cvtx_info_string != NULL) {
+		compiler_name_string(comp_name_buff);
+		nchar = sprintf(cvtx_info_string,
+			"cvortex version: %d.%d.%d\n"
+			"compiler: %s\n"
+			"using OpenMP: %s\n"
+			"using OpenCL: %s\n",
+			CVORTEX_VERSION_MAJOR, CVORTEX_VERSION_MINOR, CVORTEX_VERSION_PATCH,
+			comp_name_buff,
+			CVTX_USING_OPENMP ? "TRUE" : "FALSE",
+			CVTX_USING_OPENCL ? "TRUE" : "FALSE"
+		);
+		assert(nchar > 0);
+		assert(nchar < initial_alloc);
+		cvtx_info_string = realloc(cvtx_info_string, nchar + 1);
+	}
+}
+
+void cvtx_info_finalise(void)
+{
+	free(cvtx_info_string);
+	cvtx_info_string = NULL;
+	return;
+}
+
+void compiler_name_string(char* buffer)
+{
+#ifdef __clang__
+	sprintf(buffer,
+		"clang %d.%d.%d",
+		__clang_major__, __clang_minor__, __clang_patchlevel__);
+#elif defined(__GNUC__)
+	sprintf(buffer,
+		"GCC %d.%d.%d",
+		__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+#elif defined(_MSC_VER)
+	sprintf(buffer,
+		"MSVC %d", _MSC_FULL_VER);
+#endif
 }
