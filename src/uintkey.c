@@ -50,11 +50,11 @@ static void sort_perm_multibyte_radix8(
 	unsigned char* ui_start, size_t uibytes,
 	unsigned int* key_start, size_t num_items);
 
-static int sort_perm_uint32key2d_quicksort(
+static int sort_perm_UInt32Key2D_quicksort(
 	UInt32Key2D* ui_start,
 	unsigned int* key_start, size_t num_items);
 
-static int sort_perm_uint32key3d_quicksort(
+static int sort_perm_UInt32Key3D_quicksort(
 	UInt32Key3D* ui_start,
 	unsigned int* key_start, size_t num_items);
 
@@ -136,8 +136,11 @@ void minmax_xyz_posn(
 void sort_perm_UInt32Key2D(
 	UInt32Key2D *gridkeys,
 	unsigned int* key_start, size_t num_items) {
-	if (num_items < 100000) {
-		sort_perm_uint32key2d_quicksort(gridkeys,
+	if (num_items == 0) {
+		return;	/* Nothing to do. */
+	}
+	else if (num_items < 1) {/*( 100000) { NOT GOOD ATM */
+		sort_perm_UInt32Key2D_quicksort(gridkeys,
 			key_start, num_items);
 	}
 	else {
@@ -150,8 +153,12 @@ void sort_perm_UInt32Key2D(
 void sort_perm_UInt32Key3D(
 	UInt32Key3D *gridkeys,
 	unsigned int* key_start, size_t num_items) {
-	if (num_items < 100000) {
-		sort_perm_uint32key3d_quicksort(
+	assert(num_items >= 0);
+	if (num_items == 0) {
+		return;	/* Nothing to do. */
+	}
+	else if(num_items < 1) {/*( 100000) { NOT GOOD ATM */
+		sort_perm_UInt32Key3D_quicksort(
 			gridkeys, key_start, num_items);
 	}
 	else {
@@ -319,10 +326,17 @@ void sort_perm_multibyte_radix8(
 	return;
 }
 
-static int sort_perm_uint32key2d_quicksort(
+static int sort_perm_UInt32Key2D_quicksort(
 	UInt32Key2D* ui_start,
 	unsigned int* key_start, size_t num_items) {
-	
+
+	if (num_items == 0) {
+		return 1;	/* Nothing to do. */
+	}
+
+	assert(ui_start != NULL);
+	assert(key_start != NULL);
+
 	const int stack_max = 1024;
 	int i, good = 1, stack_pos = 0;	
 	size_t *highs, *lows, high, low, partition;
@@ -381,19 +395,28 @@ static int sort_perm_uint32key2d_quicksort(
 		if (highs[stack_pos+1] - lows[stack_pos+1] > 0) { 
 			stack_pos += 1;
 		}
+		else if (highs[stack_pos] - lows[stack_pos] < 2) {
+			stack_pos -= 1;
+		}
 	}
 	free(highs);
 	free(lows);
 	return good;
 }
 
-static int sort_perm_uint32key3d_quicksort(
+static int sort_perm_UInt32Key3D_quicksort(
 	UInt32Key3D* ui_start,
 	unsigned int* key_start, size_t num_items) {
 
+	if (num_items == 0) {
+		return 1;	/* Nothing to do. */
+	}
+	assert(ui_start != NULL);
+	assert(key_start != NULL);
+
 	const int stack_max = 1024;
 	int i, good = 1, stack_pos = 0;
-	size_t* highs, * lows, high, low, partition;
+	size_t* highs, * lows, high, low, partition, piv_idx;
 	UInt32Key3D piv, cmpv;
 	unsigned int tmp;
 	highs = (size_t*)malloc(sizeof(size_t) * stack_max);
@@ -412,17 +435,18 @@ static int sort_perm_uint32key3d_quicksort(
 		high = highs[stack_pos];
 		low = lows[stack_pos];
 		assert(high > low);
-		piv = ui_start[key_start[low + (high - low) / 2]];
+		piv_idx = low; /*+ (high - low) / 2;*/
+		piv = ui_start[key_start[piv_idx]];
 		low--; high++;
 		while (1) {
 			do { 
 				high--; 
 				cmpv = ui_start[key_start[high]];
-			} while (!(cmpv.v.lo < piv.v.lo && cmpv.v.up < piv.v.up));
+			} while (!(cmpv.v.lo <= piv.v.lo && cmpv.v.up <= piv.v.up));
 			do { 
 				low++;
 				cmpv = ui_start[key_start[low]];
-			} while (!(cmpv.v.lo > piv.v.lo && cmpv.v.up > piv.v.up));
+			} while (!(cmpv.v.lo >= piv.v.lo && cmpv.v.up >= piv.v.up));
 			if (low < high) {
 				tmp = key_start[low];
 				key_start[low] = key_start[high];
@@ -451,9 +475,12 @@ static int sort_perm_uint32key3d_quicksort(
 			highs[stack_pos] = partition;
 			lows[stack_pos + 1] = partition + 1;
 		}
-		/* If the small interval we just put on top is 0 we can ignore it. */
-		if (highs[stack_pos + 1] - lows[stack_pos + 1] > 0) {
+		/* If the small interval we just put on top is 0 or 1 we can ignore it. */
+		if (highs[stack_pos + 1] - lows[stack_pos + 1] > 1) {
 			stack_pos += 1;
+		}
+		else if (highs[stack_pos] - lows[stack_pos] < 2) {
+			stack_pos -= 1;
 		}
 	}
 	free(highs);
