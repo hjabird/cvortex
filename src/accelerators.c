@@ -25,6 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>	/* Required for not CVTX_USING_OPENCL */
 #include "opencl_acc.h"
 
@@ -129,8 +130,16 @@ void cvtx_info_init(void)
 			"using OpenCL: %s\n",
 			CVORTEX_VERSION_MAJOR, CVORTEX_VERSION_MINOR, CVORTEX_VERSION_PATCH,
 			comp_name_buff,
-			CVTX_USING_OPENMP ? "TRUE" : "FALSE",
-			CVTX_USING_OPENCL ? "TRUE" : "FALSE"
+#ifdef CVTX_USING_OPENMP
+			"TRUE",
+#else
+			"FALSE",
+#endif
+#ifdef CVTX_USING_OPENCL
+			"TRUE"
+#else
+			"FALSE"
+#endif
 		);
 		assert(nchar > 0);
 		assert(nchar < initial_alloc);
