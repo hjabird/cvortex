@@ -24,16 +24,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#include <assert.h>
+#include <cassert>
 #include <stdio.h>
 #include <stdlib.h>	/* Required for not CVTX_USING_OPENCL */
+#include <string>
 #include "opencl_acc.h"
 
 static void cvtx_info_init(void);
 static void cvtx_info_finalise(void);
-static void compiler_name_string(char*);
+static std::string compiler_name_string(void);
 
-static char* cvtx_info_string = NULL;
+static std::string cvtx_info_string;
 
 CVTX_EXPORT void cvtx_initialise() {
 #ifdef CVTX_USING_OPENCL
@@ -49,8 +50,8 @@ CVTX_EXPORT void cvtx_finalise() {
 	cvtx_info_finalise();
 }
 
-CVTX_EXPORT char* cvtx_information() {
-	return cvtx_info_string;
+CVTX_EXPORT const char* cvtx_information() {
+	return cvtx_info_string.c_str();
 }
 
 CVTX_EXPORT int cvtx_num_accelerators() {
@@ -70,10 +71,11 @@ CVTX_EXPORT int cvtx_num_enabled_accelerators() {
 	return num;
 }
 
-CVTX_EXPORT char* cvtx_accelerator_name(int accelerator_id) {
-	char *res = NULL;
+CVTX_EXPORT const char* cvtx_accelerator_name(int accelerator_id) {
 #ifdef CVTX_USING_OPENCL
-	res = opencl_accelerator_name(accelerator_id);
+	const char *res = opencl_accelerator_name(accelerator_id);
+#else
+	char* res = NULL;
 #endif
 	return res;
 }
@@ -83,7 +85,7 @@ CVTX_EXPORT int cvtx_accelerator_enabled(int accelerator_id) {
 #ifdef CVTX_USING_OPENCL
 	assert(opencl_is_init() == 1);
 	int pidx, didx;
-	opencl_deindex_device(accelerator_id, &pidx, &didx);
+	std::tie(pidx, didx) = opencl_deindex_device(accelerator_id);
 	res = opencl_device_in_active_list(pidx, didx);
 #endif
 	return res >= 0 ? 1 : 0;
@@ -94,7 +96,7 @@ CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id) {
 	assert(opencl_is_init() == 1);
 	assert(accelerator_id < cvtx_num_accelerators());
 	int pidx, didx;
-	opencl_deindex_device(accelerator_id, &pidx, &didx);
+	std::tie(pidx, didx) = opencl_deindex_device(accelerator_id);
 	assert(pidx >= 0);
 	assert(didx >= 0);
 	opencl_add_active_device(pidx, didx);
@@ -107,7 +109,7 @@ CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id) {
 	assert(opencl_is_init() == 1);
 	assert(accelerator_id < cvtx_num_accelerators());
 	int pidx, didx;
-	opencl_deindex_device(accelerator_id, &pidx, &didx);
+	std::tie(pidx, didx) = opencl_deindex_device(accelerator_id);
 	assert(pidx >= 0);
 	assert(didx >= 0);
 	opencl_remove_active_device(pidx, didx);
@@ -117,55 +119,45 @@ CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id) {
 
 void cvtx_info_init(void)
 {
-	int nchar;
 	const int initial_alloc = 1024 * 16;
-	cvtx_info_string = (char*)malloc(initial_alloc); /* Lots of space... */
-	char comp_name_buff[128];
-	if (cvtx_info_string != NULL) {
-		compiler_name_string(comp_name_buff);
-		nchar = sprintf(cvtx_info_string,
-			"cvortex version: %d.%d.%d\n"
-			"compiler: %s\n"
-			"using OpenMP: %s\n"
-			"using OpenCL: %s\n",
-			CVORTEX_VERSION_MAJOR, CVORTEX_VERSION_MINOR, CVORTEX_VERSION_PATCH,
-			comp_name_buff,
+	std::string comp_name_buff;
+	comp_name_buff = compiler_name_string();
+	cvtx_info_string =
+		"cvortex version: " + std::to_string(CVORTEX_VERSION_MAJOR) + "." +
+		std::to_string(CVORTEX_VERSION_MINOR) + "." +
+		std::to_string(CVORTEX_VERSION_PATCH) + "\n" +
+		"compiler: " + comp_name_buff + "\n" +
 #ifdef CVTX_USING_OPENMP
-			"TRUE",
+		"using OpenMP: TRUE\n" +
 #else
-			"FALSE",
+		"using OpenMP: FALSE\n" +
 #endif
 #ifdef CVTX_USING_OPENCL
-			"TRUE"
+		"using OpenCL: TRUE\n";
 #else
-			"FALSE"
+		"using OpenCL: FALSE\n";
 #endif
-		);
-		assert(nchar > 0);
-		assert(nchar < initial_alloc);
-		cvtx_info_string = (char*) realloc(cvtx_info_string, nchar + 1);
-	}
 }
 
 void cvtx_info_finalise(void)
 {
-	free(cvtx_info_string);
-	cvtx_info_string = NULL;
+	cvtx_info_string = "";
 	return;
 }
 
-void compiler_name_string(char* buffer)
+std::string compiler_name_string(void)
 {
+	std::string str("Unknown compiler");
 #ifdef __clang__
-	sprintf(buffer,
-		"clang %d.%d.%d",
-		__clang_major__, __clang_minor__, __clang_patchlevel__);
+	str = "clang " + std::to_string(__clang_major__) + "." + 
+		std::to_string(__clang_minor__)
+		+ "." + std::to_string(__clang_patchlevel__);
 #elif defined(__GNUC__)
-	sprintf(buffer,
-		"GCC %d.%d.%d",
-		__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+	str = "GCC " + std::to_string(__GNUC__) + "." + 
+		std::to_string(__GNUC_MINOR__)	+ "." + 
+		std::to_string(__GNUC_PATCHLEVEL__);
 #elif defined(_MSC_VER)
-	sprintf(buffer,
-		"MSVC %d", _MSC_FULL_VER);
+	str = "MSVC " + std::to_string(_MSC_FULL_VER);
 #endif
+	return str;
 }

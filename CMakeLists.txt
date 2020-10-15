@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(cvortex CXX)
+project(cvortex)
 set(CVORTEX_VERSION_MAJOR 0)
 set(CVORTEX_VERSION_MINOR 3)
 set(CVORTEX_VERSION_PATCH 8)
@@ -70,7 +70,7 @@ endif(USE_OPENCL)
 find_package(bsv CONFIG REQUIRED)
 target_link_libraries(cvortex PUBLIC bsv)
 target_include_directories(cvortex PUBLIC bsv)
-set_target_properties(cvortex PROPERTIES LINKER_LANGUAGE CXX)
+#set_target_properties(cvortex PROPERTIES LINKER_LANGUAGE CXX)
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
     target_link_libraries(cvortex PUBLIC m)   # Maths std library.

@@ -31,26 +31,11 @@ SOFTWARE.
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #include <CL/cl.h>
 #include <bsv/bsv.h>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #define CVTX_WORKGROUP_SIZE 256
-
-struct ocl_platform_state{
-	int good;					/* 1 if good, 0 if bad. */
-	cl_platform_id platform;
-	int num_devices;
-	cl_device_id *devices;
-	cl_command_queue *queues;
-	cl_program program;
-	cl_context context;
-	char *platform_name;
-	char **device_names;		/* Pointer to array of strings. */
-	char *program_build_log;	/* Normally NULL. Build log of OCL build fails.*/
-};
-
-struct ocl_active_device {
-	int platform_idx;
-	int device_idx;
-};
 
 /* 
 Make OpenCL code ready to use by initialising devices, platforms etc.
@@ -69,12 +54,13 @@ void opencl_finalise();
 int opencl_num_devices();
 
 /* From a linear index get the index of the platform and that devices
-on the platform. Returns -1 for both fields if invalid. */
-void opencl_deindex_device(int index, int *plat_idx, int *dev_idx);
+on the platform. Returns tuple<platform_idx, device_idx> with 
+-1 for both fields if invalid. */
+std::tuple<int,int> opencl_deindex_device(int index);
 
 /* From and platform and device index, get a linear index. -1 for 
 invalid input. */
-void opencl_index_device(int *index, int plat_idx, int dev_idx);
+int opencl_index_device(int plat_idx, int dev_idx);
 
 /* The number of active devices. -1 for bad. */
 int opencl_num_active_devices();
@@ -105,7 +91,7 @@ int opencl_get_device_state(
 	cl_command_queue *queue);
 
 /* Get the name of an accelerator by linear index. */
-char* opencl_accelerator_name(int lindex);
+const char* opencl_accelerator_name(int lindex);
 
 #endif
 #endif

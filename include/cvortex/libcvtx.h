@@ -101,10 +101,10 @@ typedef struct {
 /* cvtx libary accelerator controls */
 CVTX_EXPORT void cvtx_initialise();
 CVTX_EXPORT void cvtx_finalise();
-CVTX_EXPORT char* cvtx_information();
+CVTX_EXPORT const char* cvtx_information();
 CVTX_EXPORT int cvtx_num_accelerators();
 CVTX_EXPORT int cvtx_num_enabled_accelerators();
-CVTX_EXPORT char* cvtx_accelerator_name(int accelerator_id);
+CVTX_EXPORT const char* cvtx_accelerator_name(int accelerator_id);
 CVTX_EXPORT int cvtx_accelerator_enabled(int accelerator_id);
 CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id);
 CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id);
