@@ -46,8 +46,8 @@ float get_strength_threshold(
 	}
 
 	/* Guess vorticity thresholds and count the kept particles.*/
-	guesses = malloc(sizeof(float) * n_guesses);
-	g_counts = malloc(sizeof(float) * n_guesses);
+	guesses = (float*) malloc(sizeof(float) * n_guesses);
+	g_counts = (int*) malloc(sizeof(float) * n_guesses);
 	while (1) {
 		range = (maxv - minv) * 1.05;
 		for (i = 0; i < n_guesses; ++i) {

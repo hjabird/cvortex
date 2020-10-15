@@ -143,7 +143,7 @@ void cvtx_info_init(void)
 		);
 		assert(nchar > 0);
 		assert(nchar < initial_alloc);
-		cvtx_info_string = realloc(cvtx_info_string, nchar + 1);
+		cvtx_info_string = (char*) realloc(cvtx_info_string, nchar + 1);
 	}
 }
 

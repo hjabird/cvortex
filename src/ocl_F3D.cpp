@@ -103,7 +103,7 @@ int opencl_brute_force_F3D_M2M_vel_impl(
 		global_work_size[1] = num_mes;
 
 		/* Generate an buffer for the measurement position data  */
-		mes_pos_buff_data = malloc(num_mes * sizeof(cl_float3));
+		mes_pos_buff_data = (cl_float3*) malloc(num_mes * sizeof(cl_float3));
 		for (i = 0; i < num_mes; ++i) {
 			mes_pos_buff_data[i].x = mes_start[i].x[0];
 			mes_pos_buff_data[i].y = mes_start[i].x[1];
@@ -124,7 +124,7 @@ int opencl_brute_force_F3D_M2M_vel_impl(
 		}
 
 		/* Generate a results buffer */
-		res_buff_data = malloc(num_mes * sizeof(cl_float3));
+		res_buff_data = (cl_float3*) malloc(num_mes * sizeof(cl_float3));
 		res_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
 			sizeof(cl_float3) * num_mes, NULL, &status);
 		for (i = 0; i < num_mes; ++i) {
@@ -150,9 +150,9 @@ int opencl_brute_force_F3D_M2M_vel_impl(
 			num_filament_groups += 1;
 		}
 		n_modelled_filaments = CVTX_WORKGROUP_SIZE * num_filament_groups;
-		fil_start_buff_data = malloc(n_modelled_filaments * sizeof(cl_float3));
-		fil_end_buff_data = malloc(n_modelled_filaments * sizeof(cl_float3));
-		fil_strength_buff_data = malloc(n_modelled_filaments * sizeof(cl_float));
+		fil_start_buff_data = (cl_float3*) malloc(n_modelled_filaments * sizeof(cl_float3));
+		fil_end_buff_data = (cl_float3*) malloc(n_modelled_filaments * sizeof(cl_float3));
+		fil_strength_buff_data = (cl_float*) malloc(n_modelled_filaments * sizeof(cl_float));
 		for (i = 0; i < num_filaments; ++i) {
 			fil_start_buff_data[i].x = array_start[i]->start.x[0];
 			fil_start_buff_data[i].y = array_start[i]->start.x[1];
@@ -172,10 +172,10 @@ int opencl_brute_force_F3D_M2M_vel_impl(
 			fil_end_buff_data[i].z = (float)0.0;
 			fil_strength_buff_data[i] = (float)0.0;
 		}
-		fil_start_buff = malloc(num_filament_groups * sizeof(cl_mem));
-		fil_end_buff = malloc(num_filament_groups * sizeof(cl_mem));
-		fil_strength_buff = malloc(num_filament_groups * sizeof(cl_mem));
-		event_chain = malloc(sizeof(cl_event) * num_filament_groups * 4);
+		fil_start_buff = (cl_mem*) malloc(num_filament_groups * sizeof(cl_mem));
+		fil_end_buff = (cl_mem*) malloc(num_filament_groups * sizeof(cl_mem));
+		fil_strength_buff = (cl_mem*) malloc(num_filament_groups * sizeof(cl_mem));
+		event_chain = (cl_event*) malloc(sizeof(cl_event) * num_filament_groups * 4);
 		for (i = 0; i < num_filament_groups; ++i) {
 			fil_start_buff[i] = clCreateBuffer(context,
 				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);
@@ -296,7 +296,7 @@ int opencl_brute_force_F3D_M2sM_vel_impl(
 		assert(status == CL_SUCCESS);
 
 		/* Generate an buffer for the measurement position data  */
-		mes_pos_buff_data = malloc(num_mes * num_filament_groups * sizeof(cl_float3));
+		mes_pos_buff_data = (cl_float3*) malloc(num_mes * num_filament_groups * sizeof(cl_float3));
 		for (i = 0; i < num_mes * num_filament_groups; ++i) {
 			mes_pos_buff_data[i].x = mes_start[i % num_mes].x[0];
 			mes_pos_buff_data[i].y = mes_start[i % num_mes].x[1];
@@ -317,8 +317,8 @@ int opencl_brute_force_F3D_M2sM_vel_impl(
 		}
 
 		/* Generate a results buffer */
-		res_buff_data = malloc(num_mes * num_filament_groups * sizeof(cl_float3));
-		res_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
+		res_buff_data = (cl_float3*) malloc(num_mes * num_filament_groups * sizeof(cl_float3));
+		res_buff = (cl_mem) clCreateBuffer(context, CL_MEM_WRITE_ONLY,
 			sizeof(cl_float3) * num_mes * num_filament_groups, NULL, &status);
 		if (status != CL_SUCCESS) {
 			assert(0);
@@ -333,9 +333,9 @@ int opencl_brute_force_F3D_M2sM_vel_impl(
 				- num_filaments % CVTX_WORKGROUP_SIZE;
 		}
 		n_modelled_filaments = CVTX_WORKGROUP_SIZE * num_filament_groups;
-		fil_start_buff_data = malloc(n_modelled_filaments * sizeof(cl_float3));
-		fil_end_buff_data = malloc(n_modelled_filaments * sizeof(cl_float3));
-		fil_strength_buff_data = malloc(n_modelled_filaments * sizeof(cl_float));
+		fil_start_buff_data = (cl_float3*) malloc(n_modelled_filaments * sizeof(cl_float3));
+		fil_end_buff_data = (cl_float3*) malloc(n_modelled_filaments * sizeof(cl_float3));
+		fil_strength_buff_data = (cl_float*) malloc(n_modelled_filaments * sizeof(cl_float));
 		for (i = 0; i < num_filaments; ++i) {
 			fil_start_buff_data[i].x = array_start[i]->start.x[0];
 			fil_start_buff_data[i].y = array_start[i]->start.x[1];
@@ -480,8 +480,8 @@ int opencl_brute_force_F3D_M2M_dvort_impl(
 		global_work_size[1] = num_induced;
 
 		/* Generate an buffer for the measurement position data  */
-		part_pos_buff_data = malloc(num_induced * sizeof(cl_float3));
-		part_vort_buff_data = malloc(num_induced * sizeof(cl_float3));
+		part_pos_buff_data = (cl_float3*) malloc(num_induced * sizeof(cl_float3));
+		part_vort_buff_data = (cl_float3*) malloc(num_induced * sizeof(cl_float3));
 		for (i = 0; i < num_induced; ++i) {
 			part_pos_buff_data[i].x = induced_start[i]->coord.x[0];
 			part_pos_buff_data[i].y = induced_start[i]->coord.x[1];
@@ -515,7 +515,7 @@ int opencl_brute_force_F3D_M2M_dvort_impl(
 		}
 
 		/* Generate a results buffer */
-		res_buff_data = malloc(num_induced * sizeof(cl_float3));
+		res_buff_data = (cl_float3*) malloc(num_induced * sizeof(cl_float3));
 		res_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
 			sizeof(cl_float3) * num_induced, NULL, &status);
 		for (i = 0; i < num_induced; ++i) {
@@ -541,9 +541,9 @@ int opencl_brute_force_F3D_M2M_dvort_impl(
 			num_filament_groups += 1;
 		}
 		n_modelled_filaments = CVTX_WORKGROUP_SIZE * num_filament_groups;
-		fil_start_buff_data = malloc(n_modelled_filaments * sizeof(cl_float3));
-		fil_end_buff_data = malloc(n_modelled_filaments * sizeof(cl_float3));
-		fil_strength_buff_data = malloc(n_modelled_filaments * sizeof(cl_float));
+		fil_start_buff_data = (cl_float3*) malloc(n_modelled_filaments * sizeof(cl_float3));
+		fil_end_buff_data = (cl_float3*) malloc(n_modelled_filaments * sizeof(cl_float3));
+		fil_strength_buff_data = (cl_float*) malloc(n_modelled_filaments * sizeof(cl_float));
 		for (i = 0; i < num_fil; ++i) {
 			fil_start_buff_data[i].x = array_start[i]->start.x[0];
 			fil_start_buff_data[i].y = array_start[i]->start.x[1];
@@ -563,10 +563,10 @@ int opencl_brute_force_F3D_M2M_dvort_impl(
 			fil_end_buff_data[i].z = (float)0.0;
 			fil_strength_buff_data[i] = (float)0.0;
 		}
-		fil_start_buff = malloc(num_filament_groups * sizeof(cl_mem));
-		fil_end_buff = malloc(num_filament_groups * sizeof(cl_mem));
-		fil_strength_buff = malloc(num_filament_groups * sizeof(cl_mem));
-		event_chain = malloc(sizeof(cl_event) * num_filament_groups * 4);
+		fil_start_buff = (cl_mem*) malloc(num_filament_groups * sizeof(cl_mem));
+		fil_end_buff = (cl_mem*) malloc(num_filament_groups * sizeof(cl_mem));
+		fil_strength_buff = (cl_mem*) malloc(num_filament_groups * sizeof(cl_mem));
+		event_chain = (cl_event*) malloc(sizeof(cl_event) * num_filament_groups * 4);
 		for (i = 0; i < num_filament_groups; ++i) {
 			fil_start_buff[i] = clCreateBuffer(context,
 				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float3), NULL, &status);

@@ -142,7 +142,7 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 		global_work_size[1] = num_mes;
 
 		/* Generate an buffer for the measurement position data  */
-		mes_pos_buff_data = malloc(num_mes * sizeof(cl_float2));
+		mes_pos_buff_data = (cl_float2*) malloc(num_mes * sizeof(cl_float2));
 		for (i = 0; i < num_mes; ++i) {
 			mes_pos_buff_data[i].x = mes_start[i].x[0];
 			mes_pos_buff_data[i].y = mes_start[i].x[1];
@@ -166,7 +166,7 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 		assert(status == CL_SUCCESS);
 
 		/* Generate a results buffer */
-		res_buff_data = malloc(num_mes * sizeof(cl_float2));
+		res_buff_data = (cl_float2*) malloc(num_mes * sizeof(cl_float2));
 		res_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
 			sizeof(cl_float2) * num_mes, NULL, &status);
 		for (i = 0; i < num_mes; ++i) {
@@ -190,8 +190,8 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 			n_particle_groups += 1;
 		}
 		n_modelled_particles = CVTX_WORKGROUP_SIZE * n_particle_groups;
-		part_pos_buff_data = malloc(n_modelled_particles * sizeof(cl_float2));
-		part_vort_buff_data = malloc(n_modelled_particles * sizeof(cl_float));
+		part_pos_buff_data = (cl_float2*) malloc(n_modelled_particles * sizeof(cl_float2));
+		part_vort_buff_data = (cl_float*) malloc(n_modelled_particles * sizeof(cl_float));
 		for (i = 0; i < num_particles; ++i) {
 			part_pos_buff_data[i].x = array_start[i]->coord.x[0];
 			part_pos_buff_data[i].y = array_start[i]->coord.x[1];
@@ -203,9 +203,9 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 			part_pos_buff_data[i].y = 0.f;
 			part_vort_buff_data[i] = 0.f;
 		}
-		part_pos_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		part_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 3);
+		part_pos_buff = (cl_mem*) malloc(n_particle_groups * sizeof(cl_mem));
+		part_vort_buff = (cl_mem*) malloc(n_particle_groups * sizeof(cl_mem));
+		event_chain = (cl_event*) malloc(sizeof(cl_event) * n_particle_groups * 3);
 		for (i = 0; i < n_particle_groups; ++i) {
 			part_pos_buff[i] = clCreateBuffer(context,
 				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float2), NULL, &status);
@@ -317,7 +317,7 @@ int opencl_brute_force_P2D_M2sM_vel_impl(
 		assert(status == CL_SUCCESS);
 
 		/* Generate an buffer for the measurement position data  */
-		mes_pos_buff_data = malloc(num_mes * n_particle_groups * sizeof(cl_float2));
+		mes_pos_buff_data = (cl_float2*) malloc(num_mes * n_particle_groups * sizeof(cl_float2));
 		for (i = 0; i < num_mes * n_particle_groups; ++i) {
 			mes_pos_buff_data[i].x = mes_start[i % num_mes].x[0];
 			mes_pos_buff_data[i].y = mes_start[i % num_mes].x[1];
@@ -341,7 +341,7 @@ int opencl_brute_force_P2D_M2sM_vel_impl(
 		assert(status == CL_SUCCESS);
 
 		/* Generate a results buffer */
-		res_buff_data = malloc(num_mes * n_particle_groups * sizeof(cl_float2));
+		res_buff_data = (cl_float2*) malloc(num_mes * n_particle_groups * sizeof(cl_float2));
 		res_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
 			sizeof(cl_float2) * num_mes * n_particle_groups, NULL, &status);
 		if (status != CL_SUCCESS) {
@@ -357,8 +357,8 @@ int opencl_brute_force_P2D_M2sM_vel_impl(
 		}
 		n_modelled_particles = CVTX_WORKGROUP_SIZE * n_particle_groups;
 		assert(n_modelled_particles >= num_particles);
-		part_pos_buff_data = malloc(n_modelled_particles * sizeof(cl_float2));
-		part_vort_buff_data = malloc(n_modelled_particles * sizeof(cl_float));
+		part_pos_buff_data = (cl_float2*) malloc(n_modelled_particles * sizeof(cl_float2));
+		part_vort_buff_data = (cl_float*) malloc(n_modelled_particles * sizeof(cl_float));
 		for (i = 0; i < num_particles; ++i) {
 			part_pos_buff_data[i].x = array_start[i]->coord.x[0];
 			part_pos_buff_data[i].y = array_start[i]->coord.x[1];
@@ -463,9 +463,9 @@ int opencl_brute_force_P2D_M2M_visc_dvort_impl(
 		global_work_size[1] = num_induced;
 
 		/* Generate buffers for induced particle data  */
-		part2_pos_buff_data = malloc(num_induced * sizeof(cl_float2));
-		part2_vort_buff_data = malloc(num_induced * sizeof(cl_float));
-		part2_area_buff_data = malloc(num_induced * sizeof(cl_float));
+		part2_pos_buff_data = (cl_float2*) malloc(num_induced * sizeof(cl_float2));
+		part2_vort_buff_data = (cl_float*) malloc(num_induced * sizeof(cl_float));
+		part2_area_buff_data = (cl_float*) malloc(num_induced * sizeof(cl_float));
 		for (i = 0; i < num_induced; ++i) {
 			part2_pos_buff_data[i].x = induced_start[i]->coord.x[0];
 			part2_pos_buff_data[i].y = induced_start[i]->coord.x[1];
@@ -499,7 +499,7 @@ int opencl_brute_force_P2D_M2M_visc_dvort_impl(
 		assert(status == CL_SUCCESS);
 
 		/* Generate a results buffer										*/
-		res_buff_data = malloc(num_induced * sizeof(cl_float));
+		res_buff_data = (cl_float*) malloc(num_induced * sizeof(cl_float));
 		res_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
 			sizeof(cl_float3) * num_induced, NULL, &status);
 		for (i = 0; i < num_induced; ++i) {
@@ -532,9 +532,9 @@ int opencl_brute_force_P2D_M2M_visc_dvort_impl(
 			n_particle_groups += 1;
 		}
 		n_modelled_particles = CVTX_WORKGROUP_SIZE * n_particle_groups;
-		part1_pos_buff_data = malloc(n_modelled_particles * sizeof(cl_float2));
-		part1_vort_buff_data = malloc(n_modelled_particles * sizeof(cl_float));
-		part1_area_buff_data = malloc(n_modelled_particles * sizeof(cl_float));
+		part1_pos_buff_data = (cl_float2*) malloc(n_modelled_particles * sizeof(cl_float2));
+		part1_vort_buff_data = (cl_float*) malloc(n_modelled_particles * sizeof(cl_float));
+		part1_area_buff_data = (cl_float*) malloc(n_modelled_particles * sizeof(cl_float));
 		for (i = 0; i < num_particles; ++i) {
 			part1_pos_buff_data[i].x = array_start[i]->coord.x[0];
 			part1_pos_buff_data[i].y = array_start[i]->coord.x[1];
@@ -548,10 +548,10 @@ int opencl_brute_force_P2D_M2M_visc_dvort_impl(
 			part1_vort_buff_data[i] = 0;
 			part1_area_buff_data[i] = 0;
 		}
-		part1_pos_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		part1_vort_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		part1_area_buff = malloc(n_particle_groups * sizeof(cl_mem));
-		event_chain = malloc(sizeof(cl_event) * n_particle_groups * 4);
+		part1_pos_buff = (cl_mem*) malloc(n_particle_groups * sizeof(cl_mem));
+		part1_vort_buff = (cl_mem*) malloc(n_particle_groups * sizeof(cl_mem));
+		part1_area_buff = (cl_mem*) malloc(n_particle_groups * sizeof(cl_mem));
+		event_chain = (cl_event*) malloc(sizeof(cl_event) * n_particle_groups * 4);
 		for (i = 0; i < n_particle_groups; ++i) {
 			part1_pos_buff[i] = clCreateBuffer(context,
 				CL_MEM_READ_ONLY, CVTX_WORKGROUP_SIZE * sizeof(cl_float2), NULL, &status);

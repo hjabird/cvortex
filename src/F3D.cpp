@@ -4,7 +4,7 @@ StraightVortFil.c
 
 Basic representation of a straight vortex filament.
 
-Copyright(c) 2019 HJA Bird
+Copyright(c) 2019-2020 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -49,7 +49,7 @@ CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_vel(
 	t22 = bsv_V3f_dot(r2, r0) / bsv_V3f_abs(r2);
 	t2 = t21 - t22;
 	/* (NaN != NaN) == TRUE, (NaN == NaN) == FALSE */
-	return fabsf(t1) <= bigvar && fabsf(t2) <= bigvar ? 
+	return fabsf(t1) <= bigvar && fabsf(t2) <= bigvar ?
 		bsv_V3f_mult(crosstmp, t1 * t2) : bsv_V3f_zero();
 }
 

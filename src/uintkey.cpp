@@ -27,6 +27,7 @@ SOFTWARE.
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #ifdef CVTX_USING_OPENMP
 #	include <omp.h>
 #endif
@@ -252,9 +253,9 @@ void sort_perm_multibyte_radix8(
 	unsigned int *counts, *offsets, info_size = sizeof(unsigned int) * n_para;
 	/* swap = what are we writing the result of this iter into? */
 	unsigned int bit = 0, byte = 0, swap = 0, uini = (unsigned int)num_items;
-	buffer = malloc(num_items * sizeof(unsigned int));
-	counts = malloc(info_size * nthreads);
-	offsets = malloc(info_size * nthreads);
+	buffer = (unsigned int*) malloc(num_items * sizeof(unsigned int));
+	counts = (unsigned int*) malloc(info_size * nthreads);
+	offsets = (unsigned int*) malloc(info_size * nthreads);
 
 	/* Number permutation array. */
 	int ci;

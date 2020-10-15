@@ -311,8 +311,8 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	minx -= grid_radius * grid_density;
 	miny -= grid_radius * grid_density;
 
-	oidx_array = malloc(sizeof(unsigned int) * n_input_particles);
-	okey_array = malloc(sizeof(UInt32Key2D) * n_input_particles);
+	oidx_array = (unsigned int*) malloc(sizeof(unsigned int) * n_input_particles);
+	okey_array = (UInt32Key2D*) malloc(sizeof(UInt32Key2D) * n_input_particles);
 	for (i = 0; i < n_input_particles; ++i) {
 		oidx_array[i] = i;
 		okey_array[i] = g_P2D_gridkey2D(input_array_start[i],
@@ -322,9 +322,9 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	/* Now we make new particles based on grid. */
 	/* ppop = Particles per orginal particle. */
 	ppop = (grid_radius * 2 + 1) * (grid_radius * 2 + 1);
-	nkey_array = malloc(sizeof(UInt32Key2D) * ppop * n_input_particles);
-	nvort_array = malloc(sizeof(float) * ppop * n_input_particles); 
-	nidx_array = malloc(sizeof(unsigned int) * ppop * n_input_particles);
+	nkey_array = (UInt32Key2D*) malloc(sizeof(UInt32Key2D) * ppop * n_input_particles);
+	nvort_array = (float*) malloc(sizeof(float) * ppop * n_input_particles); 
+	nidx_array = (unsigned int*) malloc(sizeof(unsigned int) * ppop * n_input_particles);
 	for (i = 0; i < n_input_particles; ++i) {
 		int widx = oidx_array[i];
 		unsigned int okx, oky;
@@ -359,8 +359,8 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	/* Now merge our new particles */
 	sort_perm_UInt32Key2D(nkey_array, nidx_array, n_input_particles * ppop);
 
-	nnkey_array = malloc(sizeof(UInt32Key2D) * n_input_particles * ppop);
-	nnvort_array = malloc(sizeof(float) * n_input_particles * ppop);
+	nnkey_array = (UInt32Key2D*) malloc(sizeof(UInt32Key2D) * n_input_particles * ppop);
+	nnvort_array = (float*) malloc(sizeof(float) * n_input_particles * ppop);
 	for (i = 0; i < ppop * n_input_particles; ++i) {
 		nnkey_array[i] = nkey_array[nidx_array[i]];
 		nnvort_array[i] = nvort_array[nidx_array[i]];
@@ -388,7 +388,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 
 	/* Go back to array of particles. */
 	cvtx_P2D* created_particles = NULL;
-	created_particles = malloc(n_created_particles * sizeof(cvtx_P2D));
+	created_particles = (cvtx_P2D*) malloc(n_created_particles * sizeof(cvtx_P2D));
 #pragma omp parallel for
 	for (i = 0; i < n_created_particles; ++i) {
 		created_particles[i].area = grid_density * grid_density;
@@ -401,7 +401,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
 	free(nidx_array);
 
 	/* Remove particles with neglidgible vorticity. */
-	float* strengths = malloc(sizeof(float) * n_created_particles);
+	float* strengths = (float*) malloc(sizeof(float) * n_created_particles);
 #pragma omp parallel for
 	for (i = 0; i < n_created_particles; ++i) {
 		strengths[i] = fabsf(created_particles[i].vorticity);

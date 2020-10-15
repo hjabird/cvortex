@@ -177,7 +177,7 @@ int opencl_add_active_device(int plat_idx, int dev_idx){
 		/* Check we haven't already added this device. */
 		already_added = opencl_device_in_active_list(plat_idx, dev_idx) >= 0 ? 1 : 0;
 		if (!already_added) {
-			ocl_state.active_devices = realloc(
+			ocl_state.active_devices = (ocl_active_device*) realloc(
 				ocl_state.active_devices,
 				sizeof(struct ocl_active_device) * (ocl_state.num_active_devices + 1));
 			ocl_state.num_active_devices += 1;
@@ -200,7 +200,7 @@ int opencl_remove_active_device(int plat_idx, int dev_idx) {
 	if (ocl_state.initialised == 1) {
 		lindx = opencl_device_in_active_list(plat_idx, dev_idx);
 		if (lindx >= 0) {
-			tmp_arr = malloc(sizeof(struct ocl_active_device) *
+			tmp_arr = (ocl_active_device*) malloc(sizeof(struct ocl_active_device) *
 				(ocl_state.num_active_devices - 1));
 			memcpy(tmp_arr, ocl_state.active_devices,
 				sizeof(struct ocl_active_device) * lindx);
@@ -322,7 +322,7 @@ static int load_platforms() {
 	else
 	{
 		retv = num_platforms;
-		ocl_state.platforms = malloc(sizeof(struct ocl_platform_state) * num_platforms);
+		ocl_state.platforms = (ocl_platform_state*) malloc(sizeof(struct ocl_platform_state) * num_platforms);
 		for (i = 0; i < (int)num_platforms; ++i) {
 			zero_new_platform(&ocl_state.platforms[i]);
 			ocl_state.platforms[i].platform = plats[i];
@@ -362,7 +362,7 @@ static int load_platform_devices(struct ocl_platform_state *plat){
 	/* We're only interested in GPUs - cpus are slow in comparison and work better with OpenMP */
 	status = clGetDeviceIDs(plat->platform, CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
 	plat->num_devices = num_devices;
-	plat->devices = malloc(sizeof(cl_device_id) * plat->num_devices);
+	plat->devices = (cl_device_id*) malloc(sizeof(cl_device_id) * plat->num_devices);
 	status = clGetDeviceIDs(plat->platform, CL_DEVICE_TYPE_GPU, plat->num_devices, plat->devices, NULL);
 	if (status != CL_SUCCESS || plat->devices == NULL) {
 		free(plat->devices); plat->devices = NULL;
@@ -378,7 +378,7 @@ static int load_platform_devices(struct ocl_platform_state *plat){
 		clGetPlatformInfo(plat->platform, CL_PLATFORM_NAME,
 			str_len, plat->platform_name, NULL);
 		/*Loop over devices*/
-		plat->device_names = malloc( sizeof(char*) * plat->num_devices );
+		plat->device_names = (char**) malloc( sizeof(char*) * plat->num_devices );
 		for (i = 0; i < plat->num_devices; ++i) {
 			clGetDeviceInfo(plat->devices[i], CL_DEVICE_NAME, 0, NULL, &str_len);
 			plat->device_names[i] = (char*)malloc(sizeof(char*) * str_len);
@@ -407,7 +407,8 @@ static int create_platform_context_and_program(struct ocl_platform_state *plat) 
 	size_t length;
 	sprintf(tmp, "%i", CVTX_WORKGROUP_SIZE);
 	/* -cl-fast-relaxed-math is too dangerous - it ruins our NaNs on Nvidia/ */
-	strcat(compile_options, " -cl-unsafe-math-optimizations -D CVTX_CL_WORKGROUP_SIZE=");
+	/*strcat(compile_options, " -cl-unsafe-math-optimizations -D CVTX_CL_WORKGROUP_SIZE=");*/
+	strcat(compile_options, " -D CVTX_CL_WORKGROUP_SIZE=");
 	strcat(compile_options, tmp);
 	sprintf(tmp, "%i", (int)log2(CVTX_WORKGROUP_SIZE));
 	strcat(compile_options, " -D CVTX_CL_LOG2_WORKGROUP_SIZE=");
@@ -430,7 +431,7 @@ static int create_platform_context_and_program(struct ocl_platform_state *plat) 
 	status = clGetProgramBuildInfo(
 		plat->program, plat->devices[0], CL_PROGRAM_BUILD_LOG, 0, 
 		NULL, &length);
-	plat->program_build_log = malloc(length);
+	plat->program_build_log = (char*) malloc(length);
 	status = clGetProgramBuildInfo(
 		plat->program, plat->devices[0], CL_PROGRAM_BUILD_LOG, length, 
 		plat->program_build_log, &length);
@@ -461,7 +462,7 @@ static int load_platform_device_queues(struct ocl_platform_state *plat) {
 	int i;
 	cl_int status;
 
-	plat->queues = malloc(sizeof(cl_command_queue) * plat->num_devices);
+	plat->queues = (cl_command_queue*) malloc(sizeof(cl_command_queue) * plat->num_devices);
 	for (i = 0; i < plat->num_devices; ++i) {
 		plat->queues[i] = clCreateCommandQueue(
 			plat->context, plat->devices[i],

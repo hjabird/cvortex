@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
-project(cvortex C)
+project(cvortex CXX)
 set(CVORTEX_VERSION_MAJOR 0)
 set(CVORTEX_VERSION_MINOR 3)
-set(CVORTEX_VERSION_PATCH 7)
+set(CVORTEX_VERSION_PATCH 8)
 set(CVORTEX_VERSION ${CVORTEX_VERSION_MAJOR}.${CVORTEX_VERSION_MINOR}.${CVORTEX_VERSION_PATCH})
 
 option(BUILD_UNIT_TESTS "Builds tests" OFF)
@@ -20,7 +20,7 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 file (GLOB CVORTEX_INCLUDE "include/cvortex/libcvtx.h") # So shoot me for GLOBing.
-file (GLOB CVORTEX_SOURCE  "src/*.[ch]")
+file (GLOB CVORTEX_SOURCE  "src/*.h" "src/*.cpp")
 file (GLOB CVORTEX_OPENCL  "src/*.cl")
 source_group("" FILES ${cvortex})
 source_group("include" FILES ${CVORTEX_INCLUDE})
@@ -70,8 +70,9 @@ endif(USE_OPENCL)
 find_package(bsv CONFIG REQUIRED)
 target_link_libraries(cvortex PUBLIC bsv)
 target_include_directories(cvortex PUBLIC bsv)
+set_target_properties(cvortex PROPERTIES LINKER_LANGUAGE CXX)
 
-if (${CMAKE_C_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_C_COMPILER_ID} STREQUAL "Clang")
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
     target_link_libraries(cvortex PUBLIC m)   # Maths std library.
 endif()
 						

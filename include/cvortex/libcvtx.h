@@ -42,6 +42,10 @@ SOFTWARE.
 #  define CVTX_EXPORT
 # endif
 #endif 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #include <bsv/bsv.h>
 
@@ -374,4 +378,7 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid( /* Returns number of created part
 	float grid_density,
 	float negligible_vort);
 
+#ifdef __cplusplus
+} // extern "C"
+#endif
 #endif /* CVTX_LIBCVTX_H */
