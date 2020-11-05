@@ -1,8 +1,9 @@
 # cvortex
 
-cvortex is a C library for accelerating vortex particle methods in unsteady aerodynamics with an 
+CVortex is a library for accelerating vortex particle methods in unsteady aerodynamics with an 
 emphisis on ease of use. Currently, computations are best kept to the region of 100,000 particles.
 
+It is written in C++ with a C interface. Version 0.3.7 and below is pure C.
 The library is accelerated using OpenMP and OpenCL 1.2.
 It can be run on AMD, Intel and Nvidia gpus.
 
@@ -86,6 +87,7 @@ The vortex particle can be regularised using `cvtx_VortFunc`.
 
 When using the library, you'll want to use different functions according to the number of interactions:
  - Single to single, `S2S`.
+ - Single to many, `S2M`.
  - Many to single, `M2S`.
  - Many to many, `M2M`.
  

@@ -46,12 +46,11 @@ target_compile_definitions(cvortex PRIVATE  CVORTEX_VERSION=${CVORTEX_VERSION}
 											CVORTEX_VERSION_MINOR=${CVORTEX_VERSION_MINOR}
 											CVORTEX_VERSION_PATCH=${CVORTEX_VERSION_PATCH})
 if(USE_OPENMP)
-    find_package(OpenMP)
-    if (OPENMP_FOUND)
-        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-        set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+	find_package(OpenMP)
+	if(OpenMP_CXX_FOUND)
+		target_link_libraries(cvortex PUBLIC OpenMP::OpenMP_CXX)
 		target_compile_definitions(cvortex PRIVATE CVTX_USING_OPENMP)
-    endif()
+	endif()
 endif(USE_OPENMP)
 
 if(USE_OPENCL)

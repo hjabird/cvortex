@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.1)
 file (GLOB BENCHCVTX_SOURCE  "*.[ch]")
 source_group("cvtx_benchmark_source" FILES ${BENCHCVTX_SOURCE})
 add_executable(all_bench ${BENCHCVTX_SOURCE})
+set_target_properties(all_bench PROPERTIES LINKER_LANGUAGE CXX)
 
 target_link_libraries(all_bench PUBLIC cvortex)
 target_link_libraries(all_bench PUBLIC bsv)

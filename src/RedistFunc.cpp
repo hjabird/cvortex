@@ -1,10 +1,10 @@
 #include "libcvtx.h"
 /*============================================================================
-RedistributionFunc.c
+RedistributionFunc.cpp
 
 Common functions used to redistribute vortex particles.
 
-Copyright(c) 2019 HJA Bird
+Copyright(c) 2019-2020 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -31,7 +31,7 @@ Vortex_methods_and_their_applications_to_trailing_wake_vortex_sims,
 C.R. Physique 6
 */
 
-#include <assert.h>
+#include <cassert>
 
 static float lambda0(float U) {
 	assert(U >= 0.f);

@@ -1,11 +1,11 @@
 #include "redistribution_helper_funcs.h"
 /*============================================================================
-redistribution_helper_funcs.c
+redistribution_helper_funcs.cpp
 
 Functions that are common to redistributing vortex particles in both 2D
 and 3D.
 
-Copyright(c) 2019 HJA Bird
+Copyright(c) 2019-2020 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -26,9 +26,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 
-#include <assert.h>
-#include <math.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
 
 float get_strength_threshold(
 	float* strs, int n_inpt_particles, int n_desired_particles) {

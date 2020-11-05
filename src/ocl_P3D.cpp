@@ -1,6 +1,6 @@
 #include "libcvtx.h"
 /*============================================================================
-ocl_particle.c
+ocl_particle.cpp
 
 Handles the opencl accelerated vortex particle methods.
 
@@ -26,10 +26,10 @@ SOFTWARE.
 ============================================================================*/
 
 #ifdef CVTX_USING_OPENCL
-#include <assert.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 
 #include "opencl_acc.h"
 #include "ocl_P3D.h"
@@ -48,7 +48,6 @@ int opencl_brute_force_P3D_M2M_vel(
 	cl_program prog;
 	cl_context cont;
 	cl_command_queue queue;
-
 	if (opencl_num_active_devices() > 0 &&
 		opencl_get_device_state(0, &prog, &cont, &queue) == 0) {
 		return opencl_brute_force_P3D_M2M_vel_impl(

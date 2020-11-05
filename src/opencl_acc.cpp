@@ -1,10 +1,10 @@
 #include "opencl_acc.h"
 /*============================================================================
-opencl_acc.c
+opencl_acc.cpp
 
 Handles the opencl context(s).
 
-Copyright(c) 2019 HJA Bird
+Copyright(c) 2019-2020 HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -79,7 +79,6 @@ void opencl_finalise() {
 
 int opencl_num_devices() {
 	int count = -1;
-	//int n_plat, i;
 	if (ocl_state.initialised == 1) {
 		count = 0;
 		for (OclPlatformState &platform : ocl_state.platforms)
@@ -97,7 +96,7 @@ std::tuple<int, int>  opencl_deindex_device(int index) {
 	int dev_idx = -1;
 	int np, i, nd, acc;
 	if (ocl_state.initialised == 1 && index >= 0) {
-		np = ocl_state.platforms.size();
+		np = (int) ocl_state.platforms.size();
 		acc = 0;
 		for (i = 0; i < np; ++i) {
 			OclPlatformState& platform = ocl_state.platforms[i];
@@ -133,12 +132,12 @@ int opencl_index_device(int plat_idx, int dev_idx) {
 int opencl_num_active_devices() {
 	int num;
 	assert(opencl_is_init() == 1);
-	num = ocl_state.active_devices.size();
+	num = (int)ocl_state.active_devices.size();
 	return num;
 }
 
 int opencl_add_active_device(int plat_idx, int dev_idx){
-	int already_added = 0, retv;
+	int already_added = 0, retv = -1;
 	OclActiveDevice td;
 	if (ocl_state.initialised == 1) {
 		/* Check we haven't already added this device. */
@@ -147,7 +146,7 @@ int opencl_add_active_device(int plat_idx, int dev_idx){
 			td.device_idx = dev_idx;
 			td.platform_idx = plat_idx;
 			ocl_state.active_devices.emplace_back(td);
-			retv = ocl_state.active_devices.size();
+			retv = (int) ocl_state.active_devices.size();
 		}
 		else
 		{
@@ -159,13 +158,12 @@ int opencl_add_active_device(int plat_idx, int dev_idx){
 
 int opencl_remove_active_device(int plat_idx, int dev_idx) {
 	int lindx = 0, retv = -1;	/* linear index */
-	//struct ocl_active_device *tmp_arr;
 	if (ocl_state.initialised == 1) {
 		lindx = opencl_device_in_active_list(plat_idx, dev_idx);
 		if (lindx >= 0) {
 			auto& ads = ocl_state.active_devices;
 			ads.erase(ads.begin() + lindx);
-			retv = ads.size();
+			retv = (int) ads.size();
 		}
 		else
 		{
@@ -213,7 +211,7 @@ int opencl_get_device_state(
 	assert(queue != NULL);
 	assert(ocl_state.initialised);
 
-	int nd = ocl_state.active_devices.size();
+	int nd = (int) ocl_state.active_devices.size();
 	int retv, didx, pidx;
 	if (ad_idx < nd && ad_idx >= 0) {
 		didx = ocl_state.active_devices[ad_idx].device_idx;
