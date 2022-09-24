@@ -67,7 +67,7 @@ public:
 	/* Adds vorticity str at location given by key.
 	It is added to any vorticity already at that grid point.*/
 	void add_particle(UIntKey64 key, float str);
-	void GridParticleQuadtree::add_particles(
+	void add_particles(
 		std::vector<UIntKey64> key, std::vector<float> str);
 
 	/* The number of particles within the tree. */

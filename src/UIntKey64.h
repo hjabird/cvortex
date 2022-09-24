@@ -111,7 +111,7 @@ public:
 	/* Converts a linear index in [0,7] to {x,y,z} in [0,1] and shifts it
 	to a bit index. bit_idx == 0 results in setting lowest bits to xyz,
 	31 results in setting upper most bits. */
-	static UIntKey64 UIntKey64::partial_key(uint32_t lidx, uint32_t bit_idx);
+	static UIntKey64 partial_key(uint32_t lidx, uint32_t bit_idx);
 
 	/* Returns as "{<xvalue>,<yvalue>,<zvalue>}" of key. */
 	const std::string to_string();

@@ -58,7 +58,7 @@ public:
 	/* Adds vorticity str at location given by key. 
 	It is added to any vorticity already at that grid point.*/
 	void add_particle(UIntKey96 key, bsv_V3f str);
-	void GridParticleOcttree::add_particles(
+	void add_particles(
 		std::vector<UIntKey96> key, std::vector<bsv_V3f> str);
 
 	/* The number of particles within the tree. */
