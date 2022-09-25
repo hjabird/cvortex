@@ -2,7 +2,7 @@ This folder contains files with methods from `libcvtx.h`
 - `F3D.c`: 3D vortex filaments methods (CPU + calls to GPU methods). 
 - `P3D.c`: 3D vortex particle methods (CPU + calls to GPU methods). 
 - `P2D.c`: 2D vortex particle methods (CPU + calls to GPU methods).
-- `VortFunc.c`: Vortex regularisation functions.
+- `VortFunc.h`: Vortex regularisation functions.
 - `accelerators.c`: Handeling of accelerator API.
 - `RedistFunc.c`: Particle redistribution functions.
 

@@ -70,28 +70,14 @@ typedef struct {
 } cvtx_P2D;
 
 /* Vortex particle regularisation functions
-	Naming is following that of Winckelmans
-	- g(rho): normally used in induced vel
-		(NULL for unsupported)
-	- zeta(rho): used with g(rho) in induced dvort
-		(NULL for unsupported)
-	- combined(rho): combines g and zeta for perf.
-		(NULL for unsupported)
-	- eta(rho): used in particle strength exchange
-		(NULL for unsupported)
-	- cl_kernel_name_ext: identifies opencl kernel variant to run. 
-		(fall back to OpenMP)
-	- 2D and 3D variants
 */
-typedef struct {
-	float(*g_3D)(float rho);
-	float(*g_2D)(float rho);
-	float(*zeta_3D)(float rho);
-	void(*combined_3D)(float rho, float* g, float* zeta);
-	float(*eta_3D)(float rho);
-	float(*eta_2D)(float rho);
-	char cl_kernel_name_ext[32];
-} cvtx_VortFunc;
+enum cvtx_VortFunc {
+	cvtx_VortFunc_singular,
+	cvtx_VortFunc_gaussian,
+	cvtx_VortFunc_planetary,
+	cvtx_VortFunc_winckelmans,
+};
+
 
 typedef struct {
 	float(*func)(float U);
@@ -109,12 +95,6 @@ CVTX_EXPORT int cvtx_accelerator_enabled(int accelerator_id);
 CVTX_EXPORT void cvtx_accelerator_enable(int accelerator_id);
 CVTX_EXPORT void cvtx_accelerator_disable(int accelerator_id);
 
-/* cvtx_VortFunc functions */
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_singular(void);
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_winckelmans(void);
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_planetary(void);
-CVTX_EXPORT const cvtx_VortFunc cvtx_VortFunc_gaussian(void);
-
 /* cvtx_RedistFunc functions */
 CVTX_EXPORT const cvtx_RedistFunc cvtx_RedistFunc_lambda0(void);
 CVTX_EXPORT const cvtx_RedistFunc cvtx_RedistFunc_lambda1(void);
@@ -126,26 +106,26 @@ CVTX_EXPORT const cvtx_RedistFunc cvtx_RedistFunc_m4p(void);
 CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vel(
 	const cvtx_P3D *self,
 	const bsv_V3f mes_point,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_dvort(
 	const cvtx_P3D *self,
 	const cvtx_P3D *induced_particle,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_visc_dvort(
 	const cvtx_P3D *self,
 	const cvtx_P3D *induced_particle,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	float kinematic_visc);
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vort(
 	const cvtx_P3D* self,
 	const bsv_V3f mes_point,
-	const cvtx_VortFunc* kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P3D_S2M_vel(
@@ -153,7 +133,7 @@ CVTX_EXPORT void cvtx_P3D_S2M_vel(
 	const bsv_V3f* mes_start,
 	const int num_mes,
 	bsv_V3f* result_array,
-	const cvtx_VortFunc* kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P3D_S2M_dvort(
@@ -161,7 +141,7 @@ CVTX_EXPORT void cvtx_P3D_S2M_dvort(
 	const cvtx_P3D** induced_start,
 	const int num_induced,
 	bsv_V3f* result_array,
-	const cvtx_VortFunc* kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P3D_S2M_visc_dvort(
@@ -169,7 +149,7 @@ CVTX_EXPORT void cvtx_P3D_S2M_visc_dvort(
 	const cvtx_P3D** induced_start,
 	const int num_induced,
 	bsv_V3f* result_array,
-	const cvtx_VortFunc* kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	float kinematic_visc);
 
@@ -178,28 +158,28 @@ CVTX_EXPORT void cvtx_P3D_S2M_vort(
 	const bsv_V3f* mes_start,
 	const int num_mes,
 	bsv_V3f* result_array,
-	const cvtx_VortFunc* kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const bsv_V3f mes_point,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_dvort(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const cvtx_P3D *induced_particle,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(
 	const cvtx_P3D **array_start,
 	const int num_particles,
 	const cvtx_P3D *induced_particle,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	float kinematic_visc);
 
@@ -207,7 +187,7 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vort(
 	const cvtx_P3D** array_start,
 	const int num_particles,
 	const bsv_V3f mes_point,
-	const cvtx_VortFunc* kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P3D_M2M_vel(
@@ -216,7 +196,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_vel(
 	const bsv_V3f *mes_start,
 	const int num_mes,
 	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P3D_M2M_dvort(
@@ -225,7 +205,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_dvort(
 	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
@@ -234,7 +214,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
 	const cvtx_P3D **induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	float kinematic_visc);
 
@@ -244,7 +224,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_vort(
 	const bsv_V3f* mes_start,
 	const int num_mes,
 	bsv_V3f* result_array,
-	const cvtx_VortFunc* kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
@@ -260,7 +240,7 @@ CVTX_EXPORT void cvtx_P3D_pedrizzetti_relaxation(
 	cvtx_P3D** input_array_start,
 	const int n_input_particles,
 	float fdt,
-	const cvtx_VortFunc* kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 /* cvtx_F3D straight vortex filament functions */
@@ -308,7 +288,7 @@ CVTX_EXPORT void cvtx_F3D_inf_mtrx(
 CVTX_EXPORT bsv_V2f cvtx_P2D_S2S_vel(
 	const cvtx_P2D *self,
 	const bsv_V2f mes_point,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P2D_S2M_vel(
@@ -316,14 +296,14 @@ CVTX_EXPORT void cvtx_P2D_S2M_vel(
 	const bsv_V2f* mes_start,
 	const int num_mes,
 	bsv_V2f* result_array,
-	const cvtx_VortFunc* kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT bsv_V2f cvtx_P2D_M2S_vel(
 	const cvtx_P2D **array_start,
 	const int num_particles,
 	const bsv_V2f mes_point,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P2D_M2M_vel(
@@ -332,13 +312,13 @@ CVTX_EXPORT void cvtx_P2D_M2M_vel(
 	const bsv_V2f *mes_start,
 	const int num_mes,
 	bsv_V2f *result_array,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT float cvtx_P2D_S2S_visc_dvort(
 	const cvtx_P2D * self,
 	const cvtx_P2D * induced_particle,
-	const cvtx_VortFunc * kernel,
+	const cvtx_VortFunc  kernel,
 	float regularisation_radius,
 	float kinematic_visc);
 
@@ -347,7 +327,7 @@ CVTX_EXPORT void cvtx_P2D_S2M_visc_dvort(
 	const cvtx_P2D** induced_start,
 	const int num_induced,
 	float* result_array,
-	const cvtx_VortFunc* kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	float kinematic_visc);
 
@@ -355,7 +335,7 @@ CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(
 	const cvtx_P2D **array_start,
 	const int num_particles,
 	const cvtx_P2D *induced_particle,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	float kinematic_visc);
 
@@ -365,7 +345,7 @@ CVTX_EXPORT void cvtx_P2D_M2M_visc_dvort(
 	const cvtx_P2D **induced_start,
 	const int num_induced,
 	float *result_array,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	float kinematic_visc);
 
