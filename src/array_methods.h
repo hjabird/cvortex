@@ -46,17 +46,17 @@ void sort_perm_multibyte_radix8(
 	unsigned int* key_start, size_t num_items);
 
 void minmax_xyz_posn(
-	const cvtx_P3D** array_start, const int nparticles,
+	const cvtx_P3D* array_start, const int nparticles,
 	bsv_V3f *min, bsv_V3f *max);
 
 bsv_V3f mean_xyz_posn(
-	const cvtx_P3D** array_start, const int nparticles);
+	const cvtx_P3D* array_start, const int nparticles);
 
 void minmax_xy_posn(
-	const cvtx_P2D** array_start, const int nparticles,
+	const cvtx_P2D* array_start, const int nparticles,
 	bsv_V2f* min, bsv_V2f* max);
 
 bsv_V2f mean_xy_posn(
-	const cvtx_P2D** array_start, const int nparticles);
+	const cvtx_P2D* array_start, const int nparticles);
 
 #endif

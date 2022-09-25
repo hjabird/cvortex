@@ -138,7 +138,7 @@ CVTX_EXPORT void cvtx_P3D_S2M_vel(
 
 CVTX_EXPORT void cvtx_P3D_S2M_dvort(
 	const cvtx_P3D* self,
-	const cvtx_P3D** induced_start,
+	const cvtx_P3D* induced_start,
 	const int num_induced,
 	bsv_V3f* result_array,
 	const cvtx_VortFunc kernel,
@@ -146,7 +146,7 @@ CVTX_EXPORT void cvtx_P3D_S2M_dvort(
 
 CVTX_EXPORT void cvtx_P3D_S2M_visc_dvort(
 	const cvtx_P3D* self,
-	const cvtx_P3D** induced_start,
+	const cvtx_P3D* induced_start,
 	const int num_induced,
 	bsv_V3f* result_array,
 	const cvtx_VortFunc kernel,
@@ -162,21 +162,21 @@ CVTX_EXPORT void cvtx_P3D_S2M_vort(
 	float regularisation_radius);
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(
-	const cvtx_P3D **array_start,
+	const cvtx_P3D *array_start,
 	const int num_particles,
 	const bsv_V3f mes_point,
 	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_dvort(
-	const cvtx_P3D **array_start,
+	const cvtx_P3D *array_start,
 	const int num_particles,
 	const cvtx_P3D *induced_particle,
 	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(
-	const cvtx_P3D **array_start,
+	const cvtx_P3D *array_start,
 	const int num_particles,
 	const cvtx_P3D *induced_particle,
 	const cvtx_VortFunc kernel,
@@ -184,14 +184,14 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(
 	float kinematic_visc);
 
 CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vort(
-	const cvtx_P3D** array_start,
+	const cvtx_P3D* array_start,
 	const int num_particles,
 	const bsv_V3f mes_point,
 	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P3D_M2M_vel(
-	const cvtx_P3D **array_start,
+	const cvtx_P3D *array_start,
 	const int num_particles,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -200,18 +200,18 @@ CVTX_EXPORT void cvtx_P3D_M2M_vel(
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P3D_M2M_dvort(
-	const cvtx_P3D **array_start,
+	const cvtx_P3D *array_start,
 	const int num_particles,
-	const cvtx_P3D **induced_start,
+	const cvtx_P3D *induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
-	const cvtx_P3D **array_start,
+	const cvtx_P3D *array_start,
 	const int num_particles,
-	const cvtx_P3D **induced_start,
+	const cvtx_P3D *induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	const cvtx_VortFunc kernel,
@@ -219,7 +219,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_visc_dvort(
 	float kinematic_visc);
 
 CVTX_EXPORT void cvtx_P3D_M2M_vort(
-	const cvtx_P3D** array_start,
+	const cvtx_P3D* array_start,
 	const int num_particles,
 	const bsv_V3f* mes_start,
 	const int num_mes,
@@ -228,7 +228,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_vort(
 	float regularisation_radius);
 
 CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
-	const cvtx_P3D **input_array_start,
+	const cvtx_P3D *input_array_start,
 	const int n_input_particles,
 	cvtx_P3D *output_particles,		/* input is &(*cvtx_P3D) to write to */
 	int max_output_particles,		/* Set to resultant num particles.   */
@@ -237,7 +237,7 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
 	float negligible_vort);	/* 0 implies nothing is neglidgle, 1 everything*/
 
 CVTX_EXPORT void cvtx_P3D_pedrizzetti_relaxation(
-	cvtx_P3D** input_array_start,
+	cvtx_P3D* input_array_start,
 	const int n_input_particles,
 	float fdt,
 	const cvtx_VortFunc kernel,
@@ -253,31 +253,31 @@ CVTX_EXPORT bsv_V3f cvtx_F3D_S2S_dvort(
 	const cvtx_P3D *induced_particle);
 
 CVTX_EXPORT bsv_V3f cvtx_F3D_M2S_vel(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_filaments,
 	const bsv_V3f mes_point);
 
 CVTX_EXPORT bsv_V3f cvtx_F3D_M2S_dvort(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_filaments,
 	const cvtx_P3D *induced_particle);
 
 CVTX_EXPORT void cvtx_F3D_M2M_vel(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const int num_mes,
 	bsv_V3f *result_array);
 
 CVTX_EXPORT void cvtx_F3D_M2M_dvort(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_filaments,
-	const cvtx_P3D **induced_start,
+	const cvtx_P3D *induced_start,
 	const int num_induced,
 	bsv_V3f *result_array);
 
 CVTX_EXPORT void cvtx_F3D_inf_mtrx(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const bsv_V3f *dir_start,
@@ -300,14 +300,14 @@ CVTX_EXPORT void cvtx_P2D_S2M_vel(
 	float regularisation_radius);
 
 CVTX_EXPORT bsv_V2f cvtx_P2D_M2S_vel(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
 	const bsv_V2f mes_point,
 	const cvtx_VortFunc kernel,
 	float regularisation_radius);
 
 CVTX_EXPORT void cvtx_P2D_M2M_vel(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
 	const bsv_V2f *mes_start,
 	const int num_mes,
@@ -324,7 +324,7 @@ CVTX_EXPORT float cvtx_P2D_S2S_visc_dvort(
 
 CVTX_EXPORT void cvtx_P2D_S2M_visc_dvort(
 	const cvtx_P2D* self,
-	const cvtx_P2D** induced_start,
+	const cvtx_P2D* induced_start,
 	const int num_induced,
 	float* result_array,
 	const cvtx_VortFunc kernel,
@@ -332,7 +332,7 @@ CVTX_EXPORT void cvtx_P2D_S2M_visc_dvort(
 	float kinematic_visc);
 
 CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
 	const cvtx_P2D *induced_particle,
 	const cvtx_VortFunc kernel,
@@ -340,9 +340,9 @@ CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(
 	float kinematic_visc);
 
 CVTX_EXPORT void cvtx_P2D_M2M_visc_dvort(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
-	const cvtx_P2D **induced_start,
+	const cvtx_P2D *induced_start,
 	const int num_induced,
 	float *result_array,
 	const cvtx_VortFunc kernel,
@@ -350,7 +350,7 @@ CVTX_EXPORT void cvtx_P2D_M2M_visc_dvort(
 	float kinematic_visc);
 
 CVTX_EXPORT int cvtx_P2D_redistribute_on_grid( /* Returns number of created particles. */
-	const cvtx_P2D **input_array_start,
+	const cvtx_P2D *input_array_start,
 	const int num_particles,
 	cvtx_P2D *output_particles,	/* Is preallocated array. */
 	int num_output_particles,		/* Size of preallocated array.   */

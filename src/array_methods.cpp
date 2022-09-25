@@ -4,7 +4,7 @@ array_methods.cpp
 
 A radix sort permutation for uints of 8*n bytes.
 
-Copyright(c) 2019-2020 HJA Bird
+Copyright(c) HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -148,7 +148,7 @@ void sort_perm_multibyte_radix8(
 }
 
 void minmax_xyz_posn(
-	const cvtx_P3D** array_start, const int nparticles,
+	const cvtx_P3D* array_start, const int nparticles,
 	bsv_V3f* min, bsv_V3f* max) {
 	assert(array_start != NULL);
 	assert(nparticles >= 0);
@@ -156,19 +156,18 @@ void minmax_xyz_posn(
 	int i;
 
 	if (nparticles > 0) {
-		txmin = txmax = array_start[0]->coord.x[0];
-		tymin = tymax = array_start[0]->coord.x[1];
-		tzmin = tzmax = array_start[0]->coord.x[2];
+		txmin = txmax = array_start[0].coord.x[0];
+		tymin = tymax = array_start[0].coord.x[1];
+		tzmin = tzmax = array_start[0].coord.x[2];
 	}
 	else {
 		txmin = txmax = tymin = tymax = tzmin = tzmax = 0.f;
 	}
 	for (i = 1; i < nparticles; ++i) {
-		assert(array_start[i] != NULL);
 		float x, y, z;
-		x = array_start[i]->coord.x[0];
-		y = array_start[i]->coord.x[1];
-		z = array_start[i]->coord.x[2];
+		x = array_start[i].coord.x[0];
+		y = array_start[i].coord.x[1];
+		z = array_start[i].coord.x[2];
 		txmin = txmin > x ? x : txmin;
 		txmax = txmax < x ? x : txmax;
 		tymin = tymin > y ? y : tymin;
@@ -181,12 +180,12 @@ void minmax_xyz_posn(
 	return;
 }
 
-bsv_V3f mean_xyz_posn(const cvtx_P3D** array_start, const int nparticles)
+bsv_V3f mean_xyz_posn(const cvtx_P3D* array_start, const int nparticles)
 {
 	bsv_V3d sum = bsv_V3d_zero();
 	for (int i = 0; i < nparticles; ++i) {
 		sum = bsv_V3d_plus(
-			bsv_V3f_toV3d(array_start[i]->coord),
+			bsv_V3f_toV3d(array_start[i].coord),
 			sum);
 	}
 	sum = bsv_V3d_div(sum, (double)nparticles);
@@ -194,7 +193,7 @@ bsv_V3f mean_xyz_posn(const cvtx_P3D** array_start, const int nparticles)
 }
 
 void minmax_xy_posn(
-	const cvtx_P2D** array_start, const int nparticles,
+	const cvtx_P2D* array_start, const int nparticles,
 	bsv_V2f* min, bsv_V2f* max) {
 	assert(array_start != NULL);
 	assert(nparticles >= 0);
@@ -202,7 +201,7 @@ void minmax_xy_posn(
 	int i;
 
 	if (nparticles > 0) {
-		bsv_V2f coord = array_start[0]->coord;
+		bsv_V2f coord = array_start[0].coord;
 		txmin = txmax = coord.x[0];
 		tymin = tymax = coord.x[1];
 	}
@@ -210,10 +209,9 @@ void minmax_xy_posn(
 		txmin = txmax = tymin = tymax = 0.f;
 	}
 	for (i = 1; i < nparticles; ++i) {
-		assert(array_start[i] != NULL);
 		float x, y;
-		x = array_start[i]->coord.x[0];
-		y = array_start[i]->coord.x[1];
+		x = array_start[i].coord.x[0];
+		y = array_start[i].coord.x[1];
 		txmin = txmin > x ? x : txmin;
 		txmax = txmax < x ? x : txmax;
 		tymin = tymin > y ? y : tymin;
@@ -224,12 +222,12 @@ void minmax_xy_posn(
 	return;
 }
 
-bsv_V2f mean_xy_posn(const cvtx_P2D** array_start, const int nparticles)
+bsv_V2f mean_xy_posn(const cvtx_P2D* array_start, const int nparticles)
 {
 	bsv_V2d sum = bsv_V2d_zero();
 	for (int i = 0; i < nparticles; ++i) {
 		sum = bsv_V2d_plus(
-			bsv_V2f_toV2d(array_start[i]->coord),
+			bsv_V2f_toV2d(array_start[i].coord),
 			sum);
 	}
 	sum = bsv_V2d_div(sum, (double)nparticles);

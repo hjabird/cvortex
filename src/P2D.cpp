@@ -84,7 +84,7 @@ void P2D_S2M_vel(const cvtx_P2D *self, const bsv_V2f *mes_start,
 /* Induced velocity at a single point in a 2D field due to
 multiple particles. */
 template <cvtx_VortFunc VortFunc>
-bsv_V2f P2D_M2S_vel(const cvtx_P2D **array_start, const int num_particles,
+bsv_V2f P2D_M2S_vel(const cvtx_P2D *array_start, const int num_particles,
                     const bsv_V2f mes_point, float regularisation_radius) {
   float rx = 0, ry = 0;
   long i;
@@ -93,7 +93,7 @@ bsv_V2f P2D_M2S_vel(const cvtx_P2D **array_start, const int num_particles,
 #pragma omp parallel for reduction(+ : rx, ry)
   for (i = 0; i < num_particles; ++i) {
     bsv_V2f vel =
-        detail::P2D_vel<VortFunc>(array_start[i], mes_point, recip_reg_rad);
+        detail::P2D_vel<VortFunc>(array_start + i, mes_point, recip_reg_rad);
     rx += vel.x[0];
     ry += vel.x[1];
   }
@@ -104,7 +104,7 @@ bsv_V2f P2D_M2S_vel(const cvtx_P2D **array_start, const int num_particles,
 namespace open_mp {
 
 template <cvtx_VortFunc VortFunc>
-void P2D_M2M_vel(const cvtx_P2D **array_start, const int num_particles,
+void P2D_M2M_vel(const cvtx_P2D *array_start, const int num_particles,
                  const bsv_V2f *mes_start, const int num_mes,
                  bsv_V2f *result_array, float regularisation_radius) {
   long i;
@@ -116,7 +116,7 @@ void P2D_M2M_vel(const cvtx_P2D **array_start, const int num_particles,
   return;
 }
 
-void P2D_M2M_vel(const cvtx_P2D **array_start, const int num_particles,
+void P2D_M2M_vel(const cvtx_P2D *array_start, const int num_particles,
                  const bsv_V2f *mes_start, const int num_mes,
                  bsv_V2f *result_array, const cvtx_VortFunc kernel,
                  float regularisation_radius) {
@@ -198,7 +198,7 @@ CVTX_EXPORT void cvtx_P2D_S2M_vel(const cvtx_P2D *self,
   return;
 }
 
-CVTX_EXPORT bsv_V2f cvtx_P2D_M2S_vel(const cvtx_P2D **array_start,
+CVTX_EXPORT bsv_V2f cvtx_P2D_M2S_vel(const cvtx_P2D *array_start,
                                      const int num_particles,
                                      const bsv_V2f mes_point,
                                      const cvtx_VortFunc kernel,
@@ -221,7 +221,7 @@ CVTX_EXPORT bsv_V2f cvtx_P2D_M2S_vel(const cvtx_P2D **array_start,
   }
 }
 
-CVTX_EXPORT void cvtx_P2D_M2M_vel(const cvtx_P2D **array_start,
+CVTX_EXPORT void cvtx_P2D_M2M_vel(const cvtx_P2D *array_start,
                                   const int num_particles,
                                   const bsv_V2f *mes_start, const int num_mes,
                                   bsv_V2f *result_array,
@@ -287,7 +287,7 @@ CVTX_EXPORT float cvtx_P2D_S2S_visc_dvort(const cvtx_P2D *self,
 }
 
 CVTX_EXPORT void
-cvtx_P2D_S2M_visc_dvort(const cvtx_P2D *self, const cvtx_P2D **induced_start,
+cvtx_P2D_S2M_visc_dvort(const cvtx_P2D *self, const cvtx_P2D *induced_start,
                         const int num_induced, float *result_array,
                         const cvtx_VortFunc kernel, float regularisation_radius,
                         float kinematic_visc) {
@@ -295,12 +295,12 @@ cvtx_P2D_S2M_visc_dvort(const cvtx_P2D *self, const cvtx_P2D **induced_start,
 #pragma omp parallel for
   for (i = 0; i < num_induced; ++i) {
     result_array[i] = cvtx_P2D_S2S_visc_dvort(
-        self, induced_start[i], kernel, regularisation_radius, kinematic_visc);
+        self, induced_start + i, kernel, regularisation_radius, kinematic_visc);
   }
   return;
 }
 
-CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(const cvtx_P2D **array_start,
+CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(const cvtx_P2D *array_start,
                                           const int num_particles,
                                           const cvtx_P2D *induced_particle,
                                           const cvtx_VortFunc kernel,
@@ -311,7 +311,7 @@ CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(const cvtx_P2D **array_start,
   assert(num_particles >= 0);
 #pragma omp parallel for reduction(+ : dvort)
   for (i = 0; i < num_particles; ++i) {
-    dvort += (double)cvtx_P2D_S2S_visc_dvort(array_start[i], induced_particle,
+    dvort += (double)cvtx_P2D_S2S_visc_dvort(array_start + i, induced_particle,
                                              kernel, regularisation_radius,
                                              kinematic_visc);
   }
@@ -319,22 +319,22 @@ CVTX_EXPORT float cvtx_P2D_M2S_visc_dvort(const cvtx_P2D **array_start,
 }
 
 void cpu_brute_force_P2D_M2M_visc_dvort(
-    const cvtx_P2D **array_start, const int num_particles,
-    const cvtx_P2D **induced_start, const int num_induced, float *result_array,
+    const cvtx_P2D *array_start, const int num_particles,
+    const cvtx_P2D *induced_start, const int num_induced, float *result_array,
     const cvtx_VortFunc kernel, float regularisation_radius,
     float kinematic_visc) {
   long i;
   for (i = 0; i < num_induced; ++i) {
     result_array[i] =
-        cvtx_P2D_M2S_visc_dvort(array_start, num_particles, induced_start[i],
+        cvtx_P2D_M2S_visc_dvort(array_start, num_particles, induced_start + i,
                                 kernel, regularisation_radius, kinematic_visc);
   }
   return;
 }
 
 CVTX_EXPORT void
-cvtx_P2D_M2M_visc_dvort(const cvtx_P2D **array_start, const int num_particles,
-                        const cvtx_P2D **induced_start, const int num_induced,
+cvtx_P2D_M2M_visc_dvort(const cvtx_P2D *array_start, const int num_particles,
+                        const cvtx_P2D *induced_start, const int num_induced,
                         float *result_array, const cvtx_VortFunc kernel,
                         float regularisation_radius, float kinematic_visc) {
 #ifdef CVTX_USING_OPENCL
@@ -358,7 +358,7 @@ static int cvtx_remove_particles_under_str_threshold_2d(
     int max_keepable_particles);
 
 CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
-    const cvtx_P2D **input_array_start, const int n_input_particles,
+    const cvtx_P2D *input_array_start, const int n_input_particles,
     cvtx_P2D *output_particles, /* input is &(*cvtx_P2D) to write to */
     int max_output_particles,   /* Set to resultant num particles.   */
     const cvtx_RedistFunc *redistributor, const float grid_density,
@@ -410,9 +410,9 @@ CVTX_EXPORT int cvtx_P2D_redistribute_on_grid(
                ? n_input_particles
                : (threadid + 1) * (n_input_particles / nthreads);
     for (long long i = istart; i < (long long)iend; ++i) {
-      bsv_V2f tparticle_pos = input_array_start[i]->coord;
-      float tparticle_str = input_array_start[i]->vorticity;
-      UIntKey64 key = UIntKey64::nearest_key_min(input_array_start[i]->coord,
+      bsv_V2f tparticle_pos = (input_array_start + i)->coord;
+      float tparticle_str = (input_array_start + i)->vorticity;
+      UIntKey64 key = UIntKey64::nearest_key_min((input_array_start + i)->coord,
                                                  recip_grid_density, min);
       key.nearby_keys(grid_radius, key_buffer.data(), key_buffer.size());
       for (size_t j = 0; j < key_buffer_sz; ++j) {

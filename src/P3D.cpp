@@ -50,38 +50,38 @@ SOFTWARE.
 namespace cvtx {
 namespace detail {
 template <cvtx_VortFunc VortFunc>
-static inline bsv_V3f P3D_vel(const cvtx_P3D *self, const bsv_V3f mes_point,
+static inline bsv_V3f P3D_vel(const cvtx_P3D& self, const bsv_V3f mes_point,
                               float recip_reg_rad) {
   bsv_V3f rad, num, ret;
-  if (bsv_V3f_isequal(self->coord, mes_point)) {
+  if (bsv_V3f_isequal(self.coord, mes_point)) {
     ret = bsv_V3f_zero();
   } else {
     float cor, den, rho, radd;
-    rad = bsv_V3f_minus(mes_point, self->coord);
+    rad = bsv_V3f_minus(mes_point, self.coord);
     radd = bsv_V3f_abs(rad);
     rho = radd * recip_reg_rad; /* Assume positive. */
     cor = -vkernel::g_3D<VortFunc>(rho);
     den = powf(radd, -3);
-    num = bsv_V3f_cross(rad, self->vorticity);
+    num = bsv_V3f_cross(rad, self.vorticity);
     ret = bsv_V3f_mult(num, cor * den);
   }
   return bsv_V3f_mult(ret, 1.f / (4.f * CVTX_PI_F));
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_dvort(const cvtx_P3D *self, const cvtx_P3D *induced_particle,
+bsv_V3f P3D_dvort(const cvtx_P3D& self, const cvtx_P3D& induced_particle,
                   float regularisation_radius) {
   bsv_V3f ret, rad, cross_om, t2, t21, t21n, t22;
   float g, f, radd, rho, t1, t21d, t221, t222, t223;
-  if (bsv_V3f_isequal(self->coord, induced_particle->coord)) {
+  if (bsv_V3f_isequal(self.coord, induced_particle.coord)) {
     ret = bsv_V3f_zero();
   } else {
-    rad = bsv_V3f_minus(induced_particle->coord, self->coord);
+    rad = bsv_V3f_minus(induced_particle.coord, self.coord);
     radd = bsv_V3f_abs(rad);
     rho = fabsf(radd / regularisation_radius);
     g = vkernel::g_3D<VortFunc>(rho);
     f = vkernel::zeta_fn<VortFunc>(rho);
-    cross_om = bsv_V3f_cross(induced_particle->vorticity, self->vorticity);
+    cross_om = bsv_V3f_cross(induced_particle.vorticity, self.vorticity);
     t1 = 1.f / (4.f * CVTX_PI_F * powf(regularisation_radius, 3));
     t21n = bsv_V3f_mult(cross_om, g);
     t21d = rho * rho * rho;
@@ -97,19 +97,19 @@ bsv_V3f P3D_dvort(const cvtx_P3D *self, const cvtx_P3D *induced_particle,
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_visc_dvort(const cvtx_P3D *self, const cvtx_P3D *induced_particle,
+bsv_V3f P3D_visc_dvort(const cvtx_P3D& self, const cvtx_P3D& induced_particle,
                        float regularisation_radius, float kinematic_visc) {
   bsv_V3f ret, rad, t211, t212, t21, t2;
   float radd, rho, t1, t22;
-  if (bsv_V3f_isequal(self->coord, induced_particle->coord)) {
+  if (bsv_V3f_isequal(self.coord, induced_particle.coord)) {
     ret = bsv_V3f_zero();
   } else {
-    rad = bsv_V3f_minus(self->coord, induced_particle->coord);
+    rad = bsv_V3f_minus(self.coord, induced_particle.coord);
     radd = bsv_V3f_abs(rad);
     rho = fabsf(radd / regularisation_radius);
     t1 = 2 * kinematic_visc / powf(regularisation_radius, 2);
-    t211 = bsv_V3f_mult(self->vorticity, induced_particle->volume);
-    t212 = bsv_V3f_mult(induced_particle->vorticity, -1 * self->volume);
+    t211 = bsv_V3f_mult(self.vorticity, induced_particle.volume);
+    t212 = bsv_V3f_mult(induced_particle.vorticity, -1 * self.volume);
     t21 = bsv_V3f_plus(t211, t212);
     t22 = vkernel::eta_3D<VortFunc>(rho);
     t2 = bsv_V3f_mult(t21, t22);
@@ -119,23 +119,23 @@ bsv_V3f P3D_visc_dvort(const cvtx_P3D *self, const cvtx_P3D *induced_particle,
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_vort(const cvtx_P3D *self, const bsv_V3f mes_point,
+bsv_V3f P3D_vort(const cvtx_P3D& self, const bsv_V3f mes_point,
                  float regularisation_radius) {
   bsv_V3f rad, ret;
   float radd, coeff, divisor;
-  rad = bsv_V3f_minus(self->coord, mes_point);
+  rad = bsv_V3f_minus(self.coord, mes_point);
   radd = bsv_V3f_abs(rad);
   coeff = vkernel::zeta_fn<VortFunc>(radd / regularisation_radius);
   divisor = 4.f * CVTX_PI_F * regularisation_radius * regularisation_radius *
             regularisation_radius;
   coeff = coeff / divisor;
-  ret = bsv_V3f_mult(self->vorticity, coeff);
+  ret = bsv_V3f_mult(self.vorticity, coeff);
   return ret;
 }
 } // namespace detail
 
 template <cvtx_VortFunc VortFunc>
-void P3D_S2M_vel(const cvtx_P3D *self, const bsv_V3f *mes_start,
+void P3D_S2M_vel(const cvtx_P3D& self, const bsv_V3f *mes_start,
                  const int num_mes, bsv_V3f *result_array,
                  float regularisation_radius) {
   int i;
@@ -148,7 +148,7 @@ void P3D_S2M_vel(const cvtx_P3D *self, const bsv_V3f *mes_start,
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_S2M_dvort(const cvtx_P3D *self, const cvtx_P3D **induced_start,
+void P3D_S2M_dvort(const cvtx_P3D& self, const cvtx_P3D *induced_start,
                    const int num_induced, bsv_V3f *result_array,
                    float regularisation_radius) {
   int i;
@@ -161,7 +161,7 @@ void P3D_S2M_dvort(const cvtx_P3D *self, const cvtx_P3D **induced_start,
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_S2M_visc_dvort(const cvtx_P3D *self, const cvtx_P3D **induced_start,
+void P3D_S2M_visc_dvort(const cvtx_P3D& self, const cvtx_P3D *induced_start,
                         const int num_induced, bsv_V3f *result_array,
                         float regularisation_radius, float kinematic_visc) {
   int i;
@@ -174,7 +174,7 @@ void P3D_S2M_visc_dvort(const cvtx_P3D *self, const cvtx_P3D **induced_start,
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_S2M_vort(const cvtx_P3D *self, const bsv_V3f *mes_start,
+void P3D_S2M_vort(const cvtx_P3D& self, const bsv_V3f *mes_start,
                   const int num_mes, bsv_V3f *result_array,
                   float regularisation_radius) {
   int i;
@@ -187,7 +187,7 @@ void P3D_S2M_vort(const cvtx_P3D *self, const bsv_V3f *mes_start,
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_M2S_vel(const cvtx_P3D **array_start, const int num_particles,
+bsv_V3f P3D_M2S_vel(const cvtx_P3D *array_start, const int num_particles,
                     const bsv_V3f mes_point, float regularisation_radius) {
   double rx = 0, ry = 0, rz = 0;
   long i;
@@ -206,8 +206,8 @@ bsv_V3f P3D_M2S_vel(const cvtx_P3D **array_start, const int num_particles,
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_M2S_dvort(const cvtx_P3D **array_start, const int num_particles,
-                      const cvtx_P3D *induced_particle,
+bsv_V3f P3D_M2S_dvort(const cvtx_P3D *array_start, const int num_particles,
+                      const cvtx_P3D& induced_particle,
                       float regularisation_radius) {
   bsv_V3f dvort;
   double rx = 0, ry = 0, rz = 0;
@@ -225,9 +225,9 @@ bsv_V3f P3D_M2S_dvort(const cvtx_P3D **array_start, const int num_particles,
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_M2S_visc_dvort(const cvtx_P3D **array_start,
+bsv_V3f P3D_M2S_visc_dvort(const cvtx_P3D *array_start,
                            const int num_particles,
-                           const cvtx_P3D *induced_particle,
+                           const cvtx_P3D& induced_particle,
                            float regularisation_radius, float kinematic_visc) {
   bsv_V3f dvort;
   double rx = 0, ry = 0, rz = 0;
@@ -246,7 +246,7 @@ bsv_V3f P3D_M2S_visc_dvort(const cvtx_P3D **array_start,
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_M2S_vort(const cvtx_P3D **array_start, const int num_particles,
+bsv_V3f P3D_M2S_vort(const cvtx_P3D *array_start, const int num_particles,
                      const bsv_V3f mes_point, float regularisation_radius) {
   float cutoff, rsigma, radd, coeff;
   bsv_V3f rad, sum = bsv_V3f_zero();
@@ -255,12 +255,12 @@ bsv_V3f P3D_M2S_vort(const cvtx_P3D **array_start, const int num_particles,
   rsigma = 1 / regularisation_radius;
   assert(num_particles > 0);
   for (i = 0; i < num_particles; ++i) {
-    rad = bsv_V3f_minus(array_start[i]->coord, mes_point);
+    rad = bsv_V3f_minus(array_start[i].coord, mes_point);
     if (fabsf(rad.x[0]) < cutoff && fabsf(rad.x[1]) < cutoff &&
         fabsf(rad.x[2]) < cutoff) {
       radd = bsv_V3f_abs(rad);
       coeff = vkernel::zeta_fn<VortFunc>(radd * rsigma);
-      sum = bsv_V3f_plus(bsv_V3f_mult(array_start[i]->vorticity, coeff), sum);
+      sum = bsv_V3f_plus(bsv_V3f_mult(array_start[i].vorticity, coeff), sum);
     }
   }
   sum = bsv_V3f_div(sum, 4.f * CVTX_PI_F * regularisation_radius *
@@ -271,7 +271,7 @@ bsv_V3f P3D_M2S_vort(const cvtx_P3D **array_start, const int num_particles,
 namespace open_mp {
 
 template <cvtx_VortFunc VortFunc>
-void P3D_M2M_vel(const cvtx_P3D **array_start, const int num_particles,
+void P3D_M2M_vel(const cvtx_P3D *array_start, const int num_particles,
                  const bsv_V3f *mes_start, const int num_mes,
                  bsv_V3f *result_array, float regularisation_radius) {
   long i;
@@ -283,7 +283,7 @@ void P3D_M2M_vel(const cvtx_P3D **array_start, const int num_particles,
   return;
 }
 
-void P3D_M2M_vel(const cvtx_P3D **array_start, const int num_particles,
+void P3D_M2M_vel(const cvtx_P3D *array_start, const int num_particles,
                  const bsv_V3f *mes_start, const int num_mes,
                  bsv_V3f *result_array, cvtx_VortFunc kernel,
                  float regularisation_radius) {
@@ -308,8 +308,8 @@ void P3D_M2M_vel(const cvtx_P3D **array_start, const int num_particles,
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_M2M_dvort(const cvtx_P3D **array_start, const int num_particles,
-                   const cvtx_P3D **induced_start, const int num_induced,
+void P3D_M2M_dvort(const cvtx_P3D *array_start, const int num_particles,
+                   const cvtx_P3D *induced_start, const int num_induced,
                    bsv_V3f *result_array, float regularisation_radius) {
   long i;
 #pragma omp parallel for schedule(static)
@@ -320,8 +320,8 @@ void P3D_M2M_dvort(const cvtx_P3D **array_start, const int num_particles,
   return;
 }
 
-void P3D_M2M_dvort(const cvtx_P3D **array_start, const int num_particles,
-                   const cvtx_P3D **induced_start, const int num_induced,
+void P3D_M2M_dvort(const cvtx_P3D *array_start, const int num_particles,
+                   const cvtx_P3D *induced_start, const int num_induced,
                    bsv_V3f *result_array, const cvtx_VortFunc kernel,
                    float regularisation_radius) {
   switch (kernel) {
@@ -345,8 +345,8 @@ void P3D_M2M_dvort(const cvtx_P3D **array_start, const int num_particles,
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_M2M_visc_dvort(const cvtx_P3D **array_start, const int num_particles,
-                        const cvtx_P3D **induced_start, const int num_induced,
+void P3D_M2M_visc_dvort(const cvtx_P3D *array_start, const int num_particles,
+                        const cvtx_P3D *induced_start, const int num_induced,
                         bsv_V3f *result_array, float regularisation_radius,
                         float kinematic_visc) {
   long i;
@@ -359,8 +359,8 @@ void P3D_M2M_visc_dvort(const cvtx_P3D **array_start, const int num_particles,
   return;
 }
 
-void P3D_M2M_visc_dvort(const cvtx_P3D **array_start, const int num_particles,
-                        const cvtx_P3D **induced_start, const int num_induced,
+void P3D_M2M_visc_dvort(const cvtx_P3D *array_start, const int num_particles,
+                        const cvtx_P3D *induced_start, const int num_induced,
                         bsv_V3f *result_array, cvtx_VortFunc kernel,
                         float regularisation_radius, float kinematic_visc) {
   switch (kernel) {
@@ -380,7 +380,7 @@ void P3D_M2M_visc_dvort(const cvtx_P3D **array_start, const int num_particles,
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_M2M_vort(const cvtx_P3D **array_start,
+void P3D_M2M_vort(const cvtx_P3D *array_start,
                                   const int num_particles,
                                   const bsv_V3f *mes_start, const int num_mes,
                                   bsv_V3f *result_array,
@@ -394,7 +394,7 @@ void P3D_M2M_vort(const cvtx_P3D **array_start,
   }
   return;
 }
-void P3D_M2M_vort(const cvtx_P3D **array_start,
+void P3D_M2M_vort(const cvtx_P3D *array_start,
                                   const int num_particles,
                                   const bsv_V3f *mes_start, const int num_mes,
                                   bsv_V3f *result_array,
@@ -429,16 +429,16 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vel(const cvtx_P3D *self,
   float recip_ref_rad = 1.f / regularisation_radius;
   switch (kernel) {
   case cvtx_VortFunc_singular:
-    return cvtx::detail::P3D_vel<cvtx_VortFunc_singular>(self, mes_point,
+    return cvtx::detail::P3D_vel<cvtx_VortFunc_singular>(*self, mes_point,
                                                          recip_ref_rad);
   case cvtx_VortFunc_planetary:
-    return cvtx::detail::P3D_vel<cvtx_VortFunc_planetary>(self, mes_point,
+    return cvtx::detail::P3D_vel<cvtx_VortFunc_planetary>(*self, mes_point,
                                                           recip_ref_rad);
   case cvtx_VortFunc_winckelmans:
-    return cvtx::detail::P3D_vel<cvtx_VortFunc_winckelmans>(self, mes_point,
+    return cvtx::detail::P3D_vel<cvtx_VortFunc_winckelmans>(*self, mes_point,
                                                             recip_ref_rad);
   case cvtx_VortFunc_gaussian:
-    return cvtx::detail::P3D_vel<cvtx_VortFunc_gaussian>(self, mes_point,
+    return cvtx::detail::P3D_vel<cvtx_VortFunc_gaussian>(*self, mes_point,
                                                          recip_ref_rad);
   }
 }
@@ -450,16 +450,16 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_dvort(const cvtx_P3D *self,
   switch (kernel) {
   case cvtx_VortFunc_singular:
     return cvtx::detail::P3D_dvort<cvtx_VortFunc_singular>(
-        self, induced_particle, regularisation_radius);
+        *self, *induced_particle, regularisation_radius);
   case cvtx_VortFunc_planetary:
     return cvtx::detail::P3D_dvort<cvtx_VortFunc_planetary>(
-        self, induced_particle, regularisation_radius);
+        *self, *induced_particle, regularisation_radius);
   case cvtx_VortFunc_winckelmans:
     return cvtx::detail::P3D_dvort<cvtx_VortFunc_winckelmans>(
-        self, induced_particle, regularisation_radius);
+        *self, *induced_particle, regularisation_radius);
   case cvtx_VortFunc_gaussian:
     return cvtx::detail::P3D_dvort<cvtx_VortFunc_gaussian>(
-        self, induced_particle, regularisation_radius);
+        *self, *induced_particle, regularisation_radius);
   }
 }
 
@@ -471,10 +471,10 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_visc_dvort(const cvtx_P3D *self,
   switch (kernel) {
   case cvtx_VortFunc_winckelmans:
     return cvtx::detail::P3D_visc_dvort<cvtx_VortFunc_winckelmans>(
-        self, induced_particle, regularisation_radius, kinematic_visc);
+        *self, *induced_particle, regularisation_radius, kinematic_visc);
   case cvtx_VortFunc_gaussian:
     return cvtx::detail::P3D_visc_dvort<cvtx_VortFunc_gaussian>(
-        self, induced_particle, regularisation_radius, kinematic_visc);
+        *self, *induced_particle, regularisation_radius, kinematic_visc);
   default:
 	assert(false && "Invalid kernel choice.");
 	return {0.f, 0.f, 0.f};
@@ -488,16 +488,16 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vort(const cvtx_P3D *self,
   switch (kernel) {
   case cvtx_VortFunc_singular:
     return cvtx::detail::P3D_vort<cvtx_VortFunc_singular>(
-        self, mes_point, regularisation_radius);
+        *self, mes_point, regularisation_radius);
   case cvtx_VortFunc_planetary:
     return cvtx::detail::P3D_vort<cvtx_VortFunc_planetary>(
-        self, mes_point, regularisation_radius);
+        *self, mes_point, regularisation_radius);
   case cvtx_VortFunc_winckelmans:
     return cvtx::detail::P3D_vort<cvtx_VortFunc_winckelmans>(
-        self, mes_point, regularisation_radius);
+        *self, mes_point, regularisation_radius);
   case cvtx_VortFunc_gaussian:
     return cvtx::detail::P3D_vort<cvtx_VortFunc_gaussian>(
-        self, mes_point, regularisation_radius);
+        *self, mes_point, regularisation_radius);
   }
 }
 
@@ -509,56 +509,56 @@ CVTX_EXPORT void cvtx_P3D_S2M_vel(const cvtx_P3D *self,
   switch (kernel) {
   case cvtx_VortFunc_singular:
     cvtx::P3D_S2M_vel<cvtx_VortFunc_singular>(
-        self, mes_start, num_mes, result_array, regularisation_radius);
+        *self, mes_start, num_mes, result_array, regularisation_radius);
     break;
   case cvtx_VortFunc_planetary:
     cvtx::P3D_S2M_vel<cvtx_VortFunc_planetary>(
-        self, mes_start, num_mes, result_array, regularisation_radius);
+        *self, mes_start, num_mes, result_array, regularisation_radius);
     break;
   case cvtx_VortFunc_winckelmans:
     cvtx::P3D_S2M_vel<cvtx_VortFunc_winckelmans>(
-        self, mes_start, num_mes, result_array, regularisation_radius);
+        *self, mes_start, num_mes, result_array, regularisation_radius);
     break;
   case cvtx_VortFunc_gaussian:
     cvtx::P3D_S2M_vel<cvtx_VortFunc_gaussian>(
-        self, mes_start, num_mes, result_array, regularisation_radius);
+        *self, mes_start, num_mes, result_array, regularisation_radius);
     break;
   }
 }
 
 CVTX_EXPORT void
-cvtx_P3D_S2M_dvort(const cvtx_P3D *self, const cvtx_P3D **induced_start,
+cvtx_P3D_S2M_dvort(const cvtx_P3D *self, const cvtx_P3D *induced_start,
                    const int num_induced, bsv_V3f *result_array,
                    const cvtx_VortFunc kernel, float regularisation_radius) {
   switch (kernel) {
   case cvtx_VortFunc_singular:
     return cvtx::P3D_S2M_dvort<cvtx_VortFunc_singular>(
-        self, induced_start, num_induced, result_array, regularisation_radius);
+        *self, induced_start, num_induced, result_array, regularisation_radius);
   case cvtx_VortFunc_planetary:
     return cvtx::P3D_S2M_dvort<cvtx_VortFunc_planetary>(
-        self, induced_start, num_induced, result_array, regularisation_radius);
+        *self, induced_start, num_induced, result_array, regularisation_radius);
   case cvtx_VortFunc_winckelmans:
     return cvtx::P3D_S2M_dvort<cvtx_VortFunc_winckelmans>(
-        self, induced_start, num_induced, result_array, regularisation_radius);
+        *self, induced_start, num_induced, result_array, regularisation_radius);
   case cvtx_VortFunc_gaussian:
     return cvtx::P3D_S2M_dvort<cvtx_VortFunc_gaussian>(
-        self, induced_start, num_induced, result_array, regularisation_radius);
+        *self, induced_start, num_induced, result_array, regularisation_radius);
   }
 }
 
 CVTX_EXPORT void
-cvtx_P3D_S2M_visc_dvort(const cvtx_P3D *self, const cvtx_P3D **induced_start,
+cvtx_P3D_S2M_visc_dvort(const cvtx_P3D *self, const cvtx_P3D *induced_start,
                         const int num_induced, bsv_V3f *result_array,
                         const cvtx_VortFunc kernel, float regularisation_radius,
                         float kinematic_visc) {
   switch (kernel) {
   case cvtx_VortFunc_winckelmans:
     return cvtx::P3D_S2M_visc_dvort<cvtx_VortFunc_winckelmans>(
-        self, induced_start, num_induced, result_array, regularisation_radius,
+        *self, induced_start, num_induced, result_array, regularisation_radius,
         kinematic_visc);
   case cvtx_VortFunc_gaussian:
     return cvtx::P3D_S2M_visc_dvort<cvtx_VortFunc_gaussian>(
-        self, induced_start, num_induced, result_array, regularisation_radius,
+        *self, induced_start, num_induced, result_array, regularisation_radius,
         kinematic_visc);
   default:
 	assert(false && "Invalid kernel choice.");
@@ -574,20 +574,20 @@ CVTX_EXPORT void cvtx_P3D_S2M_vort(const cvtx_P3D *self,
   switch (kernel) {
   case cvtx_VortFunc_singular:
     return cvtx::P3D_S2M_vort<cvtx_VortFunc_singular>(
-        self, mes_start, num_mes, result_array, regularisation_radius);
+        *self, mes_start, num_mes, result_array, regularisation_radius);
   case cvtx_VortFunc_planetary:
     return cvtx::P3D_S2M_vort<cvtx_VortFunc_planetary>(
-        self, mes_start, num_mes, result_array, regularisation_radius);
+        *self, mes_start, num_mes, result_array, regularisation_radius);
   case cvtx_VortFunc_winckelmans:
     return cvtx::P3D_S2M_vort<cvtx_VortFunc_winckelmans>(
-        self, mes_start, num_mes, result_array, regularisation_radius);
+        *self, mes_start, num_mes, result_array, regularisation_radius);
   case cvtx_VortFunc_gaussian:
     return cvtx::P3D_S2M_vort<cvtx_VortFunc_gaussian>(
-        self, mes_start, num_mes, result_array, regularisation_radius);
+        *self, mes_start, num_mes, result_array, regularisation_radius);
   }
 }
 
-CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(const cvtx_P3D **array_start,
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(const cvtx_P3D *array_start,
                                      const int num_particles,
                                      const bsv_V3f mes_point,
                                      const cvtx_VortFunc kernel,
@@ -608,7 +608,7 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(const cvtx_P3D **array_start,
   }
 }
 
-CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_dvort(const cvtx_P3D **array_start,
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_dvort(const cvtx_P3D *array_start,
                                        const int num_particles,
                                        const cvtx_P3D *induced_particle,
                                        const cvtx_VortFunc kernel,
@@ -616,20 +616,20 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_dvort(const cvtx_P3D **array_start,
   switch (kernel) {
   case cvtx_VortFunc_singular:
     return cvtx::P3D_M2S_dvort<cvtx_VortFunc_singular>(
-        array_start, num_particles, induced_particle, regularisation_radius);
+        array_start, num_particles, *induced_particle, regularisation_radius);
   case cvtx_VortFunc_planetary:
     return cvtx::P3D_M2S_dvort<cvtx_VortFunc_planetary>(
-        array_start, num_particles, induced_particle, regularisation_radius);
+        array_start, num_particles, *induced_particle, regularisation_radius);
   case cvtx_VortFunc_winckelmans:
     return cvtx::P3D_M2S_dvort<cvtx_VortFunc_winckelmans>(
-        array_start, num_particles, induced_particle, regularisation_radius);
+        array_start, num_particles, *induced_particle, regularisation_radius);
   case cvtx_VortFunc_gaussian:
     return cvtx::P3D_M2S_dvort<cvtx_VortFunc_gaussian>(
-        array_start, num_particles, induced_particle, regularisation_radius);
+        array_start, num_particles, *induced_particle, regularisation_radius);
   }
 }
 
-CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(const cvtx_P3D **array_start,
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(const cvtx_P3D *array_start,
                                             const int num_particles,
                                             const cvtx_P3D *induced_particle,
                                             const cvtx_VortFunc kernel,
@@ -638,11 +638,11 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(const cvtx_P3D **array_start,
   switch (kernel) {
   case cvtx_VortFunc_winckelmans:
     return cvtx::P3D_M2S_visc_dvort<cvtx_VortFunc_winckelmans>(
-        array_start, num_particles, induced_particle, regularisation_radius,
+        array_start, num_particles, *induced_particle, regularisation_radius,
         kinematic_visc);
   case cvtx_VortFunc_gaussian:
     return cvtx::P3D_M2S_visc_dvort<cvtx_VortFunc_gaussian>(
-        array_start, num_particles, induced_particle, regularisation_radius,
+        array_start, num_particles, *induced_particle, regularisation_radius,
         kinematic_visc);
   default:
 	assert(false && "Invalid kernel choice.");
@@ -650,7 +650,7 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(const cvtx_P3D **array_start,
   }
 }
 
-CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vort(const cvtx_P3D **array_start,
+CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vort(const cvtx_P3D *array_start,
                                       const int num_particles,
                                       const bsv_V3f mes_point,
                                       const cvtx_VortFunc kernel,
@@ -671,7 +671,7 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vort(const cvtx_P3D **array_start,
   }
 }
 
-CVTX_EXPORT void cvtx_P3D_M2M_vel(const cvtx_P3D **array_start,
+CVTX_EXPORT void cvtx_P3D_M2M_vel(const cvtx_P3D *array_start,
                                   const int num_particles,
                                   const bsv_V3f *mes_start, const int num_mes,
                                   bsv_V3f *result_array,
@@ -692,8 +692,8 @@ CVTX_EXPORT void cvtx_P3D_M2M_vel(const cvtx_P3D **array_start,
 }
 
 CVTX_EXPORT void
-cvtx_P3D_M2M_dvort(const cvtx_P3D **array_start, const int num_particles,
-                   const cvtx_P3D **induced_start, const int num_induced,
+cvtx_P3D_M2M_dvort(const cvtx_P3D *array_start, const int num_particles,
+                   const cvtx_P3D *induced_start, const int num_induced,
                    bsv_V3f *result_array, const cvtx_VortFunc kernel,
                    float regularisation_radius) {
 #ifdef CVTX_USING_OPENCL
@@ -712,8 +712,8 @@ cvtx_P3D_M2M_dvort(const cvtx_P3D **array_start, const int num_particles,
 }
 
 CVTX_EXPORT void
-cvtx_P3D_M2M_visc_dvort(const cvtx_P3D **array_start, const int num_particles,
-                        const cvtx_P3D **induced_start, const int num_induced,
+cvtx_P3D_M2M_visc_dvort(const cvtx_P3D *array_start, const int num_particles,
+                        const cvtx_P3D *induced_start, const int num_induced,
                         bsv_V3f *result_array, const cvtx_VortFunc kernel,
                         float regularisation_radius, float kinematic_visc) {
 #ifdef CVTX_USING_OPENCL
@@ -731,7 +731,7 @@ cvtx_P3D_M2M_visc_dvort(const cvtx_P3D **array_start, const int num_particles,
   return;
 }
 
-CVTX_EXPORT void cvtx_P3D_M2M_vort(const cvtx_P3D **array_start,
+CVTX_EXPORT void cvtx_P3D_M2M_vort(const cvtx_P3D *array_start,
                                    const int num_particles,
                                    const bsv_V3f *mes_start, const int num_mes,
                                    bsv_V3f *result_array,
@@ -762,7 +762,7 @@ static int cvtx_remove_particles_under_str_threshold(cvtx_P3D *io_arr,
                                                      int max_keepable);
 
 CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
-    const cvtx_P3D **input_array_start, const int n_input_particles,
+    const cvtx_P3D *input_array_start, const int n_input_particles,
     cvtx_P3D *output_particles, /* input is &(*cvtx_P3D) to write to */
     int max_output_particles,   /* Set to resultant num particles.   */
     const cvtx_RedistFunc *redistributor, const float grid_density,
@@ -815,9 +815,9 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
                ? n_input_particles
                : (threadid + 1) * (n_input_particles / nthreads);
     for (long long i = istart; i < (long long)iend; ++i) {
-      bsv_V3f tparticle_pos = input_array_start[i]->coord;
-      bsv_V3f tparticle_str = input_array_start[i]->vorticity;
-      UIntKey96 key = UIntKey96::nearest_key_min(input_array_start[i]->coord,
+      bsv_V3f tparticle_pos = input_array_start[i].coord;
+      bsv_V3f tparticle_str = input_array_start[i].vorticity;
+      UIntKey96 key = UIntKey96::nearest_key_min(input_array_start[i].coord,
                                                  recip_grid_density, min);
       key.nearby_keys(grid_radius, key_buffer.data(), key_buffer.size());
       for (size_t j = 0; j < key_buffer_sz; ++j) {
@@ -921,7 +921,7 @@ int cvtx_remove_particles_under_str_threshold(cvtx_P3D *io_arr, float *strs,
 
 /* Relaxation --------------------------------------------------------------*/
 
-CVTX_EXPORT void cvtx_P3D_pedrizzetti_relaxation(cvtx_P3D **input_array_start,
+CVTX_EXPORT void cvtx_P3D_pedrizzetti_relaxation(cvtx_P3D *input_array_start,
                                                  const int n_input_particles,
                                                  float fdt,
                                                  const cvtx_VortFunc kernel,
@@ -936,10 +936,10 @@ CVTX_EXPORT void cvtx_P3D_pedrizzetti_relaxation(cvtx_P3D **input_array_start,
   mes_posns = (bsv_V3f *)malloc(sizeof(bsv_V3f) * n_input_particles);
 #pragma omp parallel for
   for (i = 0; i < n_input_particles; ++i) {
-    mes_posns[i] = input_array_start[i]->coord;
+    mes_posns[i] = input_array_start[i].coord;
   }
   omegas = (bsv_V3f *)malloc(sizeof(bsv_V3f) * n_input_particles);
-  cvtx_P3D_M2M_vort((const cvtx_P3D **)input_array_start, n_input_particles,
+  cvtx_P3D_M2M_vort((const cvtx_P3D *)input_array_start, n_input_particles,
                     mes_posns, n_input_particles, omegas, kernel,
                     regularisation_radius);
 
@@ -948,13 +948,13 @@ CVTX_EXPORT void cvtx_P3D_pedrizzetti_relaxation(cvtx_P3D **input_array_start,
   for (i = 0; i < n_input_particles; ++i) {
     bsv_V3f ovort, nvort; /* original & new vorts*/
     float coeff, absomega;
-    ovort = input_array_start[i]->vorticity;
+    ovort = input_array_start[i].vorticity;
     absomega = bsv_V3f_abs(omegas[i]);
     coeff = bsv_V3f_abs(ovort) / absomega;
     nvort = bsv_V3f_mult(ovort, tmp);
     nvort = bsv_V3f_plus(nvort, bsv_V3f_mult(omegas[i], coeff * fdt));
     nvort = absomega != 0.f ? nvort : bsv_V3f_zero();
-    input_array_start[i]->vorticity = nvort;
+    input_array_start[i].vorticity = nvort;
   }
 
   free(mes_posns);
