@@ -38,6 +38,7 @@ static bsv_V3f* m_v3f_arr1 = NULL;
 static bsv_V3f* m_v3f_arr2 = NULL;
 static bsv_V2f* m_v2f_arr1 = NULL;
 static bsv_V2f* m_v2f_arr2 = NULL;
+static float * m_f_arr1 = NULL;
 
 /* Setup / teardown. */
 void create_particles_3D(int np, float maxf, float vol) {
@@ -78,7 +79,6 @@ void create_particles_2D(int np, float maxf, float area) {
 	for (i = 0; i < np; ++i) {
 		particles_2D[i].coord.x[0] = mrandf(maxf);
 		particles_2D[i].coord.x[1] = mrandf(maxf);
-		particles_2D[i].coord.x[2] = mrandf(maxf);
 		particles_2D[i].vorticity = mrandf(maxf);
 		particles_2D[i].area = area;
 		pparticles_2D[i] = &(particles_2D[i]);
@@ -164,6 +164,20 @@ void destroy_V2f_arr2() {
 	return;
 }
 
+void create_f_arr(int n, float maxf) {
+	m_f_arr1 = malloc(sizeof(float) * n);
+	int i;
+	for (i = 0; i < n; ++i) {
+		m_f_arr1[i] = mrandf(maxf);
+	}
+	return;
+}
+
+void destroy_f_arr() {
+	free(m_f_arr1);
+	return;
+}
+
 cvtx_P3D** particle_3D_pptr(void) {
 	return pparticles_3D;
 }
@@ -202,4 +216,8 @@ bsv_V2f* v2f_arr(void) {
 
 bsv_V2f* v2f_arr2(void) {
 	return m_v2f_arr2;
+}
+
+float* f_arr(void) {
+	return m_f_arr1;
 }

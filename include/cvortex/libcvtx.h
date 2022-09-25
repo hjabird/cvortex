@@ -71,12 +71,12 @@ typedef struct {
 
 /* Vortex particle regularisation functions
 */
-enum cvtx_VortFunc {
+typedef enum {
 	cvtx_VortFunc_singular,
 	cvtx_VortFunc_gaussian,
 	cvtx_VortFunc_planetary,
 	cvtx_VortFunc_winckelmans,
-};
+} cvtx_VortFunc;
 
 
 typedef struct {

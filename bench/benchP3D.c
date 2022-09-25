@@ -281,134 +281,134 @@ void run_P3D_bench(void) {
 
 /* VEL ---------------------------------------------------------------------*/
 void bench_P3D_vel_singular(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_singular();
+	cvtx_VortFunc vf = cvtx_VortFunc_singular;
 	cvtx_P3D_M2M_vel(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
 		np,
 		v3f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P3D_vel_gaussian(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_gaussian();
+	cvtx_VortFunc vf = cvtx_VortFunc_gaussian;
 	cvtx_P3D_M2M_vel(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
 		np,
 		v3f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P3D_vel_winckelmans(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans();
+	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans;
 	cvtx_P3D_M2M_vel(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
 		np,
 		v3f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P3D_vel_planetary(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_planetary();
+	cvtx_VortFunc vf = cvtx_VortFunc_planetary;
 	cvtx_P3D_M2M_vel(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
 		np,
 		v3f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 /* DVORT -------------------------------------------------------------------*/
 void bench_P3D_dvort_singular(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_singular();
+	cvtx_VortFunc vf = cvtx_VortFunc_singular;
 	cvtx_P3D_M2M_dvort(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np, 
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P3D_dvort_gaussian(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_gaussian();
+	cvtx_VortFunc vf = cvtx_VortFunc_gaussian;
 	cvtx_P3D_M2M_dvort(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P3D_dvort_winckelmans(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans();
+	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans;
 	cvtx_P3D_M2M_dvort(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P3D_dvort_planetary(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_planetary();
+	cvtx_VortFunc vf = cvtx_VortFunc_planetary;
 	cvtx_P3D_M2M_dvort(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 /* VISC DVORT --------------------------------------------------------------*/
 void bench_P3D_viscdvort_gaussian(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_gaussian();
+	cvtx_VortFunc vf = cvtx_VortFunc_gaussian;
 	cvtx_P3D_M2M_visc_dvort(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
-		&vf,
+		vf,
 		0.02,
 		1.
 	);
 }
 
 void bench_P3D_viscdvort_winckelmans(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans();
+	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans;
 	cvtx_P3D_M2M_visc_dvort(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
-		&vf,
+		vf,
 		0.02,
 		1.
 	);
@@ -416,53 +416,53 @@ void bench_P3D_viscdvort_winckelmans(int np) {
 
 /* VEL ---------------------------------------------------------------------*/
 void bench_P3D_vort_singular(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_singular();
+	cvtx_VortFunc vf = cvtx_VortFunc_singular;
 	cvtx_P3D_M2M_vort(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
 		np,
 		v3f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P3D_vort_gaussian(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_gaussian();
+	cvtx_VortFunc vf = cvtx_VortFunc_gaussian;
 	cvtx_P3D_M2M_vort(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
 		np,
 		v3f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P3D_vort_winckelmans(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans();
+	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans;
 	cvtx_P3D_M2M_vort(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
 		np,
 		v3f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P3D_vort_planetary(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_planetary();
+	cvtx_VortFunc vf = cvtx_VortFunc_planetary;
 	cvtx_P3D_M2M_vort(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		np,
 		v3f_arr(),
 		np,
 		v3f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }

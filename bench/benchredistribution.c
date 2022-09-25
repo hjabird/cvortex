@@ -136,7 +136,7 @@ void redistribution_3D_m4(int probsz) {
 	cvtx_RedistFunc rfunc = cvtx_RedistFunc_m4p();
 	/* Call function. */
 	cvtx_P3D_redistribute_on_grid(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		probsz,
 		oparticle_3D_ptr(),
 		4 * probsz,		/* Set to resultant num particles.   */
@@ -150,7 +150,7 @@ void redistribution_3D_lambda0(int probsz) {
 	cvtx_RedistFunc rfunc = cvtx_RedistFunc_lambda0();
 	/* Call function. */
 	cvtx_P3D_redistribute_on_grid(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		probsz,
 		oparticle_3D_ptr(),
 		4 * probsz,		/* Set to resultant num particles.   */
@@ -164,7 +164,7 @@ void redistribution_3D_lambda1(int probsz) {
 	cvtx_RedistFunc rfunc = cvtx_RedistFunc_lambda1();
 	/* Call function. */
 	cvtx_P3D_redistribute_on_grid(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		probsz,
 		oparticle_3D_ptr(),
 		4 * probsz,		/* Set to resultant num particles.   */
@@ -178,7 +178,7 @@ void redistribution_3D_lambda2(int probsz) {
 	cvtx_RedistFunc rfunc = cvtx_RedistFunc_lambda2();
 	/* Call function. */
 	cvtx_P3D_redistribute_on_grid(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		probsz,
 		oparticle_3D_ptr(),
 		4 * probsz,		/* Set to resultant num particles.   */
@@ -192,7 +192,7 @@ void redistribution_3D_lambda3(int probsz) {
 	cvtx_RedistFunc rfunc = cvtx_RedistFunc_lambda3();
 	/* Call function. */
 	cvtx_P3D_redistribute_on_grid(
-		particle_3D_pptr(),
+		particle_3D_ptr(),
 		probsz,
 		oparticle_3D_ptr(),
 		4 * probsz,		/* Set to resultant num particles.   */
@@ -208,7 +208,7 @@ void redistribution_2D_m4(int probsz) {
 	cvtx_RedistFunc rfunc = cvtx_RedistFunc_m4p();
 	/* Call function. */
 	cvtx_P2D_redistribute_on_grid(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		probsz,
 		oparticle_2D_ptr(),
 		4 * probsz,		/* Set to resultant num particles.   */
@@ -222,7 +222,7 @@ void redistribution_2D_lambda0(int probsz) {
 	cvtx_RedistFunc rfunc = cvtx_RedistFunc_lambda0();
 	/* Call function. */
 	cvtx_P2D_redistribute_on_grid(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		probsz,
 		oparticle_2D_ptr(),
 		4 * probsz,		/* Set to resultant num particles.   */
@@ -236,7 +236,7 @@ void redistribution_2D_lambda1(int probsz) {
 	cvtx_RedistFunc rfunc = cvtx_RedistFunc_lambda1();
 	/* Call function. */
 	cvtx_P2D_redistribute_on_grid(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		probsz,
 		oparticle_2D_ptr(),
 		4 * probsz,		/* Set to resultant num particles.   */
@@ -250,7 +250,7 @@ void redistribution_2D_lambda2(int probsz) {
 	cvtx_RedistFunc rfunc = cvtx_RedistFunc_lambda2();
 	/* Call function. */
 	cvtx_P2D_redistribute_on_grid(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		probsz,
 		oparticle_2D_ptr(),
 		4 * probsz,		/* Set to resultant num particles.   */
@@ -264,7 +264,7 @@ void redistribution_2D_lambda3(int probsz) {
 	cvtx_RedistFunc rfunc = cvtx_RedistFunc_lambda3();
 	/* Call function. */
 	cvtx_P2D_redistribute_on_grid(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		probsz,
 		oparticle_2D_ptr(),
 		4 * probsz,		/* Set to resultant num particles.   */

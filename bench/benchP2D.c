@@ -40,6 +40,7 @@ void run_P2D_bench(void) {
 	create_particles_2D(1000000, 10.f, 0.01);
 	create_V2f_arr(1000000, 10.f);
 	create_V2f_arr2(1000000, 10.f);
+	create_f_arr(1000000, 10.f);
 
 	/* Run first with GPUs enabled. */
 	int i, n;
@@ -146,86 +147,87 @@ void run_P2D_bench(void) {
 	destroy_particles_2D();
 	destroy_V2f_arr();
 	destroy_V2f_arr2();
+	destroy_f_arr();
 	return;
 }
 
 /* VEL ---------------------------------------------------------------------*/
 void bench_P2D_vel_singular(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_singular();
+	cvtx_VortFunc vf = cvtx_VortFunc_singular;
 	cvtx_P2D_M2M_vel(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		np,
 		v2f_arr(),
 		np,
 		v2f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P2D_vel_gaussian(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_gaussian();
+	cvtx_VortFunc vf = cvtx_VortFunc_gaussian;
 	cvtx_P2D_M2M_vel(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		np,
 		v2f_arr(),
 		np,
 		v2f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P2D_vel_winckelmans(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans();
+	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans;
 	cvtx_P2D_M2M_vel(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		np,
 		v2f_arr(),
 		np,
 		v2f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 void bench_P2D_vel_planetary(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_planetary();
+	cvtx_VortFunc vf = cvtx_VortFunc_planetary;
 	cvtx_P2D_M2M_vel(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		np,
 		v2f_arr(),
 		np,
 		v2f_arr2(),
-		&vf,
+		vf,
 		0.02
 	);
 }
 
 /* VISC DVORT --------------------------------------------------------------*/
 void bench_P2D_viscdvort_gaussian(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_gaussian();
+	cvtx_VortFunc vf = cvtx_VortFunc_gaussian;
 	cvtx_P2D_M2M_visc_dvort(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		np,
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		np,
-		v2f_arr(),
-		&vf,
+		f_arr(),
+		vf,
 		0.02,
 		1.
 	);
 }
 
 void bench_P2D_viscdvort_winckelmans(int np) {
-	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans();
+	cvtx_VortFunc vf = cvtx_VortFunc_winckelmans;
 	cvtx_P2D_M2M_visc_dvort(
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		np,
-		particle_2D_pptr(),
+		particle_2D_ptr(),
 		np,
-		v2f_arr(),
-		&vf,
+		f_arr(),
+		vf,
 		0.02,
 		1.
 	);

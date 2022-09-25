@@ -48,11 +48,12 @@ void create_V2f_arr2(int n, float maxf);
 void destroy_V2f_arr();
 void destroy_V2f_arr2();
 
-cvtx_P3D** particle_3D_pptr(void);
+void create_f_arr(int n, float maxf);
+void destroy_f_arr();
+
 cvtx_P3D* oparticle_3D_ptr(void);
 cvtx_P3D* particle_3D_ptr(void);
 
-cvtx_P2D** particle_2D_pptr(void);
 cvtx_P2D* oparticle_2D_ptr(void);
 cvtx_P2D* particle_2D_ptr(void);
 
@@ -60,5 +61,6 @@ bsv_V3f* v3f_arr(void);
 bsv_V3f* v3f_arr2(void);
 bsv_V2f* v2f_arr(void);
 bsv_V2f* v2f_arr2(void);
+float* f_arr(void);
 
 #endif
