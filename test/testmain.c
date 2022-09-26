@@ -86,21 +86,19 @@ int print_summary() {
 
 int mrand(void)
 {	/* We want randomish, but reproducable tests. */
-	static mrandv = 0xF0F0F0F0;
+	static long mrandv = 0xF0F0F0F0;
 	return (((mrandv = mrandv * 214013L + 2531011L) >> 16) &
 		0x7fff)%RAND_MAX;
 }
 
 #include "testaccelerators.h"
 #include "testparticle.h"
-#include "testvortfunc.h"
 #include "testsamecpugpuresultsingle.h"
 #include "testsamecpugpuresultmany.h"
 
 int main(int argc, char* argv[]){
 	cvtx_initialise();
 	testAccelerators();
-    testVortFunc();
     testParticle();
 	testSameCpuGpuResSingle();
 	testSameCpuGpuResMany();

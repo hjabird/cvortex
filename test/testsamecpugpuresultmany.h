@@ -44,13 +44,12 @@ int testSameCpuGpuResMany() {
 
 	bsv_V3f *pmes, *presult, *presult2;
 	bsv_V2f *p2mes, *p2dres, *p2dres2;
-	cvtx_P3D *particles, **pparticles;
-	cvtx_P2D *p2ds, **pp2ds;
-	cvtx_F3D *fils, **pfils;
+	cvtx_P3D *particles;
+	cvtx_P2D *p2ds;
+	cvtx_F3D *fils;
 	cvtx_VortFunc func;
 	float tmpp, tmpm, *fres, *fres2, maxerr, aveerr;
 	particles = malloc(sizeof(cvtx_P3D) * num_obj);
-	pparticles = malloc(sizeof(cvtx_P3D*) * num_obj);
 	pmes = malloc(sizeof(bsv_V3f) * num_obj);
 	presult = malloc(sizeof(bsv_V3f) * num_obj);
 	presult2 = malloc(sizeof(bsv_V3f) * num_obj);
@@ -58,42 +57,38 @@ int testSameCpuGpuResMany() {
 	p2dres2 = malloc(sizeof(bsv_V2f) * num_obj);
 	p2mes = malloc(sizeof(bsv_V2f) * num_obj);
 	p2ds = malloc(sizeof(cvtx_P2D) * num_obj);
-	pp2ds = malloc(sizeof(cvtx_P2D*) * num_obj);
 	fils = malloc(sizeof(cvtx_F3D) * num_obj);
-	pfils = malloc(sizeof(cvtx_F3D*) * num_obj);
 	fres = malloc(sizeof(float) * num_obj);
 	fres2 = malloc(sizeof(float) * num_obj);
 
 	for (repeat = 0; repeat < max_repeats; ++repeat) {
 		/* 3D PROBLEMS!!!!! */
 		for (i = 0; i < num_obj; ++i) {
-			particles[i].coord.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
-			particles[i].coord.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
-			particles[i].coord.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
+			particles[i].coord.x[0] = (float)mrand() / ((float)RAND_MAX / max_float);
+			particles[i].coord.x[1] = (float)mrand() / ((float)RAND_MAX / max_float);
+			particles[i].coord.x[2] = (float)mrand() / ((float)RAND_MAX / max_float);
 			pmes[i] = particles[i].coord;
-			particles[i].vorticity.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
-			particles[i].vorticity.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
-			particles[i].vorticity.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
-			particles[i].volume = (float)mrand() / (float)(RAND_MAX / 0.01);
-			pparticles[i] = &(particles[i]);
+			particles[i].vorticity.x[0] = (float)mrand() / ((float)RAND_MAX / max_float);
+			particles[i].vorticity.x[1] = (float)mrand() / ((float)RAND_MAX / max_float);
+			particles[i].vorticity.x[2] = (float)mrand() / ((float)RAND_MAX / max_float);
+			particles[i].volume = (float)mrand() / ((float)RAND_MAX / 0.01);
 		}
 		for (i = 0; i < num_obj; ++i) {
-			fils[i].start.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
-			fils[i].start.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
-			fils[i].start.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
-			fils[i].end.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
-			fils[i].end.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
-			fils[i].end.x[2] = (float)mrand() / (float)(RAND_MAX / max_float);
-			fils[i].strength = (float)mrand() / (float)(RAND_MAX / max_float);
-			pfils[i] = &(fils[i]);
+			fils[i].start.x[0] = (float)mrand() / ((float)RAND_MAX / max_float);
+			fils[i].start.x[1] = (float)mrand() / ((float)RAND_MAX / max_float);
+			fils[i].start.x[2] = (float)mrand() / ((float)RAND_MAX / max_float);
+			fils[i].end.x[0] = (float)mrand() / ((float)RAND_MAX / max_float);
+			fils[i].end.x[1] = (float)mrand() / ((float)RAND_MAX / max_float);
+			fils[i].end.x[2] = (float)mrand() / ((float)RAND_MAX / max_float);
+			fils[i].strength = (float)mrand() / ((float)RAND_MAX / max_float);
 		}
 		if (cvtx_num_accelerators() > 0) {
 			/* Singular */
-			func = cvtx_VortFunc_singular();
+			func = cvtx_VortFunc_singular;
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_vel(particles, num_obj, pmes, num_obj, presult, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_vel(particles, num_obj, pmes, num_obj, presult2, func, reg_rad);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -107,9 +102,9 @@ int testSameCpuGpuResMany() {
 			NAMED_TEST(good, "P3D M2M vel singular");
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(particles, num_obj, particles, num_obj, presult, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(particles, num_obj, particles, num_obj, presult2, func, reg_rad);
 			good = 1; 
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -128,11 +123,11 @@ int testSameCpuGpuResMany() {
 			/* (No viscous method) */
 
 			/* Planetary */
-			func = cvtx_VortFunc_planetary();
+			func = cvtx_VortFunc_planetary;
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_vel(particles, num_obj, pmes, num_obj, presult, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_vel(particles, num_obj, pmes, num_obj, presult2, func, reg_rad);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -149,9 +144,9 @@ int testSameCpuGpuResMany() {
 			NAMED_TEST(good, "P3D M2M vel planetary");
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(particles, num_obj, particles, num_obj, presult, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(particles, num_obj, particles, num_obj, presult2, func, reg_rad);
 			good = 1; 
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -170,11 +165,11 @@ int testSameCpuGpuResMany() {
 			/* No viscous method. */
 
 			/* Gaussian */
-			func = cvtx_VortFunc_gaussian();
+			func = cvtx_VortFunc_gaussian;
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_vel(particles, num_obj, pmes, num_obj, presult, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_vel(particles, num_obj, pmes, num_obj, presult2, func, reg_rad);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -191,9 +186,9 @@ int testSameCpuGpuResMany() {
 			NAMED_TEST(good, "P3D M2M vel gaussian");
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(particles, num_obj, particles, num_obj, presult, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(particles, num_obj, particles, num_obj, presult2, func, reg_rad);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -210,9 +205,9 @@ int testSameCpuGpuResMany() {
 			NAMED_TEST(good, "P3D M2M dvort gaussian");
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad, 0.1f);
+			cvtx_P3D_M2M_visc_dvort(particles, num_obj, particles, num_obj, presult, func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad, 0.1f);
+			cvtx_P3D_M2M_visc_dvort(particles, num_obj, particles, num_obj, presult2, func, reg_rad, 0.1f);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -230,11 +225,11 @@ int testSameCpuGpuResMany() {
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 
 			/* Winckelmans */
-			func = cvtx_VortFunc_winckelmans();
+			func = cvtx_VortFunc_winckelmans;
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_vel(particles, num_obj, pmes, num_obj, presult, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_vel(pparticles, num_obj, pmes, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_vel(particles, num_obj, pmes, num_obj, presult2, func, reg_rad);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -251,9 +246,9 @@ int testSameCpuGpuResMany() {
 			NAMED_TEST(good, "P3D M2M vel winckelmans");
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(particles, num_obj, particles, num_obj, presult, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad);
+			cvtx_P3D_M2M_dvort(particles, num_obj, particles, num_obj, presult2, func, reg_rad);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -270,9 +265,9 @@ int testSameCpuGpuResMany() {
 			NAMED_TEST(good, "P3D M2M dvort winckelmans");
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
-			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult, &func, reg_rad, 0.1f);
+			cvtx_P3D_M2M_visc_dvort(particles, num_obj, particles, num_obj, presult, func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
-			cvtx_P3D_M2M_visc_dvort(pparticles, num_obj, pparticles, num_obj, presult2, &func, reg_rad, 0.1f);
+			cvtx_P3D_M2M_visc_dvort(particles, num_obj, particles, num_obj, presult2, func, reg_rad, 0.1f);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -291,9 +286,9 @@ int testSameCpuGpuResMany() {
 
 			/* Vortex filaments */
 			cvtx_accelerator_enable(0);
-			cvtx_F3D_M2M_vel(pfils, num_obj, pmes, num_obj, presult);
+			cvtx_F3D_M2M_vel(fils, num_obj, pmes, num_obj, presult);
 			cvtx_accelerator_disable(0);
-			cvtx_F3D_M2M_vel(pfils, num_obj, pmes, num_obj, presult2);
+			cvtx_F3D_M2M_vel(fils, num_obj, pmes, num_obj, presult2);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -310,9 +305,9 @@ int testSameCpuGpuResMany() {
 			NAMED_TEST(good, "F3D M2M vel");
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
-			cvtx_F3D_M2M_dvort(pfils, num_obj, pparticles, num_obj, presult);
+			cvtx_F3D_M2M_dvort(fils, num_obj, particles, num_obj, presult);
 			cvtx_accelerator_disable(0);
-			cvtx_F3D_M2M_dvort(pfils, num_obj, pparticles, num_obj, presult2);
+			cvtx_F3D_M2M_dvort(fils, num_obj, particles, num_obj, presult2);
 			good = 1; 
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -333,19 +328,18 @@ int testSameCpuGpuResMany() {
 
 		/* 2D PROBLEMS!!!!! */
 		for (i = 0; i < num_obj; ++i) {
-			p2ds[i].coord.x[0] = (float)mrand() / (float)(RAND_MAX / max_float);
-			p2ds[i].coord.x[1] = (float)mrand() / (float)(RAND_MAX / max_float);
-			p2ds[i].vorticity = (float)mrand() / (float)(RAND_MAX / max_float);
-			p2ds[i].area = (float)mrand() / (float)(RAND_MAX / 0.01);
-			pp2ds[i] = &(p2ds[i]);
+			p2ds[i].coord.x[0] = (float)mrand() / ((float)RAND_MAX / max_float);
+			p2ds[i].coord.x[1] = (float)mrand() / ((float)RAND_MAX / max_float);
+			p2ds[i].vorticity = (float)mrand() / ((float)RAND_MAX / max_float);
+			p2ds[i].area = (float)mrand() / ((float)RAND_MAX / 0.01);
 		}
 		if (cvtx_num_accelerators() > 0) {
 			/* Singular */
-			func = cvtx_VortFunc_singular();
+			func = cvtx_VortFunc_singular;
 			cvtx_accelerator_enable(0);
-			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres, &func, reg_rad);
+			cvtx_P2D_M2M_vel(p2ds, num_obj, p2mes, num_obj, p2dres, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres2, &func, reg_rad);
+			cvtx_P2D_M2M_vel(p2ds, num_obj, p2mes, num_obj, p2dres2, func, reg_rad);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -363,11 +357,11 @@ int testSameCpuGpuResMany() {
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 
 			/* Planetary */
-			func = cvtx_VortFunc_planetary();
+			func = cvtx_VortFunc_planetary;
 			cvtx_accelerator_enable(0);
-			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres, &func, reg_rad);
+			cvtx_P2D_M2M_vel(p2ds, num_obj, p2mes, num_obj, p2dres, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres2, &func, reg_rad);
+			cvtx_P2D_M2M_vel(p2ds, num_obj, p2mes, num_obj, p2dres2, func, reg_rad);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -385,11 +379,11 @@ int testSameCpuGpuResMany() {
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 
 			/* Gaussian */
-			func = cvtx_VortFunc_gaussian();
+			func = cvtx_VortFunc_gaussian;
 			cvtx_accelerator_enable(0);
-			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres, &func, reg_rad);
+			cvtx_P2D_M2M_vel(p2ds, num_obj, p2mes, num_obj, p2dres, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres2, &func, reg_rad);
+			cvtx_P2D_M2M_vel(p2ds, num_obj, p2mes, num_obj, p2dres2, func, reg_rad);
 			good = 1;
 			maxerr = aveerr = 0.;
 			for (i = 0; i < num_obj; ++i) {
@@ -407,9 +401,9 @@ int testSameCpuGpuResMany() {
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 
 			cvtx_accelerator_enable(0);
-			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres, &func, reg_rad, 0.1f);
+			cvtx_P2D_M2M_visc_dvort(p2ds, num_obj, p2ds, num_obj, fres, func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
-			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres2, &func, reg_rad, 0.1f);
+			cvtx_P2D_M2M_visc_dvort(p2ds, num_obj, p2ds, num_obj, fres2, func, reg_rad, 0.1f);
 			good = 1;
 			maxerr = aveerr = 0.f;
 			for (i = 0; i < num_obj; ++i) {
@@ -427,11 +421,11 @@ int testSameCpuGpuResMany() {
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr / num_obj, maxerr); }
 
 			/* Winckelmans */
-			func = cvtx_VortFunc_winckelmans();
+			func = cvtx_VortFunc_winckelmans;
 			cvtx_accelerator_enable(0);
-			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres, &func, reg_rad);
+			cvtx_P2D_M2M_vel(p2ds, num_obj, p2mes, num_obj, p2dres, func, reg_rad);
 			cvtx_accelerator_disable(0);
-			cvtx_P2D_M2M_vel(pp2ds, num_obj, p2mes, num_obj, p2dres2, &func, reg_rad);
+			cvtx_P2D_M2M_vel(p2ds, num_obj, p2mes, num_obj, p2dres2, func, reg_rad);
 			good = 1;
 			maxerr = aveerr = 0.f;
 			for (i = 0; i < num_obj; ++i) {
@@ -448,9 +442,9 @@ int testSameCpuGpuResMany() {
 			NAMED_TEST(good, "P2D M2M vel winckelmans");
 			if (!good) { printf("\tAve Err = %.2e Max Err = %.2e\n", aveerr/num_obj, maxerr); }
 			cvtx_accelerator_enable(0);
-			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres, &func, reg_rad, 0.1f);
+			cvtx_P2D_M2M_visc_dvort(p2ds, num_obj, p2ds, num_obj, fres, func, reg_rad, 0.1f);
 			cvtx_accelerator_disable(0);
-			cvtx_P2D_M2M_visc_dvort(pp2ds, num_obj, pp2ds, num_obj, fres2, &func, reg_rad, 0.1f);
+			cvtx_P2D_M2M_visc_dvort(p2ds, num_obj, p2ds, num_obj, fres2, func, reg_rad, 0.1f);
 			good = 1;
 			maxerr = aveerr = 0.f;
 			for (i = 0; i < num_obj; ++i) {
@@ -469,17 +463,14 @@ int testSameCpuGpuResMany() {
 		}
 	}
 	free(particles);
-	free(pparticles);
 	free(pmes);
 	free(presult);
 	free(presult2);
 	free(p2dres);
 	free(p2dres2);
 	free(p2ds);
-	free(pp2ds); 
 	free(p2mes);
 	free(fils);
-	free(pfils);
 	free(fres);
 	free(fres2);
 	return 0;
