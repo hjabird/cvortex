@@ -175,8 +175,14 @@ void minmax_xyz_posn(
 		tzmin = tzmin > z ? z : tzmin;
 		tzmax = tzmax < z ? z : tzmax;
 	}
-	if (min != NULL) { *min = { txmin, tymin, tzmin }; }
-	if (max != NULL) { *max = { txmax, tymax, tzmax }; }
+	if (min != NULL) {
+        bsv_V3f tmin = { txmin, tymin, tzmin };
+        *min = tmin;
+    }
+	if (max != NULL) {
+        bsv_V3f tmax = { txmax, tymax, tzmax };
+        *max = tmax;
+    }
 	return;
 }
 
@@ -217,8 +223,14 @@ void minmax_xy_posn(
 		tymin = tymin > y ? y : tymin;
 		tymax = tymax < y ? y : tymax;
 	}
-	if (min != NULL) { *min = { txmin, tymin }; }
-	if (max != NULL) { *max = { txmax, tymax }; }
+	if (min != NULL) {
+        bsv_V2f tmin = {txmin, tymin};
+        *min = tmin;
+    }
+	if (max != NULL) {
+        bsv_V2f tmax = {txmax, tymax};
+        *max = tmax;
+    }
 	return;
 }
 

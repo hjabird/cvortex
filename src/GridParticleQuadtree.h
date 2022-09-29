@@ -37,7 +37,7 @@ SOFTWARE.
 
 #include <bsv/bsv_V2f.h>
 
-#include "UIntKey64.h"
+#include "UIntKey64.hpp"
 
 class GridParticleQuadtree;
 class GridParticleQuadtreeBranch;

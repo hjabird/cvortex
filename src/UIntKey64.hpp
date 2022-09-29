@@ -2,11 +2,11 @@
 #define CVTX_UINTKEY64_H
 #include "libcvtx.h"
 /*============================================================================
-UIntKey64.h
+UIntKey64.hpp
 
 uint32 based key for working with 2D grids.
 
-Copyright(c) 2019-2020 HJA Bird
+Copyright(c) HJA Bird
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
@@ -27,9 +27,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 
-#include <cassert>
 #include <cstdint>
-#include <string>
 #include <tuple>
 
 #ifdef __GNUC__
@@ -50,7 +48,7 @@ public:
 	};
 
 	UIntKey64() :v() {};
-	inline UIntKey64(uint32_t x, uint32_t y) :k({ x, y }) {};
+    inline UIntKey64(uint32_t x, uint32_t y) { k.x = x; k.y=y;};
 	inline UIntKey64(const UIntKey64& parent, uint32_t bit_shift, uint32_t lidx);
 
 	/* Returns nearby grid points (including this one) in output buffer.

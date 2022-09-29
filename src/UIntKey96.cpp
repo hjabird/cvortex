@@ -1,4 +1,4 @@
-#include "UIntKey96.h"
+#include "UIntKey96.hpp"
 /*============================================================================
 UIntKey96.cpp
 
@@ -27,6 +27,7 @@ SOFTWARE.
 
 #include <cassert>
 #include <cmath>
+#include <string>
 #include "array_methods.h"
 
 

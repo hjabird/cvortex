@@ -1,4 +1,4 @@
-#include "UIntKey64.h"
+#include "UIntKey64.hpp"
 /*============================================================================
 UIntKey64.c
 
@@ -25,9 +25,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cassert>
+#include <string>
 #include "array_methods.h"
 
 /*	DEFINITIONS ------------------------------------------------------------*/

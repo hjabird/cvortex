@@ -44,7 +44,7 @@ SOFTWARE.
 #define CVTX_VORTEX_KERNELS_H
 
 #include <assert.h>
-#include <math.h>
+#include <cmath>
 
 #define SQRTF_2_OVER_PI 0.7978845608028654f
 #define RECIP_SQRTF_2 0.7071067811865475f
@@ -67,7 +67,7 @@ template <cvtx_VortFunc VortFunc> constexpr const char *opencl_kernel_name_ext()
 /* SPECIALISATIONS ----------------------------------------------------------*/
 
 /* Specialisations for the singular kernel */
-template <> inline float g_2D<cvtx_VortFunc_singular>(float rho) { return 1.f; }
+template <> inline float g_2D<cvtx_VortFunc_singular>(float) { return 1.f; }
 template <> inline float g_3D<cvtx_VortFunc_singular>(float) { return 1.f; }
 template <> inline float zeta_fn<cvtx_VortFunc_singular>(float) { return 0.f; }
 /* No eta functions for singular kernels */
@@ -79,18 +79,16 @@ template <> constexpr const char *opencl_kernel_name_ext<cvtx_VortFunc_singular>
 /* Winckelmans kernels */
 template <> inline float g_3D<cvtx_VortFunc_winckelmans>(float rho) {
   float a, b, c, d;
-  assert(rho >= 0 && "Rho should not be -ve");
   a = (rho * rho) + 2.5f;
   b = a * rho * (rho * rho);
   c = (rho * rho) + 1.f;
-  d = b * powf(c, -2.5f);
+  d = b / std::sqrt((c * c) * (c * c) * c);
   return d;
 }
 template <> inline float zeta_fn<cvtx_VortFunc_winckelmans>(float rho) {
   float a, b, c;
-  assert(rho >= 0 && "Rho should not be -ve");
   a = rho * rho + 1.f;
-  b = powf(a, -3.5f);
+  b = 1.f / std::sqrt((a * a) * (a * a) * (a * a) * a);
   c = 7.5f * b;
   return c;
 }
@@ -104,19 +102,17 @@ template <> constexpr bool has_eta_fns<cvtx_VortFunc_winckelmans>() {
   return true;
 }
 template <> inline float eta_2D<cvtx_VortFunc_winckelmans>(float rho) {
-  assert(rho >= 0 && "Rho should not be -ve");
   float a, a2, c;
   a = rho * rho + 1.f;
   a2 = 1.f / (a * a);
-  c = 24.f * expf(4.f * a * (a2 * a2));
+  c = 24.f * std::exp(4.f * a * (a2 * a2));
   return c * (a2 * a2);
 }
 template <> inline float eta_3D<cvtx_VortFunc_winckelmans>(float rho) {
   float a, b, c;
-  assert(rho >= 0 && "Rho should not be -ve");
   a = 52.5f;
   b = rho * rho + 1.f;
-  c = powf(b, -4.5f);
+  c = 1.f / std::sqrt((b*b*b)*(b*b*b)*(b*b*b));
   return a * c;
 }
 template <> constexpr const char *opencl_kernel_name_ext<cvtx_VortFunc_winckelmans>() {
@@ -131,7 +127,7 @@ template <> inline float g_3D<cvtx_VortFunc_planetary>(float rho) {
   a = (rho * rho) + 2.5f;
   b = a * rho * (rho * rho);
   c = (rho * rho) + 1.f;
-  d = b * powf(c, -2.5f);
+  d = b * 1.f / std::sqrt((c * c) * (c * c) * c);
   return d;
 }
 template <> inline float zeta_fn<cvtx_VortFunc_planetary>(float rho) {
@@ -167,8 +163,8 @@ template <> inline float g_3D<cvtx_VortFunc_gaussian>(float rho) {
     float t4 = t2 * t2;
     float t5 = t3 * t2;
     float erf = 1.f - (a1 * t + a2 * t2 + a3 * t3 + a4 * t4 + a5 * t5) *
-                          expf(-rho_sr2 * rho_sr2);
-    float term2 = rho * SQRTF_2_OVER_PI * expf(-rho_sr2 * rho_sr2);
+                          std::exp(-rho_sr2 * rho_sr2);
+    float term2 = rho * SQRTF_2_OVER_PI * std::exp(-rho_sr2 * rho_sr2);
     ret = erf - term2;
   }
   return ret;
@@ -176,18 +172,18 @@ template <> inline float g_3D<cvtx_VortFunc_gaussian>(float rho) {
 template <> inline float zeta_fn<cvtx_VortFunc_gaussian>(float rho) {
   assert(rho >= 0 && "Rho should not be -ve");
   const float pi = 3.14159265359f;
-  return SQRTF_2_OVER_PI * expf(-rho * rho * 0.5f);
+  return SQRTF_2_OVER_PI * std::exp(-rho * rho * 0.5f);
 }
 template <> inline float g_2D<cvtx_VortFunc_gaussian>(float rho) {
   assert(rho >= 0 && "Rho should not be -ve");
-  return 1.f - expf(-rho * rho * 0.5f);
+  return 1.f - std::exp(-rho * rho * 0.5f);
 }
 template <> constexpr bool has_eta_fns<cvtx_VortFunc_gaussian>() {
   return true;
 }
 template <> inline float eta_2D<cvtx_VortFunc_gaussian>(float rho) {
   assert(rho >= 0 && "Rho should not be -ve");
-  return expf(-rho * rho * 0.5f);
+  return std::exp(-rho * rho * 0.5f);
 }
 template <> inline float eta_3D<cvtx_VortFunc_gaussian>(float rho) {
   return zeta_fn<cvtx_VortFunc_gaussian>(rho);

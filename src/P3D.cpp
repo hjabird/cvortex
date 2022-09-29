@@ -2,7 +2,7 @@
 /*============================================================================
 P3D.c
 
-Vortex particle in 2D with CPU based code.
+Vortex particle in 3D with CPU based code.
 
 Copyright(c) HJA Bird
 
@@ -33,7 +33,7 @@ SOFTWARE.
 #include <vector>
 
 #include "GridParticleOcttree.h"
-#include "UIntKey96.h"
+#include "UIntKey96.hpp"
 #include "array_methods.h"
 #include "redistribution_helper_funcs.h"
 #include "vortex_kernels.h"
@@ -50,76 +50,69 @@ SOFTWARE.
 namespace cvtx {
 namespace detail {
 template <cvtx_VortFunc VortFunc>
-static inline bsv_V3f P3D_vel(const cvtx_P3D& self, const bsv_V3f mes_point,
+inline bsv_V3f P3D_vel(const cvtx_P3D &self, const bsv_V3f mes_point,
                               float recip_reg_rad) {
   bsv_V3f rad, num, ret;
-  if (bsv_V3f_isequal(self.coord, mes_point)) {
-    ret = bsv_V3f_zero();
-  } else {
-    float cor, den, rho, radd;
-    rad = bsv_V3f_minus(mes_point, self.coord);
-    radd = bsv_V3f_abs(rad);
-    rho = radd * recip_reg_rad; /* Assume positive. */
-    cor = -vkernel::g_3D<VortFunc>(rho);
-    den = powf(radd, -3);
-    num = bsv_V3f_cross(rad, self.vorticity);
-    ret = bsv_V3f_mult(num, cor * den);
-  }
+  float cor, den, rho, radd;
+  rad = bsv_V3f_minus(mes_point, self.coord);
+  radd = bsv_V3f_abs(rad);
+  rho = radd * recip_reg_rad; /* Assume positive. */
+  cor = -vkernel::g_3D<VortFunc>(rho);
+  den = 1.f / (radd * radd * radd);
+  num = bsv_V3f_cross(rad, self.vorticity);
+  ret = bsv_V3f_mult(num, cor * den);
+  ret = bsv_V3f_isequal(self.coord, mes_point) ? bsv_V3f_zero() : ret;
   return bsv_V3f_mult(ret, 1.f / (4.f * CVTX_PI_F));
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_dvort(const cvtx_P3D& self, const cvtx_P3D& induced_particle,
+bsv_V3f P3D_dvort(const cvtx_P3D &self, const cvtx_P3D &induced_particle,
                   float regularisation_radius) {
   bsv_V3f ret, rad, cross_om, t2, t21, t21n, t22;
   float g, f, radd, rho, t1, t21d, t221, t222, t223;
-  if (bsv_V3f_isequal(self.coord, induced_particle.coord)) {
-    ret = bsv_V3f_zero();
-  } else {
-    rad = bsv_V3f_minus(induced_particle.coord, self.coord);
-    radd = bsv_V3f_abs(rad);
-    rho = fabsf(radd / regularisation_radius);
-    g = vkernel::g_3D<VortFunc>(rho);
-    f = vkernel::zeta_fn<VortFunc>(rho);
-    cross_om = bsv_V3f_cross(induced_particle.vorticity, self.vorticity);
-    t1 = 1.f / (4.f * CVTX_PI_F * powf(regularisation_radius, 3));
-    t21n = bsv_V3f_mult(cross_om, g);
-    t21d = rho * rho * rho;
-    t21 = bsv_V3f_div(t21n, t21d);
-    t221 = -1.f / (radd * radd);
-    t222 = (3 * g) / t21d - f;
-    t223 = bsv_V3f_dot(rad, cross_om);
-    t22 = bsv_V3f_mult(rad, t221 * t222 * t223);
-    t2 = bsv_V3f_plus(t21, t22);
-    ret = bsv_V3f_mult(t2, t1);
-  }
+  rad = bsv_V3f_minus(induced_particle.coord, self.coord);
+  radd = bsv_V3f_abs(rad);
+  rho = std::abs(radd / regularisation_radius);
+  g = vkernel::g_3D<VortFunc>(rho);
+  f = vkernel::zeta_fn<VortFunc>(rho);
+  cross_om = bsv_V3f_cross(induced_particle.vorticity, self.vorticity);
+  t1 = 1.f / (4.f * CVTX_PI_F * regularisation_radius * regularisation_radius * regularisation_radius);
+  t21n = bsv_V3f_mult(cross_om, g);
+  t21d = rho * rho * rho;
+  t21 = bsv_V3f_div(t21n, t21d);
+  t221 = -1.f / (radd * radd);
+  t222 = (3 * g) / t21d - f;
+  t223 = bsv_V3f_dot(rad, cross_om);
+  t22 = bsv_V3f_mult(rad, t221 * t222 * t223);
+  t2 = bsv_V3f_plus(t21, t22);
+  ret = bsv_V3f_mult(t2, t1);
+  ret = bsv_V3f_isequal(self.coord, induced_particle.coord) ? bsv_V3f_zero()
+                                                            : ret;
   return ret;
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_visc_dvort(const cvtx_P3D& self, const cvtx_P3D& induced_particle,
+bsv_V3f P3D_visc_dvort(const cvtx_P3D &self, const cvtx_P3D &induced_particle,
                        float regularisation_radius, float kinematic_visc) {
   bsv_V3f ret, rad, t211, t212, t21, t2;
   float radd, rho, t1, t22;
-  if (bsv_V3f_isequal(self.coord, induced_particle.coord)) {
-    ret = bsv_V3f_zero();
-  } else {
-    rad = bsv_V3f_minus(self.coord, induced_particle.coord);
-    radd = bsv_V3f_abs(rad);
-    rho = fabsf(radd / regularisation_radius);
-    t1 = 2 * kinematic_visc / powf(regularisation_radius, 2);
-    t211 = bsv_V3f_mult(self.vorticity, induced_particle.volume);
-    t212 = bsv_V3f_mult(induced_particle.vorticity, -1 * self.volume);
-    t21 = bsv_V3f_plus(t211, t212);
-    t22 = vkernel::eta_3D<VortFunc>(rho);
-    t2 = bsv_V3f_mult(t21, t22);
-    ret = bsv_V3f_mult(t2, t1);
-  }
+  rad = bsv_V3f_minus(self.coord, induced_particle.coord);
+  radd = bsv_V3f_abs(rad);
+  rho = std::abs(radd / regularisation_radius);
+  t1 = 2 * kinematic_visc / (regularisation_radius * regularisation_radius);
+  t211 = bsv_V3f_mult(self.vorticity, induced_particle.volume);
+  t212 = bsv_V3f_mult(induced_particle.vorticity, -1 * self.volume);
+  t21 = bsv_V3f_plus(t211, t212);
+  t22 = vkernel::eta_3D<VortFunc>(rho);
+  t2 = bsv_V3f_mult(t21, t22);
+  ret = bsv_V3f_mult(t2, t1);
+  ret = bsv_V3f_isequal(self.coord, induced_particle.coord) ? bsv_V3f_zero()
+                                                            : ret;
   return ret;
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_vort(const cvtx_P3D& self, const bsv_V3f mes_point,
+bsv_V3f P3D_vort(const cvtx_P3D &self, const bsv_V3f mes_point,
                  float regularisation_radius) {
   bsv_V3f rad, ret;
   float radd, coeff, divisor;
@@ -135,25 +128,23 @@ bsv_V3f P3D_vort(const cvtx_P3D& self, const bsv_V3f mes_point,
 } // namespace detail
 
 template <cvtx_VortFunc VortFunc>
-void P3D_S2M_vel(const cvtx_P3D& self, const bsv_V3f *mes_start,
+void P3D_S2M_vel(const cvtx_P3D &self, const bsv_V3f *mes_start,
                  const int num_mes, bsv_V3f *result_array,
                  float regularisation_radius) {
-  int i;
   float recip_rad = 1.f / regularisation_radius;
 #pragma omp parallel for
-  for (i = 0; i < num_mes; ++i) {
+  for (int i = 0; i < num_mes; ++i) {
     result_array[i] = detail::P3D_vel<VortFunc>(self, mes_start[i], recip_rad);
   }
   return;
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_S2M_dvort(const cvtx_P3D& self, const cvtx_P3D *induced_start,
+void P3D_S2M_dvort(const cvtx_P3D &self, const cvtx_P3D *induced_start,
                    const int num_induced, bsv_V3f *result_array,
                    float regularisation_radius) {
-  int i;
 #pragma omp parallel for
-  for (i = 0; i < num_induced; ++i) {
+  for (int i = 0; i < num_induced; ++i) {
     result_array[i] = detail::P3D_dvort<VortFunc>(self, induced_start[i],
                                                   regularisation_radius);
   }
@@ -161,12 +152,11 @@ void P3D_S2M_dvort(const cvtx_P3D& self, const cvtx_P3D *induced_start,
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_S2M_visc_dvort(const cvtx_P3D& self, const cvtx_P3D *induced_start,
+void P3D_S2M_visc_dvort(const cvtx_P3D &self, const cvtx_P3D *induced_start,
                         const int num_induced, bsv_V3f *result_array,
                         float regularisation_radius, float kinematic_visc) {
-  int i;
 #pragma omp parallel for
-  for (i = 0; i < num_induced; ++i) {
+  for (int i = 0; i < num_induced; ++i) {
     result_array[i] = detail::P3D_visc_dvort<VortFunc>(
         self, induced_start[i], regularisation_radius, kinematic_visc);
   }
@@ -174,12 +164,11 @@ void P3D_S2M_visc_dvort(const cvtx_P3D& self, const cvtx_P3D *induced_start,
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_S2M_vort(const cvtx_P3D& self, const bsv_V3f *mes_start,
+void P3D_S2M_vort(const cvtx_P3D &self, const bsv_V3f *mes_start,
                   const int num_mes, bsv_V3f *result_array,
                   float regularisation_radius) {
-  int i;
 #pragma omp parallel for
-  for (i = 0; i < num_mes; ++i) {
+  for (int i = 0; i < num_mes; ++i) {
     result_array[i] =
         detail::P3D_vort<VortFunc>(self, mes_start[i], regularisation_radius);
   }
@@ -189,51 +178,46 @@ void P3D_S2M_vort(const cvtx_P3D& self, const bsv_V3f *mes_start,
 template <cvtx_VortFunc VortFunc>
 bsv_V3f P3D_M2S_vel(const cvtx_P3D *array_start, const int num_particles,
                     const bsv_V3f mes_point, float regularisation_radius) {
-  double rx = 0, ry = 0, rz = 0;
-  long i;
-  float recip_reg_rad = 1.f / fabsf(regularisation_radius);
+  float rx = 0, ry = 0, rz = 0;
+  float recip_reg_rad = 1.f / std::abs(regularisation_radius);
   assert(num_particles >= 0);
 #pragma omp parallel for reduction(+ : rx, ry, rz)
-  for (i = 0; i < num_particles; ++i) {
+  for (int i = 0; i < num_particles; ++i) {
     bsv_V3f vel =
         detail::P3D_vel<VortFunc>(array_start[i], mes_point, recip_reg_rad);
     rx += vel.x[0];
     ry += vel.x[1];
     rz += vel.x[2];
   }
-  bsv_V3f ret = {(float)rx, (float)ry, (float)rz};
-  return bsv_V3f_mult(ret, 1.f / (4.f * CVTX_PI_F));
+  return {rx, ry, rz};;
 }
 
 template <cvtx_VortFunc VortFunc>
 bsv_V3f P3D_M2S_dvort(const cvtx_P3D *array_start, const int num_particles,
-                      const cvtx_P3D& induced_particle,
+                      const cvtx_P3D &induced_particle,
                       float regularisation_radius) {
   bsv_V3f dvort;
-  double rx = 0, ry = 0, rz = 0;
-  long i;
+  float rx = 0, ry = 0, rz = 0;
   assert(num_particles >= 0);
-  for (i = 0; i < num_particles; ++i) {
+  for (int i = 0; i < num_particles; ++i) {
     dvort = detail::P3D_dvort<VortFunc>(array_start[i], induced_particle,
                                         regularisation_radius);
     rx += dvort.x[0];
     ry += dvort.x[1];
     rz += dvort.x[2];
   }
-  bsv_V3f ret = {(float)rx, (float)ry, (float)rz};
+  bsv_V3f ret = {rx, ry, rz};
   return ret;
 }
 
 template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_M2S_visc_dvort(const cvtx_P3D *array_start,
-                           const int num_particles,
-                           const cvtx_P3D& induced_particle,
+bsv_V3f P3D_M2S_visc_dvort(const cvtx_P3D *array_start, const int num_particles,
+                           const cvtx_P3D &induced_particle,
                            float regularisation_radius, float kinematic_visc) {
   bsv_V3f dvort;
-  double rx = 0, ry = 0, rz = 0;
-  long i;
+  float rx = 0, ry = 0, rz = 0;
   assert(num_particles >= 0);
-  for (i = 0; i < num_particles; ++i) {
+  for (int i = 0; i < num_particles; ++i) {
     dvort =
         detail::P3D_visc_dvort<VortFunc>(array_start[i], induced_particle,
                                          regularisation_radius, kinematic_visc);
@@ -241,7 +225,7 @@ bsv_V3f P3D_M2S_visc_dvort(const cvtx_P3D *array_start,
     ry += dvort.x[1];
     rz += dvort.x[2];
   }
-  bsv_V3f ret = {(float)rx, (float)ry, (float)rz};
+  bsv_V3f ret = {rx, ry, rz};
   return ret;
 }
 
@@ -250,14 +234,13 @@ bsv_V3f P3D_M2S_vort(const cvtx_P3D *array_start, const int num_particles,
                      const bsv_V3f mes_point, float regularisation_radius) {
   float cutoff, rsigma, radd, coeff;
   bsv_V3f rad, sum = bsv_V3f_zero();
-  long i;
   cutoff = 5.f * regularisation_radius;
   rsigma = 1 / regularisation_radius;
   assert(num_particles > 0);
-  for (i = 0; i < num_particles; ++i) {
+  for (int i = 0; i < num_particles; ++i) {
     rad = bsv_V3f_minus(array_start[i].coord, mes_point);
-    if (fabsf(rad.x[0]) < cutoff && fabsf(rad.x[1]) < cutoff &&
-        fabsf(rad.x[2]) < cutoff) {
+    if (std::abs(rad.x[0]) < cutoff && std::abs(rad.x[1]) < cutoff &&
+        std::abs(rad.x[2]) < cutoff) {
       radd = bsv_V3f_abs(rad);
       coeff = vkernel::zeta_fn<VortFunc>(radd * rsigma);
       sum = bsv_V3f_plus(bsv_V3f_mult(array_start[i].vorticity, coeff), sum);
@@ -274,9 +257,8 @@ template <cvtx_VortFunc VortFunc>
 void P3D_M2M_vel(const cvtx_P3D *array_start, const int num_particles,
                  const bsv_V3f *mes_start, const int num_mes,
                  bsv_V3f *result_array, float regularisation_radius) {
-  long i;
 #pragma omp parallel for schedule(static)
-  for (i = 0; i < num_mes; ++i) {
+  for (int i = 0; i < num_mes; ++i) {
     result_array[i] = P3D_M2S_vel<VortFunc>(
         array_start, num_particles, mes_start[i], regularisation_radius);
   }
@@ -311,9 +293,8 @@ template <cvtx_VortFunc VortFunc>
 void P3D_M2M_dvort(const cvtx_P3D *array_start, const int num_particles,
                    const cvtx_P3D *induced_start, const int num_induced,
                    bsv_V3f *result_array, float regularisation_radius) {
-  long i;
 #pragma omp parallel for schedule(static)
-  for (i = 0; i < num_induced; ++i) {
+  for (int i = 0; i < num_induced; ++i) {
     result_array[i] = P3D_M2S_dvort<VortFunc>(
         array_start, num_particles, induced_start[i], regularisation_radius);
   }
@@ -349,9 +330,8 @@ void P3D_M2M_visc_dvort(const cvtx_P3D *array_start, const int num_particles,
                         const cvtx_P3D *induced_start, const int num_induced,
                         bsv_V3f *result_array, float regularisation_radius,
                         float kinematic_visc) {
-  long i;
 #pragma omp parallel for schedule(static)
-  for (i = 0; i < num_induced; ++i) {
+  for (int i = 0; i < num_induced; ++i) {
     result_array[i] = P3D_M2S_visc_dvort<VortFunc>(
         array_start, num_particles, induced_start[i], regularisation_radius,
         kinematic_visc);
@@ -374,32 +354,26 @@ void P3D_M2M_visc_dvort(const cvtx_P3D *array_start, const int num_particles,
         array_start, num_particles, induced_start, num_induced, result_array,
         regularisation_radius, kinematic_visc);
   default:
-	assert(false && "Invalid kernel choice.");
-	return;
+    assert(false && "Invalid kernel choice.");
+    return;
   }
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_M2M_vort(const cvtx_P3D *array_start,
-                                  const int num_particles,
-                                  const bsv_V3f *mes_start, const int num_mes,
-                                  bsv_V3f *result_array,
-                                  float regularisation_radius) {
-  long i;
+void P3D_M2M_vort(const cvtx_P3D *array_start, const int num_particles,
+                  const bsv_V3f *mes_start, const int num_mes,
+                  bsv_V3f *result_array, float regularisation_radius) {
 #pragma omp parallel for schedule(guided)
-  for (i = 0; i < num_mes; ++i) {
-    result_array[i] =
-        P3D_M2S_vort<VortFunc>(array_start, num_particles, mes_start[i],
-                          regularisation_radius);
+  for (int i = 0; i < num_mes; ++i) {
+    result_array[i] = P3D_M2S_vort<VortFunc>(
+        array_start, num_particles, mes_start[i], regularisation_radius);
   }
   return;
 }
-void P3D_M2M_vort(const cvtx_P3D *array_start,
-                                  const int num_particles,
-                                  const bsv_V3f *mes_start, const int num_mes,
-                                  bsv_V3f *result_array,
-                                  const cvtx_VortFunc kernel,
-                                  float regularisation_radius){
+void P3D_M2M_vort(const cvtx_P3D *array_start, const int num_particles,
+                  const bsv_V3f *mes_start, const int num_mes,
+                  bsv_V3f *result_array, const cvtx_VortFunc kernel,
+                  float regularisation_radius) {
   switch (kernel) {
   case cvtx_VortFunc_singular:
     return P3D_M2M_vort<cvtx_VortFunc_singular>(
@@ -476,8 +450,8 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_visc_dvort(const cvtx_P3D *self,
     return cvtx::detail::P3D_visc_dvort<cvtx_VortFunc_gaussian>(
         *self, *induced_particle, regularisation_radius, kinematic_visc);
   default:
-	assert(false && "Invalid kernel choice.");
-	return {0.f, 0.f, 0.f};
+    assert(false && "Invalid kernel choice.");
+    return {0.f, 0.f, 0.f};
   }
 }
 
@@ -561,8 +535,8 @@ cvtx_P3D_S2M_visc_dvort(const cvtx_P3D *self, const cvtx_P3D *induced_start,
         *self, induced_start, num_induced, result_array, regularisation_radius,
         kinematic_visc);
   default:
-	assert(false && "Invalid kernel choice.");
-	return;
+    assert(false && "Invalid kernel choice.");
+    return;
   }
 }
 
@@ -645,8 +619,8 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_visc_dvort(const cvtx_P3D *array_start,
         array_start, num_particles, *induced_particle, regularisation_radius,
         kinematic_visc);
   default:
-	assert(false && "Invalid kernel choice.");
-	return {0.f, 0.f, 0.f};
+    assert(false && "Invalid kernel choice.");
+    return {0.f, 0.f, 0.f};
   }
 }
 
@@ -724,9 +698,9 @@ cvtx_P3D_M2M_visc_dvort(const cvtx_P3D *array_start, const int num_particles,
           kernel, regularisation_radius, kinematic_visc) != 0)
 #endif
   {
-    cvtx::open_mp::P3D_M2M_visc_dvort(
-        array_start, num_particles, induced_start, num_induced, result_array,
-        kernel, regularisation_radius, kinematic_visc);
+    cvtx::open_mp::P3D_M2M_visc_dvort(array_start, num_particles, induced_start,
+                                      num_induced, result_array, kernel,
+                                      regularisation_radius, kinematic_visc);
   }
   return;
 }
@@ -746,7 +720,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_vort(const cvtx_P3D *array_start,
 #endif
   {
     cvtx::open_mp::P3D_M2M_vort(array_start, num_particles, mes_start, num_mes,
-                                 result_array, kernel, regularisation_radius);
+                                result_array, kernel, regularisation_radius);
   }
   return;
 }
@@ -824,9 +798,9 @@ CVTX_EXPORT int cvtx_P3D_redistribute_on_grid(
         bsv_V3f npos = key_buffer[j].to_position_min(grid_density, min);
         float U, W, V, vortfrac;
         bsv_V3f dx = bsv_V3f_minus(tparticle_pos, npos);
-        U = fabsf(dx.x[0] * recip_grid_density);
-        W = fabsf(dx.x[1] * recip_grid_density);
-        V = fabsf(dx.x[2] * recip_grid_density);
+        U = std::abs(dx.x[0] * recip_grid_density);
+        W = std::abs(dx.x[1] * recip_grid_density);
+        V = std::abs(dx.x[2] * recip_grid_density);
         vortfrac = redistributor->func(U) * redistributor->func(W) *
                    redistributor->func(V);
         str_buffer[j] = bsv_V3f_mult(tparticle_str, vortfrac);

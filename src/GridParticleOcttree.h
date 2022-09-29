@@ -34,7 +34,7 @@ SOFTWARE.
 
 #include <bsv/bsv_V3f.h>
 
-#include "UIntKey96.h"
+#include "UIntKey96.hpp"
 
 class GridParticleOcttree;
 class GridParticleOcttreeBranch;

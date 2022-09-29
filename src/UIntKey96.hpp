@@ -27,10 +27,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 
-#include <cassert>
 #include <cstdint>
-#include <string>
 #include <tuple>
+
+#include "cpp_types.hpp"
 
 #ifdef __GNUC__
 /* No need to include anything. */
@@ -56,7 +56,9 @@ public:
 	};
 
 	UIntKey96() :v() {};
-	inline UIntKey96(uint32_t x, uint32_t y, uint32_t z) :k({ x, y, z }) {};
+    inline UIntKey96(uint32_t x, uint32_t y, uint32_t z) {
+        k.x = x; k.y = y; k.z = z;
+    };
 	inline UIntKey96(const UIntKey96& parent, uint32_t bit_shift, uint32_t lidx);
 
 	/* Returns nearby grid points (including this one) in output buffer.
