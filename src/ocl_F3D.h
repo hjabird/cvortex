@@ -31,14 +31,14 @@ SOFTWARE.
 #include <CL/cl.h>
 
 int opencl_brute_force_F3D_M2M_vel(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const int num_mes,
 	bsv_V3f *result_array);
 
 int opencl_brute_force_F3D_M2M_vel_impl(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -49,7 +49,7 @@ int opencl_brute_force_F3D_M2M_vel_impl(
 
 /* M2M, but for where the num_mes is small (EG. <256) */
 int opencl_brute_force_F3D_M2sM_vel_impl(
-	const cvtx_F3D** array_start,
+	const cvtx_F3D  *array_start,
 	const int num_filaments,
 	const bsv_V3f* mes_start,
 	const int num_mes,
@@ -59,16 +59,16 @@ int opencl_brute_force_F3D_M2sM_vel_impl(
 	cl_context context);
 
 int opencl_brute_force_F3D_M2M_dvort(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_fil,
-	const cvtx_P3D **induced_start,
+	const cvtx_P3D *induced_start,
 	const int num_induced,
 	bsv_V3f *result_array);
 
 int opencl_brute_force_F3D_M2M_dvort_impl(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_fil,
-	const cvtx_P3D **induced_start,
+	const cvtx_P3D *induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	cl_program program,

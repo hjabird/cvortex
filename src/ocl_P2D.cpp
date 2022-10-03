@@ -33,14 +33,15 @@ SOFTWARE.
 
 #include "opencl_acc.h"
 #include "ocl_P2D.h"
+#include "vortex_kernels.h"
 
 int opencl_brute_force_P2D_M2M_vel(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
 	const bsv_V2f *mes_start,
 	const int num_mes,
 	bsv_V2f *result_array,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius)
 {
 	/* Right now we just use the first active device. */
@@ -76,12 +77,12 @@ int opencl_brute_force_P2D_M2M_vel(
 }
 
 int opencl_brute_force_P2D_M2M_visc_dvort(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
-	const cvtx_P2D **induced_start,
+	const cvtx_P2D *induced_start,
 	const int num_induced,
 	float *result_array,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	float kinematic_visc)
 {
@@ -105,12 +106,12 @@ int opencl_brute_force_P2D_M2M_visc_dvort(
 }
 
 int opencl_brute_force_P2D_M2M_vel_impl(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
 	const bsv_V2f *mes_start,
 	const int num_mes,
 	bsv_V2f *result_array,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	cl_program program,
 	cl_command_queue queue,
@@ -129,7 +130,7 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 
 	if (opencl_init() == 1)
 	{
-		strncat(kernel_name, kernel->cl_kernel_name_ext, 32);
+		strncat(kernel_name, cvtx::vkernel::opencl_kernel_name_ext(kernel), 32);
 		cl_kernel = clCreateKernel(program, kernel_name, &status);
 		if (status != CL_SUCCESS) {
 			clReleaseKernel(cl_kernel);
@@ -193,9 +194,9 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 		part_pos_buff_data = (cl_float2*) malloc(n_modelled_particles * sizeof(cl_float2));
 		part_vort_buff_data = (cl_float*) malloc(n_modelled_particles * sizeof(cl_float));
 		for (i = 0; i < num_particles; ++i) {
-			part_pos_buff_data[i].x = array_start[i]->coord.x[0];
-			part_pos_buff_data[i].y = array_start[i]->coord.x[1];
-			part_vort_buff_data[i] = array_start[i]->vorticity;
+			part_pos_buff_data[i].x = array_start[i].coord.x[0];
+			part_pos_buff_data[i].y = array_start[i].coord.x[1];
+			part_vort_buff_data[i] = array_start[i].vorticity;
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_particles; i < n_modelled_particles; ++i) {
@@ -270,12 +271,12 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 }
 
 int opencl_brute_force_P2D_M2sM_vel_impl(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
 	const bsv_V2f *mes_start,
 	const int num_mes,
 	bsv_V2f *result_array,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	cl_program program,
 	cl_command_queue queue,
@@ -294,7 +295,7 @@ int opencl_brute_force_P2D_M2sM_vel_impl(
 
 	if (opencl_init() == 1)
 	{
-		strncat(kernel_name, kernel->cl_kernel_name_ext, 32);
+		strncat(kernel_name, cvtx::vkernel::opencl_kernel_name_ext(kernel), 32);
 		cl_kernel = clCreateKernel(program, kernel_name, &status);
 		if (status != CL_SUCCESS) {
 			clReleaseKernel(cl_kernel);
@@ -360,9 +361,9 @@ int opencl_brute_force_P2D_M2sM_vel_impl(
 		part_pos_buff_data = (cl_float2*) malloc(n_modelled_particles * sizeof(cl_float2));
 		part_vort_buff_data = (cl_float*) malloc(n_modelled_particles * sizeof(cl_float));
 		for (i = 0; i < num_particles; ++i) {
-			part_pos_buff_data[i].x = array_start[i]->coord.x[0];
-			part_pos_buff_data[i].y = array_start[i]->coord.x[1];
-			part_vort_buff_data[i] = array_start[i]->vorticity;
+			part_pos_buff_data[i].x = array_start[i].coord.x[0];
+			part_pos_buff_data[i].y = array_start[i].coord.x[1];
+			part_vort_buff_data[i] = array_start[i].vorticity;
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_particles; i < n_modelled_particles; ++i) {
@@ -424,12 +425,12 @@ int opencl_brute_force_P2D_M2sM_vel_impl(
 }
 
 int opencl_brute_force_P2D_M2M_visc_dvort_impl(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
-	const cvtx_P2D **induced_start,
+	const cvtx_P2D *induced_start,
 	const int num_induced,
 	float *result_array,
-	const cvtx_VortFunc *kernel,
+	const cvtx_VortFunc kernel,
 	float regularisation_radius,
 	float kinematic_visc,
 	cl_program program,
@@ -450,7 +451,7 @@ int opencl_brute_force_P2D_M2M_visc_dvort_impl(
 
 	if (opencl_init() == 1)
 	{
-		strncat(kernel_name, kernel->cl_kernel_name_ext, 32);
+		strncat(kernel_name, cvtx::vkernel::opencl_kernel_name_ext(kernel), 32);
 		cl_kernel = clCreateKernel(program, kernel_name, &status);
 		if (status != CL_SUCCESS) {
 			clReleaseKernel(cl_kernel);
@@ -467,10 +468,10 @@ int opencl_brute_force_P2D_M2M_visc_dvort_impl(
 		part2_vort_buff_data = (cl_float*) malloc(num_induced * sizeof(cl_float));
 		part2_area_buff_data = (cl_float*) malloc(num_induced * sizeof(cl_float));
 		for (i = 0; i < num_induced; ++i) {
-			part2_pos_buff_data[i].x = induced_start[i]->coord.x[0];
-			part2_pos_buff_data[i].y = induced_start[i]->coord.x[1];
-			part2_vort_buff_data[i] = induced_start[i]->vorticity;
-			part2_area_buff_data[i] = induced_start[i]->area;
+			part2_pos_buff_data[i].x = induced_start[i].coord.x[0];
+			part2_pos_buff_data[i].y = induced_start[i].coord.x[1];
+			part2_vort_buff_data[i] = induced_start[i].vorticity;
+			part2_area_buff_data[i] = induced_start[i].area;
 		}
 		/* Induced particle Create buffer, enqueue write and set kernel arg. */
 		part2_pos_buff = clCreateBuffer(context,
@@ -536,10 +537,10 @@ int opencl_brute_force_P2D_M2M_visc_dvort_impl(
 		part1_vort_buff_data = (cl_float*) malloc(n_modelled_particles * sizeof(cl_float));
 		part1_area_buff_data = (cl_float*) malloc(n_modelled_particles * sizeof(cl_float));
 		for (i = 0; i < num_particles; ++i) {
-			part1_pos_buff_data[i].x = array_start[i]->coord.x[0];
-			part1_pos_buff_data[i].y = array_start[i]->coord.x[1];
-			part1_vort_buff_data[i] = array_start[i]->vorticity;
-			part1_area_buff_data[i] = array_start[i]->area;
+			part1_pos_buff_data[i].x = array_start[i].coord.x[0];
+			part1_pos_buff_data[i].y = array_start[i].coord.x[1];
+			part1_vort_buff_data[i] = array_start[i].vorticity;
+			part1_area_buff_data[i] = array_start[i].area;
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_particles; i < n_modelled_particles; ++i) {

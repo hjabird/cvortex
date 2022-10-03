@@ -391,6 +391,9 @@ void P3D_M2M_vort(const cvtx_P3D *array_start, const int num_particles,
     return P3D_M2M_vort<cvtx_VortFunc_gaussian>(
         array_start, num_particles, mes_start, num_mes, result_array,
         regularisation_radius);
+  default:
+    assert(false && "Invalid kernel choice.");
+    return;
   }
 }
 } // namespace open_mp
@@ -414,6 +417,9 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vel(const cvtx_P3D *self,
   case cvtx_VortFunc_gaussian:
     return cvtx::detail::P3D_vel<cvtx_VortFunc_gaussian>(*self, mes_point,
                                                          recip_ref_rad);
+  default:
+    assert(false && "Invalid kernel choice.");
+    return {0.f, 0.f, 0.f};
   }
 }
 
@@ -434,6 +440,9 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_dvort(const cvtx_P3D *self,
   case cvtx_VortFunc_gaussian:
     return cvtx::detail::P3D_dvort<cvtx_VortFunc_gaussian>(
         *self, *induced_particle, regularisation_radius);
+  default:
+    assert(false && "Invalid kernel choice.");
+    return {0.f, 0.f, 0.f};
   }
 }
 
@@ -472,6 +481,9 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vort(const cvtx_P3D *self,
   case cvtx_VortFunc_gaussian:
     return cvtx::detail::P3D_vort<cvtx_VortFunc_gaussian>(
         *self, mes_point, regularisation_radius);
+  default:
+    assert(false && "Invalid kernel choice.");
+    return {0.f, 0.f, 0.f};
   }
 }
 
@@ -497,6 +509,9 @@ CVTX_EXPORT void cvtx_P3D_S2M_vel(const cvtx_P3D *self,
     cvtx::P3D_S2M_vel<cvtx_VortFunc_gaussian>(
         *self, mes_start, num_mes, result_array, regularisation_radius);
     break;
+  default:
+    assert(false && "Invalid kernel choice.");
+    return;
   }
 }
 
@@ -517,6 +532,9 @@ cvtx_P3D_S2M_dvort(const cvtx_P3D *self, const cvtx_P3D *induced_start,
   case cvtx_VortFunc_gaussian:
     return cvtx::P3D_S2M_dvort<cvtx_VortFunc_gaussian>(
         *self, induced_start, num_induced, result_array, regularisation_radius);
+  default:
+    assert(false && "Invalid kernel choice.");
+    return;
   }
 }
 
@@ -558,6 +576,9 @@ CVTX_EXPORT void cvtx_P3D_S2M_vort(const cvtx_P3D *self,
   case cvtx_VortFunc_gaussian:
     return cvtx::P3D_S2M_vort<cvtx_VortFunc_gaussian>(
         *self, mes_start, num_mes, result_array, regularisation_radius);
+  default:
+    assert(false && "Invalid kernel choice.");
+    return;
   }
 }
 
@@ -579,6 +600,9 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vel(const cvtx_P3D *array_start,
   case cvtx_VortFunc_gaussian:
     return cvtx::P3D_M2S_vel<cvtx_VortFunc_gaussian>(
         array_start, num_particles, mes_point, regularisation_radius);
+  default:
+    assert(false && "Invalid kernel choice.");
+    return {0.f, 0.f, 0.f};
   }
 }
 
@@ -600,6 +624,9 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_dvort(const cvtx_P3D *array_start,
   case cvtx_VortFunc_gaussian:
     return cvtx::P3D_M2S_dvort<cvtx_VortFunc_gaussian>(
         array_start, num_particles, *induced_particle, regularisation_radius);
+  default:
+    assert(false && "Invalid kernel choice.");
+    return {0.f, 0.f, 0.f};
   }
 }
 
@@ -642,6 +669,9 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_M2S_vort(const cvtx_P3D *array_start,
   case cvtx_VortFunc_gaussian:
     return cvtx::P3D_M2S_vort<cvtx_VortFunc_gaussian>(
         array_start, num_particles, mes_point, regularisation_radius);
+  default:
+    assert(false && "Invalid kernel choice.");
+    return {0.f, 0.f, 0.f};
   }
 }
 
@@ -653,7 +683,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_vel(const cvtx_P3D *array_start,
                                   float regularisation_radius) {
 #ifdef CVTX_USING_OPENCL
   if (num_particles < 256 || num_mes < 256 ||
-      !strcmp(kernel->cl_kernel_name_ext, "") ||
+      cvtx::vkernel::opencl_kernel_name_ext(kernel) == nullptr ||
       opencl_brute_force_P3D_M2M_vel(array_start, num_particles, mes_start,
                                      num_mes, result_array, kernel,
                                      regularisation_radius) != 0)
@@ -672,7 +702,7 @@ cvtx_P3D_M2M_dvort(const cvtx_P3D *array_start, const int num_particles,
                    float regularisation_radius) {
 #ifdef CVTX_USING_OPENCL
   if (num_particles < 256 || num_induced < 256 ||
-      !strcmp(kernel->cl_kernel_name_ext, "") ||
+      cvtx::vkernel::opencl_kernel_name_ext(kernel) == nullptr ||
       opencl_brute_force_P3D_M2M_dvort(array_start, num_particles,
                                        induced_start, num_induced, result_array,
                                        kernel, regularisation_radius) != 0)
@@ -692,7 +722,7 @@ cvtx_P3D_M2M_visc_dvort(const cvtx_P3D *array_start, const int num_particles,
                         float regularisation_radius, float kinematic_visc) {
 #ifdef CVTX_USING_OPENCL
   if (num_particles < 256 || num_induced < 256 ||
-      !strcmp(kernel->cl_kernel_name_ext, "") ||
+      cvtx::vkernel::opencl_kernel_name_ext(kernel) == nullptr ||
       opencl_brute_force_P3D_M2M_visc_dvort(
           array_start, num_particles, induced_start, num_induced, result_array,
           kernel, regularisation_radius, kinematic_visc) != 0)
@@ -713,7 +743,7 @@ CVTX_EXPORT void cvtx_P3D_M2M_vort(const cvtx_P3D *array_start,
                                    float regularisation_radius) {
 #ifdef CVTX_USING_OPENCL
   if (num_particles < 256 || num_mes < 256 ||
-      !strcmp(kernel->cl_kernel_name_ext, "") ||
+      cvtx::vkernel::opencl_kernel_name_ext(kernel) == nullptr ||
       opencl_brute_force_P3D_M2M_vort(array_start, num_particles, mes_start,
                                       num_mes, result_array, kernel,
                                       regularisation_radius) != 0)

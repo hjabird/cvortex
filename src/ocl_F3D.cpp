@@ -30,11 +30,12 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "vortex_kernels.h"
 #include "opencl_acc.h"
 #include "ocl_F3D.h"
 
 int opencl_brute_force_F3D_M2M_vel(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -70,7 +71,7 @@ int opencl_brute_force_F3D_M2M_vel(
 }
 
 int opencl_brute_force_F3D_M2M_vel_impl(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_filaments,
 	const bsv_V3f *mes_start,
 	const int num_mes,
@@ -154,13 +155,13 @@ int opencl_brute_force_F3D_M2M_vel_impl(
 		fil_end_buff_data = (cl_float3*) malloc(n_modelled_filaments * sizeof(cl_float3));
 		fil_strength_buff_data = (cl_float*) malloc(n_modelled_filaments * sizeof(cl_float));
 		for (i = 0; i < num_filaments; ++i) {
-			fil_start_buff_data[i].x = array_start[i]->start.x[0];
-			fil_start_buff_data[i].y = array_start[i]->start.x[1];
-			fil_start_buff_data[i].z = array_start[i]->start.x[2];
-			fil_end_buff_data[i].x = array_start[i]->end.x[0];
-			fil_end_buff_data[i].y = array_start[i]->end.x[1];
-			fil_end_buff_data[i].z = array_start[i]->end.x[2];
-			fil_strength_buff_data[i] = array_start[i]->strength;
+			fil_start_buff_data[i].x = array_start[i].start.x[0];
+			fil_start_buff_data[i].y = array_start[i].start.x[1];
+			fil_start_buff_data[i].z = array_start[i].start.x[2];
+			fil_end_buff_data[i].x = array_start[i].end.x[0];
+			fil_end_buff_data[i].y = array_start[i].end.x[1];
+			fil_end_buff_data[i].z = array_start[i].end.x[2];
+			fil_strength_buff_data[i] = array_start[i].strength;
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_filaments; i < n_modelled_filaments; ++i) {
@@ -253,7 +254,7 @@ int opencl_brute_force_F3D_M2M_vel_impl(
 }
 
 int opencl_brute_force_F3D_M2sM_vel_impl(
-	const cvtx_F3D** array_start,
+	const cvtx_F3D *array_start,
 	const int num_filaments,
 	const bsv_V3f* mes_start,
 	const int num_mes,
@@ -337,13 +338,13 @@ int opencl_brute_force_F3D_M2sM_vel_impl(
 		fil_end_buff_data = (cl_float3*) malloc(n_modelled_filaments * sizeof(cl_float3));
 		fil_strength_buff_data = (cl_float*) malloc(n_modelled_filaments * sizeof(cl_float));
 		for (i = 0; i < num_filaments; ++i) {
-			fil_start_buff_data[i].x = array_start[i]->start.x[0];
-			fil_start_buff_data[i].y = array_start[i]->start.x[1];
-			fil_start_buff_data[i].z = array_start[i]->start.x[2];
-			fil_end_buff_data[i].x = array_start[i]->end.x[0];
-			fil_end_buff_data[i].y = array_start[i]->end.x[1];
-			fil_end_buff_data[i].z = array_start[i]->end.x[2];
-			fil_strength_buff_data[i] = array_start[i]->strength;
+			fil_start_buff_data[i].x = array_start[i].start.x[0];
+			fil_start_buff_data[i].y = array_start[i].start.x[1];
+			fil_start_buff_data[i].z = array_start[i].start.x[2];
+			fil_end_buff_data[i].x = array_start[i].end.x[0];
+			fil_end_buff_data[i].y = array_start[i].end.x[1];
+			fil_end_buff_data[i].z = array_start[i].end.x[2];
+			fil_strength_buff_data[i] = array_start[i].strength;
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_filaments; i < n_modelled_filaments; ++i) {
@@ -420,9 +421,9 @@ int opencl_brute_force_F3D_M2sM_vel_impl(
 }
 
 int opencl_brute_force_F3D_M2M_dvort(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_fil,
-	const cvtx_P3D **induced_start,
+	const cvtx_P3D *induced_start,
 	const int num_induced,
 	bsv_V3f *result_array) {
 
@@ -445,9 +446,9 @@ int opencl_brute_force_F3D_M2M_dvort(
 }
 
 int opencl_brute_force_F3D_M2M_dvort_impl(
-	const cvtx_F3D **array_start,
+	const cvtx_F3D *array_start,
 	const int num_fil,
-	const cvtx_P3D **induced_start,
+	const cvtx_P3D *induced_start,
 	const int num_induced,
 	bsv_V3f *result_array,
 	cl_program program,
@@ -483,12 +484,12 @@ int opencl_brute_force_F3D_M2M_dvort_impl(
 		part_pos_buff_data = (cl_float3*) malloc(num_induced * sizeof(cl_float3));
 		part_vort_buff_data = (cl_float3*) malloc(num_induced * sizeof(cl_float3));
 		for (i = 0; i < num_induced; ++i) {
-			part_pos_buff_data[i].x = induced_start[i]->coord.x[0];
-			part_pos_buff_data[i].y = induced_start[i]->coord.x[1];
-			part_pos_buff_data[i].z = induced_start[i]->coord.x[2];
-			part_vort_buff_data[i].x = induced_start[i]->vorticity.x[0];
-			part_vort_buff_data[i].y = induced_start[i]->vorticity.x[1];
-			part_vort_buff_data[i].z = induced_start[i]->vorticity.x[2];
+			part_pos_buff_data[i].x = induced_start[i].coord.x[0];
+			part_pos_buff_data[i].y = induced_start[i].coord.x[1];
+			part_pos_buff_data[i].z = induced_start[i].coord.x[2];
+			part_vort_buff_data[i].x = induced_start[i].vorticity.x[0];
+			part_vort_buff_data[i].y = induced_start[i].vorticity.x[1];
+			part_vort_buff_data[i].z = induced_start[i].vorticity.x[2];
 		}
 		part_pos_buff = clCreateBuffer(context,
 			CL_MEM_READ_ONLY, num_induced * sizeof(cl_float3), NULL, &status);
@@ -545,13 +546,13 @@ int opencl_brute_force_F3D_M2M_dvort_impl(
 		fil_end_buff_data = (cl_float3*) malloc(n_modelled_filaments * sizeof(cl_float3));
 		fil_strength_buff_data = (cl_float*) malloc(n_modelled_filaments * sizeof(cl_float));
 		for (i = 0; i < num_fil; ++i) {
-			fil_start_buff_data[i].x = array_start[i]->start.x[0];
-			fil_start_buff_data[i].y = array_start[i]->start.x[1];
-			fil_start_buff_data[i].z = array_start[i]->start.x[2];
-			fil_end_buff_data[i].x = array_start[i]->end.x[0];
-			fil_end_buff_data[i].y = array_start[i]->end.x[1];
-			fil_end_buff_data[i].z = array_start[i]->end.x[2];
-			fil_strength_buff_data[i] = array_start[i]->strength;
+			fil_start_buff_data[i].x = array_start[i].start.x[0];
+			fil_start_buff_data[i].y = array_start[i].start.x[1];
+			fil_start_buff_data[i].z = array_start[i].start.x[2];
+			fil_end_buff_data[i].x = array_start[i].end.x[0];
+			fil_end_buff_data[i].y = array_start[i].end.x[1];
+			fil_end_buff_data[i].z = array_start[i].end.x[2];
+			fil_strength_buff_data[i] = array_start[i].strength;
 		}
 		/* We need this so that we always have the minimum workgroup size. */
 		for (i = num_fil; i < n_modelled_filaments; ++i) {

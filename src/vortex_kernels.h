@@ -193,6 +193,24 @@ template <> constexpr const char *opencl_kernel_name_ext<cvtx_VortFunc_gaussian>
   return str;
 }
 
+inline const char *opencl_kernel_name_ext(cvtx_VortFunc kernel){
+  const char* str;
+  switch(kernel) {
+  case cvtx_VortFunc_singular:
+    str =  opencl_kernel_name_ext<cvtx_VortFunc_singular>();
+    return str;
+    break;
+  case cvtx_VortFunc_planetary:
+    return opencl_kernel_name_ext<cvtx_VortFunc_planetary>();
+  case cvtx_VortFunc_winckelmans:
+    return opencl_kernel_name_ext<cvtx_VortFunc_winckelmans>();
+  case cvtx_VortFunc_gaussian:
+    return opencl_kernel_name_ext<cvtx_VortFunc_gaussian>();
+  default:
+    return nullptr;  
+  }
+}
+
 } // namespace vkernel
 } // namespace cvtx
 

@@ -31,7 +31,7 @@ SOFTWARE.
 #include "opencl_acc.h"
 
 int opencl_brute_force_P2D_M2M_vel(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
 	const bsv_V2f *mes_start,
 	const int num_mes,
@@ -40,9 +40,9 @@ int opencl_brute_force_P2D_M2M_vel(
 	float regularisation_radius);
 
 int opencl_brute_force_P2D_M2M_visc_dvort(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
-	const cvtx_P2D **induced_start,
+	const cvtx_P2D *induced_start,
 	const int num_induced,
 	float *result_array,
 	const cvtx_VortFunc kernel,
@@ -50,7 +50,7 @@ int opencl_brute_force_P2D_M2M_visc_dvort(
 	float kinematic_visc);
 
 int opencl_brute_force_P2D_M2M_vel_impl(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
 	const bsv_V2f *mes_start,
 	const int num_mes,
@@ -63,7 +63,7 @@ int opencl_brute_force_P2D_M2M_vel_impl(
 
 /* For small number of measurement points. */
 int opencl_brute_force_P2D_M2sM_vel_impl(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
 	const bsv_V2f *mes_start,
 	const int num_mes,
@@ -75,9 +75,9 @@ int opencl_brute_force_P2D_M2sM_vel_impl(
 	cl_context context);
 
 int opencl_brute_force_P2D_M2M_visc_dvort_impl(
-	const cvtx_P2D **array_start,
+	const cvtx_P2D *array_start,
 	const int num_particles,
-	const cvtx_P2D **induced_start,
+	const cvtx_P2D *induced_start,
 	const int num_induced,
 	float *result_array,
 	const cvtx_VortFunc kernel,

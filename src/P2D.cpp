@@ -220,7 +220,7 @@ CVTX_EXPORT void cvtx_P2D_M2M_vel(const cvtx_P2D *array_start,
                                   const cvtx_VortFunc kernel,
                                   float regularisation_radius) {
 #ifdef CVTX_USING_OPENCL
-  if (!strcmp(kernel->cl_kernel_name_ext, "") ||
+  if (cvtx::vkernel::opencl_kernel_name_ext(kernel) == nullptr ||
       opencl_brute_force_P2D_M2M_vel(array_start, num_particles, mes_start,
                                      num_mes, result_array, kernel,
                                      regularisation_radius) != 0)
@@ -328,7 +328,7 @@ cvtx_P2D_M2M_visc_dvort(const cvtx_P2D *array_start, const int num_particles,
                         float regularisation_radius, float kinematic_visc) {
 #ifdef CVTX_USING_OPENCL
   if (num_particles < 256 || num_induced < 256 ||
-      !strcmp(kernel->cl_kernel_name_ext, "") ||
+      cvtx::vkernel::opencl_kernel_name_ext(kernel) == nullptr ||
       opencl_brute_force_P2D_M2M_visc_dvort(
           array_start, num_particles, induced_start, num_induced, result_array,
           kernel, regularisation_radius, kinematic_visc) != 0)
