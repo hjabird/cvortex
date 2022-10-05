@@ -60,7 +60,7 @@ int opencl_init() {
 		ocl_state.initialised = 1;
 		ocl_state.platforms.clear();
 		ocl_state.active_devices.clear();
-		good = load_platforms();
+		good = load_platforms() > 0 ? 1 : 0;
 	}
 	opencl_enable_default_accelerator();
 	return good;

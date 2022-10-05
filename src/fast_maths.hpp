@@ -1,10 +1,8 @@
-#ifndef CVTX_CPP_TYPES_H
-#define CVTX_CPP_TYPES_H
 #include "libcvtx.h"
 /*============================================================================
-UIntKey64.hpp
+VortFunc.c
 
-uint32 based key for working with 2D grids.
+Fast good-enough maths functions.
 
 Copyright(c) HJA Bird
 
@@ -26,27 +24,66 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
+#ifndef CVTX_FAST_MATHS_H
+#define CVTX_FAST_MATHS_H
 
-namespace bsv {
+namespace cvtx {
+namespace maths {
 
-class v3f : public bsv_V3f {
-public:
-  constexpr v3f(){};
-  constexpr v3f(float x_, float y_, float z_) {
-        x[0] = x_;
-        x[1] = y_;
-        x[2] = z_;
-   }
-};
+template<int ExpNumerator, int ExpDenominator = 1>
+constexpr float pow(float x);
 
-class v2f : public bsv_V2f {
-public:
-  constexpr v2f(){};
-  constexpr v2f(float x_, float y_) {
-        x[0] = x_;
-        x[1] = y_;
-  }
-};
-}   // namespace bsv
+template<>
+constexpr float pow<1, 1>(float x) {
+  return x;
+}
 
-#endif  // CVTX_CPP_TYPES_H
+template<>
+constexpr float pow<2, 1>(float x) {
+  return x * x;
+}
+
+template <>
+constexpr float pow<3, 1>(float x) {
+  return x * x * x;
+}
+
+template <>
+constexpr float pow<4, 1>(float x) {
+  return pow<2>(x) * pow<2>(x);
+}
+
+template <>
+constexpr float pow<5, 1>(float x) {
+  return pow<4>(x) * x;
+}
+
+template <>
+constexpr float pow<6, 1>(float x) {
+  return pow<3>(x) * pow<3>(x);
+}
+
+template <>
+constexpr float pow<7, 1>(float x) {
+  return pow<6>(x) * x;
+}
+
+template <>
+constexpr float pow<8, 1>(float x) {
+  return pow<4>(x) * pow<4>(x);
+}
+
+template <>
+constexpr float pow<9, 1>(float x) {
+  return pow<3>(x) * pow<3>(x) * pow<3>(x);
+}
+
+/** Compute exp(-x^2 / 2).
+**/
+constexpr float expm2(float x) {
+
+}
+
+}	// namespace maths
+}	// namespace cvtx
+#endif  // CVTX_FAST_MATHS_H

@@ -37,6 +37,7 @@ SOFTWARE.
 #include "array_methods.h"
 #include "redistribution_helper_funcs.h"
 #include "vortex_kernels.h"
+#include "particle_core_functions.hpp"
 
 #ifdef CVTX_USING_OPENCL
 #include "ocl_P3D.h"
@@ -45,87 +46,7 @@ SOFTWARE.
 #include <omp.h>
 #endif
 
-#define CVTX_PI_F 3.14159265359f
-
 namespace cvtx {
-namespace detail {
-template <cvtx_VortFunc VortFunc>
-inline bsv_V3f P3D_vel(const cvtx_P3D &self, const bsv_V3f mes_point,
-                              float recip_reg_rad) {
-  bsv_V3f rad, num, ret;
-  float cor, den, rho, radd;
-  rad = bsv_V3f_minus(mes_point, self.coord);
-  radd = bsv_V3f_abs(rad);
-  rho = radd * recip_reg_rad; /* Assume positive. */
-  cor = -vkernel::g_3D<VortFunc>(rho);
-  den = 1.f / (radd * radd * radd);
-  num = bsv_V3f_cross(rad, self.vorticity);
-  ret = bsv_V3f_mult(num, cor * den);
-  ret = bsv_V3f_isequal(self.coord, mes_point) ? bsv_V3f_zero() : ret;
-  return bsv_V3f_mult(ret, 1.f / (4.f * CVTX_PI_F));
-}
-
-template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_dvort(const cvtx_P3D &self, const cvtx_P3D &induced_particle,
-                  float regularisation_radius) {
-  bsv_V3f ret, rad, cross_om, t2, t21, t21n, t22;
-  float g, f, radd, rho, t1, t21d, t221, t222, t223;
-  rad = bsv_V3f_minus(induced_particle.coord, self.coord);
-  radd = bsv_V3f_abs(rad);
-  rho = std::abs(radd / regularisation_radius);
-  g = vkernel::g_3D<VortFunc>(rho);
-  f = vkernel::zeta_fn<VortFunc>(rho);
-  cross_om = bsv_V3f_cross(induced_particle.vorticity, self.vorticity);
-  t1 = 1.f / (4.f * CVTX_PI_F * regularisation_radius * regularisation_radius * regularisation_radius);
-  t21n = bsv_V3f_mult(cross_om, g);
-  t21d = rho * rho * rho;
-  t21 = bsv_V3f_div(t21n, t21d);
-  t221 = -1.f / (radd * radd);
-  t222 = (3 * g) / t21d - f;
-  t223 = bsv_V3f_dot(rad, cross_om);
-  t22 = bsv_V3f_mult(rad, t221 * t222 * t223);
-  t2 = bsv_V3f_plus(t21, t22);
-  ret = bsv_V3f_mult(t2, t1);
-  ret = bsv_V3f_isequal(self.coord, induced_particle.coord) ? bsv_V3f_zero()
-                                                            : ret;
-  return ret;
-}
-
-template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_visc_dvort(const cvtx_P3D &self, const cvtx_P3D &induced_particle,
-                       float regularisation_radius, float kinematic_visc) {
-  bsv_V3f ret, rad, t211, t212, t21, t2;
-  float radd, rho, t1, t22;
-  rad = bsv_V3f_minus(self.coord, induced_particle.coord);
-  radd = bsv_V3f_abs(rad);
-  rho = std::abs(radd / regularisation_radius);
-  t1 = 2 * kinematic_visc / (regularisation_radius * regularisation_radius);
-  t211 = bsv_V3f_mult(self.vorticity, induced_particle.volume);
-  t212 = bsv_V3f_mult(induced_particle.vorticity, -1 * self.volume);
-  t21 = bsv_V3f_plus(t211, t212);
-  t22 = vkernel::eta_3D<VortFunc>(rho);
-  t2 = bsv_V3f_mult(t21, t22);
-  ret = bsv_V3f_mult(t2, t1);
-  ret = bsv_V3f_isequal(self.coord, induced_particle.coord) ? bsv_V3f_zero()
-                                                            : ret;
-  return ret;
-}
-
-template <cvtx_VortFunc VortFunc>
-bsv_V3f P3D_vort(const cvtx_P3D &self, const bsv_V3f mes_point,
-                 float regularisation_radius) {
-  bsv_V3f rad, ret;
-  float radd, coeff, divisor;
-  rad = bsv_V3f_minus(self.coord, mes_point);
-  radd = bsv_V3f_abs(rad);
-  coeff = vkernel::zeta_fn<VortFunc>(radd / regularisation_radius);
-  divisor = 4.f * CVTX_PI_F * regularisation_radius * regularisation_radius *
-            regularisation_radius;
-  coeff = coeff / divisor;
-  ret = bsv_V3f_mult(self.vorticity, coeff);
-  return ret;
-}
-} // namespace detail
 
 template <cvtx_VortFunc VortFunc>
 void P3D_S2M_vel(const cvtx_P3D &self, const bsv_V3f *mes_start,
@@ -134,7 +55,7 @@ void P3D_S2M_vel(const cvtx_P3D &self, const bsv_V3f *mes_start,
   float recip_rad = 1.f / regularisation_radius;
 #pragma omp parallel for
   for (int i = 0; i < num_mes; ++i) {
-    result_array[i] = detail::P3D_vel<VortFunc>(self, mes_start[i], recip_rad);
+    result_array[i] = core::vel<VortFunc>(self, mes_start[i], recip_rad);
   }
   return;
 }
@@ -145,7 +66,7 @@ void P3D_S2M_dvort(const cvtx_P3D &self, const cvtx_P3D *induced_start,
                    float regularisation_radius) {
 #pragma omp parallel for
   for (int i = 0; i < num_induced; ++i) {
-    result_array[i] = detail::P3D_dvort<VortFunc>(self, induced_start[i],
+    result_array[i] = core::dvort<VortFunc>(self, induced_start[i],
                                                   regularisation_radius);
   }
   return;
@@ -157,7 +78,7 @@ void P3D_S2M_visc_dvort(const cvtx_P3D &self, const cvtx_P3D *induced_start,
                         float regularisation_radius, float kinematic_visc) {
 #pragma omp parallel for
   for (int i = 0; i < num_induced; ++i) {
-    result_array[i] = detail::P3D_visc_dvort<VortFunc>(
+    result_array[i] = core::visc_dvort<VortFunc>(
         self, induced_start[i], regularisation_radius, kinematic_visc);
   }
   return;
@@ -170,7 +91,7 @@ void P3D_S2M_vort(const cvtx_P3D &self, const bsv_V3f *mes_start,
 #pragma omp parallel for
   for (int i = 0; i < num_mes; ++i) {
     result_array[i] =
-        detail::P3D_vort<VortFunc>(self, mes_start[i], regularisation_radius);
+        core::vort<VortFunc>(self, mes_start[i], regularisation_radius);
   }
   return;
 }
@@ -183,8 +104,7 @@ bsv_V3f P3D_M2S_vel(const cvtx_P3D *array_start, const int num_particles,
   assert(num_particles >= 0);
 #pragma omp parallel for reduction(+ : rx, ry, rz)
   for (int i = 0; i < num_particles; ++i) {
-    bsv_V3f vel =
-        detail::P3D_vel<VortFunc>(array_start[i], mes_point, recip_reg_rad);
+    bsv_V3f vel = core::vel<VortFunc>(array_start[i], mes_point, recip_reg_rad);
     rx += vel.x[0];
     ry += vel.x[1];
     rz += vel.x[2];
@@ -200,7 +120,7 @@ bsv_V3f P3D_M2S_dvort(const cvtx_P3D *array_start, const int num_particles,
   float rx = 0, ry = 0, rz = 0;
   assert(num_particles >= 0);
   for (int i = 0; i < num_particles; ++i) {
-    dvort = detail::P3D_dvort<VortFunc>(array_start[i], induced_particle,
+    dvort = core::dvort<VortFunc>(array_start[i], induced_particle,
                                         regularisation_radius);
     rx += dvort.x[0];
     ry += dvort.x[1];
@@ -218,8 +138,7 @@ bsv_V3f P3D_M2S_visc_dvort(const cvtx_P3D *array_start, const int num_particles,
   float rx = 0, ry = 0, rz = 0;
   assert(num_particles >= 0);
   for (int i = 0; i < num_particles; ++i) {
-    dvort =
-        detail::P3D_visc_dvort<VortFunc>(array_start[i], induced_particle,
+    dvort = core::visc_dvort<VortFunc>(array_start[i], induced_particle,
                                          regularisation_radius, kinematic_visc);
     rx += dvort.x[0];
     ry += dvort.x[1];
@@ -235,19 +154,16 @@ bsv_V3f P3D_M2S_vort(const cvtx_P3D *array_start, const int num_particles,
   float cutoff, rsigma, radd, coeff;
   bsv_V3f rad, sum = bsv_V3f_zero();
   cutoff = 5.f * regularisation_radius;
-  rsigma = 1 / regularisation_radius;
   assert(num_particles > 0);
   for (int i = 0; i < num_particles; ++i) {
     rad = bsv_V3f_minus(array_start[i].coord, mes_point);
     if (std::abs(rad.x[0]) < cutoff && std::abs(rad.x[1]) < cutoff &&
         std::abs(rad.x[2]) < cutoff) {
-      radd = bsv_V3f_abs(rad);
-      coeff = vkernel::zeta_fn<VortFunc>(radd * rsigma);
-      sum = bsv_V3f_plus(bsv_V3f_mult(array_start[i].vorticity, coeff), sum);
+      sum = bsv_V3f_plus(
+          core::vort<VortFunc>(array_start[i], mes_point, regularisation_radius), 
+          sum);
     }
   }
-  sum = bsv_V3f_div(sum, 4.f * CVTX_PI_F * regularisation_radius *
-                             regularisation_radius * regularisation_radius);
   return sum;
 }
 
@@ -406,16 +322,16 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vel(const cvtx_P3D *self,
   float recip_ref_rad = 1.f / regularisation_radius;
   switch (kernel) {
   case cvtx_VortFunc_singular:
-    return cvtx::detail::P3D_vel<cvtx_VortFunc_singular>(*self, mes_point,
+      return cvtx::core::vel<cvtx_VortFunc_singular>(*self, mes_point,
                                                          recip_ref_rad);
   case cvtx_VortFunc_planetary:
-    return cvtx::detail::P3D_vel<cvtx_VortFunc_planetary>(*self, mes_point,
+    return cvtx::core::vel<cvtx_VortFunc_planetary>(*self, mes_point,
                                                           recip_ref_rad);
   case cvtx_VortFunc_winckelmans:
-    return cvtx::detail::P3D_vel<cvtx_VortFunc_winckelmans>(*self, mes_point,
+    return cvtx::core::vel<cvtx_VortFunc_winckelmans>(*self, mes_point,
                                                             recip_ref_rad);
   case cvtx_VortFunc_gaussian:
-    return cvtx::detail::P3D_vel<cvtx_VortFunc_gaussian>(*self, mes_point,
+    return cvtx::core::vel<cvtx_VortFunc_gaussian>(*self, mes_point,
                                                          recip_ref_rad);
   default:
     assert(false && "Invalid kernel choice.");
@@ -429,16 +345,16 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_dvort(const cvtx_P3D *self,
                                        float regularisation_radius) {
   switch (kernel) {
   case cvtx_VortFunc_singular:
-    return cvtx::detail::P3D_dvort<cvtx_VortFunc_singular>(
+    return cvtx::core::dvort<cvtx_VortFunc_singular>(
         *self, *induced_particle, regularisation_radius);
   case cvtx_VortFunc_planetary:
-    return cvtx::detail::P3D_dvort<cvtx_VortFunc_planetary>(
+    return cvtx::core::dvort<cvtx_VortFunc_planetary>(
         *self, *induced_particle, regularisation_radius);
   case cvtx_VortFunc_winckelmans:
-    return cvtx::detail::P3D_dvort<cvtx_VortFunc_winckelmans>(
+    return cvtx::core::dvort<cvtx_VortFunc_winckelmans>(
         *self, *induced_particle, regularisation_radius);
   case cvtx_VortFunc_gaussian:
-    return cvtx::detail::P3D_dvort<cvtx_VortFunc_gaussian>(
+    return cvtx::core::dvort<cvtx_VortFunc_gaussian>(
         *self, *induced_particle, regularisation_radius);
   default:
     assert(false && "Invalid kernel choice.");
@@ -453,10 +369,10 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_visc_dvort(const cvtx_P3D *self,
                                             float kinematic_visc) {
   switch (kernel) {
   case cvtx_VortFunc_winckelmans:
-    return cvtx::detail::P3D_visc_dvort<cvtx_VortFunc_winckelmans>(
+    return cvtx::core::visc_dvort<cvtx_VortFunc_winckelmans>(
         *self, *induced_particle, regularisation_radius, kinematic_visc);
   case cvtx_VortFunc_gaussian:
-    return cvtx::detail::P3D_visc_dvort<cvtx_VortFunc_gaussian>(
+    return cvtx::core::visc_dvort<cvtx_VortFunc_gaussian>(
         *self, *induced_particle, regularisation_radius, kinematic_visc);
   default:
     assert(false && "Invalid kernel choice.");
@@ -470,16 +386,16 @@ CVTX_EXPORT bsv_V3f cvtx_P3D_S2S_vort(const cvtx_P3D *self,
                                       float regularisation_radius) {
   switch (kernel) {
   case cvtx_VortFunc_singular:
-    return cvtx::detail::P3D_vort<cvtx_VortFunc_singular>(
+      return cvtx::core::vort<cvtx_VortFunc_singular>(
         *self, mes_point, regularisation_radius);
   case cvtx_VortFunc_planetary:
-    return cvtx::detail::P3D_vort<cvtx_VortFunc_planetary>(
+    return cvtx::core::vort<cvtx_VortFunc_planetary>(
         *self, mes_point, regularisation_radius);
   case cvtx_VortFunc_winckelmans:
-    return cvtx::detail::P3D_vort<cvtx_VortFunc_winckelmans>(
+    return cvtx::core::vort<cvtx_VortFunc_winckelmans>(
         *self, mes_point, regularisation_radius);
   case cvtx_VortFunc_gaussian:
-    return cvtx::detail::P3D_vort<cvtx_VortFunc_gaussian>(
+    return cvtx::core::vort<cvtx_VortFunc_gaussian>(
         *self, mes_point, regularisation_radius);
   default:
     assert(false && "Invalid kernel choice.");

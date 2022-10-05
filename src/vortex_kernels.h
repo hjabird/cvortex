@@ -46,6 +46,8 @@ SOFTWARE.
 #include <assert.h>
 #include <cmath>
 
+#include "fast_maths.hpp"
+
 #define SQRTF_2_OVER_PI 0.7978845608028654f
 #define RECIP_SQRTF_2 0.7071067811865475f
 
@@ -82,20 +84,20 @@ template <> inline float g_3D<cvtx_VortFunc_winckelmans>(float rho) {
   a = (rho * rho) + 2.5f;
   b = a * rho * (rho * rho);
   c = (rho * rho) + 1.f;
-  d = b / std::sqrt((c * c) * (c * c) * c);
+  d = b / std::sqrt(maths::pow<5>(c));
   return d;
 }
 template <> inline float zeta_fn<cvtx_VortFunc_winckelmans>(float rho) {
   float a, b, c;
   a = rho * rho + 1.f;
-  b = 1.f / std::sqrt((a * a) * (a * a) * (a * a) * a);
+  b = 1.f / std::sqrt(maths::pow<7>(a));
   c = 7.5f * b;
   return c;
 }
 template <> inline float g_2D<cvtx_VortFunc_winckelmans>(float rho) {
   float num, denom;
-  num = (rho * rho) * (rho * rho) + (rho * rho) * 2.f;
-  denom = (rho * rho) * (rho * rho) + 2.f * (rho * rho) + 1.f;
+  num = maths::pow<4>(rho) + maths::pow<2>(rho) * 2.f;
+  denom = maths::pow<4>(rho) + 2.f * maths::pow<2>(rho) + 1.f;
   return num / denom;
 }
 template <> constexpr bool has_eta_fns<cvtx_VortFunc_winckelmans>() {
@@ -112,7 +114,7 @@ template <> inline float eta_3D<cvtx_VortFunc_winckelmans>(float rho) {
   float a, b, c;
   a = 52.5f;
   b = rho * rho + 1.f;
-  c = 1.f / std::sqrt((b*b*b)*(b*b*b)*(b*b*b));
+  c = 1.f / std::sqrt(maths::pow<9>(b));
   return a * c;
 }
 template <> constexpr const char *opencl_kernel_name_ext<cvtx_VortFunc_winckelmans>() {
@@ -121,21 +123,14 @@ template <> constexpr const char *opencl_kernel_name_ext<cvtx_VortFunc_winckelma
 }
 
 /* Planetary kernels */
-template <> inline float g_3D<cvtx_VortFunc_planetary>(float rho) {
-  float a, b, c, d;
-  assert(rho >= 0 && "Rho should not be -ve");
-  a = (rho * rho) + 2.5f;
-  b = a * rho * (rho * rho);
-  c = (rho * rho) + 1.f;
-  d = b * 1.f / std::sqrt((c * c) * (c * c) * c);
-  return d;
+template <>
+inline float g_3D<cvtx_VortFunc_planetary>(float rho) {
+  return rho < 1.f ? maths::pow<3>(rho) : 1.f;
 }
 template <> inline float zeta_fn<cvtx_VortFunc_planetary>(float rho) {
-  assert(rho >= 0 && "Rho should not be -ve");
   return rho < 1.f ? 3.f : 0.f;
 }
 template <> inline float g_2D<cvtx_VortFunc_planetary>(float rho) {
-  assert(rho >= 0 && "Rho should not be -ve");
   return rho < 1.f ? rho * rho : 1.f;
 }
 /* No eta functions for exponential kernels */
@@ -147,8 +142,6 @@ template <> constexpr const char *opencl_kernel_name_ext<cvtx_VortFunc_planetary
 /* Gaussian kernels */
 template <> inline float g_3D<cvtx_VortFunc_gaussian>(float rho) {
   /* = 1 to 8sf for rho ~>6. Taylor expansion otherwise */
-  assert(rho >= 0 && "Rho should not be -ve");
-  const float pi = 3.14159265359f;
   float ret;
   if (rho > 6.f) {
     ret = 1.f;
@@ -170,19 +163,15 @@ template <> inline float g_3D<cvtx_VortFunc_gaussian>(float rho) {
   return ret;
 }
 template <> inline float zeta_fn<cvtx_VortFunc_gaussian>(float rho) {
-  assert(rho >= 0 && "Rho should not be -ve");
-  const float pi = 3.14159265359f;
   return SQRTF_2_OVER_PI * std::exp(-rho * rho * 0.5f);
 }
 template <> inline float g_2D<cvtx_VortFunc_gaussian>(float rho) {
-  assert(rho >= 0 && "Rho should not be -ve");
   return 1.f - std::exp(-rho * rho * 0.5f);
 }
 template <> constexpr bool has_eta_fns<cvtx_VortFunc_gaussian>() {
   return true;
 }
 template <> inline float eta_2D<cvtx_VortFunc_gaussian>(float rho) {
-  assert(rho >= 0 && "Rho should not be -ve");
   return std::exp(-rho * rho * 0.5f);
 }
 template <> inline float eta_3D<cvtx_VortFunc_gaussian>(float rho) {
@@ -194,12 +183,9 @@ template <> constexpr const char *opencl_kernel_name_ext<cvtx_VortFunc_gaussian>
 }
 
 inline const char *opencl_kernel_name_ext(cvtx_VortFunc kernel){
-  const char* str;
   switch(kernel) {
   case cvtx_VortFunc_singular:
-    str =  opencl_kernel_name_ext<cvtx_VortFunc_singular>();
-    return str;
-    break;
+    return opencl_kernel_name_ext<cvtx_VortFunc_singular>();
   case cvtx_VortFunc_planetary:
     return opencl_kernel_name_ext<cvtx_VortFunc_planetary>();
   case cvtx_VortFunc_winckelmans:

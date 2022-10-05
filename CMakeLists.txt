@@ -21,7 +21,7 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 file (GLOB CVORTEX_INCLUDE "include/cvortex/libcvtx.h")
-file (GLOB CVORTEX_SOURCE  "src/*.h" "src/*.cpp")
+file (GLOB CVORTEX_SOURCE  "src/*.h" "src/*.hpp" "src/*.cpp")
 file (GLOB CVORTEX_OPENCL  "src/*.cl")
 source_group("" FILES ${cvortex})
 source_group("include" FILES ${CVORTEX_INCLUDE})

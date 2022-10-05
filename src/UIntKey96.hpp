@@ -29,6 +29,7 @@ SOFTWARE.
 
 #include <cstdint>
 #include <tuple>
+#include <string>
 
 #include "cpp_types.hpp"
 

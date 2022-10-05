@@ -32,6 +32,7 @@ SOFTWARE.
 #include "array_methods.h"
 #include "redistribution_helper_funcs.h"
 #include "vortex_kernels.h"
+#include "particle_core_functions.hpp"
 
 #ifdef CVTX_USING_OPENCL
 #include "ocl_P2D.h"
@@ -41,27 +42,8 @@ SOFTWARE.
 #endif
 
 #define NG_FOR_REDUCING_PARICLES 64
-#define CVTX_PI_F 3.14159265359f
 
 namespace cvtx {
-namespace detail {
-/* The induced velocity for a particle */
-template <cvtx_VortFunc VortFunc>
-bsv_V2f P2D_vel(const cvtx_P2D &self, const bsv_V2f& mes_point,
-                float recip_reg_rad) {
-  bsv_V2f rad, ret;
-  float radd, rho, g, cor;
-  rad = bsv_V2f_minus(mes_point, self.coord);
-  radd = bsv_V2f_abs(rad);
-  rho = radd * recip_reg_rad;
-  g = vkernel::g_2D<VortFunc>(rho);
-  cor = self.vorticity / (radd * radd);
-  ret.x[0] = g * rad.x[1] * cor;
-  ret.x[1] = g * -rad.x[0] * cor;
-  ret = bsv_V2f_isequal(self.coord, mes_point) ? bsv_V2f_zero() : ret;
-  return bsv_V2f_mult(ret, 1.f / (2.f * CVTX_PI_F));
-}
-} // namespace detail
 
 /* Induced velocity at multiple points in a 2D field due to
 a single particle. */
@@ -72,7 +54,7 @@ void P2D_S2M_vel(const cvtx_P2D &self, const bsv_V2f *mes_start,
   float recip_reg_rad = 1.f / std::abs(regularisation_radius);
 #pragma omp parallel for
   for (int i = 0; i < num_mes; ++i) {
-    result_array[i] = detail::P2D_vel<VortFunc>(
+    result_array[i] = core::vel<VortFunc>(
         self, mes_start[i], recip_reg_rad);
   }
 }
@@ -86,8 +68,7 @@ bsv_V2f P2D_M2S_vel(const cvtx_P2D *array_start, const int num_particles,
   float recip_reg_rad = 1.f / std::abs(regularisation_radius);
 #pragma omp parallel for reduction(+ : rx, ry)
   for (int i = 0; i < num_particles; ++i) {
-    bsv_V2f vel =
-        detail::P2D_vel<VortFunc>(array_start[i], mes_point, recip_reg_rad);
+    bsv_V2f vel = core::vel<VortFunc>(array_start[i], mes_point, recip_reg_rad);
     rx += vel.x[0];
     ry += vel.x[1];
   }
@@ -114,21 +95,24 @@ void P2D_M2M_vel(const cvtx_P2D *array_start, const int num_particles,
                  float regularisation_radius) {
   switch (kernel) {
   case cvtx_VortFunc_singular:
-    P2D_M2M_vel<cvtx_VortFunc_singular>(array_start, num_particles, mes_start,
+    return P2D_M2M_vel<cvtx_VortFunc_singular>(array_start, num_particles, mes_start,
                                         num_mes, result_array,
                                         regularisation_radius);
   case cvtx_VortFunc_planetary:
-    P2D_M2M_vel<cvtx_VortFunc_planetary>(array_start, num_particles, mes_start,
+    return P2D_M2M_vel<cvtx_VortFunc_planetary>(
+        array_start, num_particles, mes_start,
                                          num_mes, result_array,
                                          regularisation_radius);
   case cvtx_VortFunc_winckelmans:
-    P2D_M2M_vel<cvtx_VortFunc_winckelmans>(array_start, num_particles,
-                                           mes_start, num_mes, result_array,
-                                           regularisation_radius);
+    return P2D_M2M_vel<cvtx_VortFunc_winckelmans>(
+        array_start, num_particles,
+        mes_start, num_mes, result_array,
+        regularisation_radius);
   case cvtx_VortFunc_gaussian:
-    P2D_M2M_vel<cvtx_VortFunc_gaussian>(array_start, num_particles, mes_start,
-                                        num_mes, result_array,
-                                        regularisation_radius);
+    return P2D_M2M_vel<cvtx_VortFunc_gaussian>(array_start, num_particles,
+                                               mes_start,
+                                               num_mes, result_array,
+                                               regularisation_radius); 
   default:
     break;
   }
@@ -146,17 +130,17 @@ CVTX_EXPORT bsv_V2f cvtx_P2D_S2S_vel(const cvtx_P2D *self,
   float recip_rad = 1.f / std::abs(regularisation_radius);
   switch (kernel) {
   case cvtx_VortFunc_singular:
-    return cvtx::detail::P2D_vel<cvtx_VortFunc_singular>(*self, mes_point,
-                                                         recip_rad);
+      return cvtx::core::vel<cvtx_VortFunc_singular>(*self, mes_point,
+                                                      recip_rad);
   case cvtx_VortFunc_planetary:
-    return cvtx::detail::P2D_vel<cvtx_VortFunc_planetary>(*self, mes_point,
-                                                          recip_rad);
+    return cvtx::core::vel<cvtx_VortFunc_planetary>(*self, mes_point,
+                                                    recip_rad);
   case cvtx_VortFunc_winckelmans:
-    return cvtx::detail::P2D_vel<cvtx_VortFunc_winckelmans>(*self, mes_point,
-                                                            recip_rad);
+    return cvtx::core::vel<cvtx_VortFunc_winckelmans>(*self, mes_point,
+                                                      recip_rad);
   case cvtx_VortFunc_gaussian:
-    return cvtx::detail::P2D_vel<cvtx_VortFunc_gaussian>(*self, mes_point,
-                                                         recip_rad);
+    return cvtx::core::vel<cvtx_VortFunc_gaussian>(*self, mes_point,
+                                                   recip_rad);
   default:
     return {0.f, 0.f};
   }
@@ -234,31 +218,6 @@ CVTX_EXPORT void cvtx_P2D_M2M_vel(const cvtx_P2D *array_start,
 
 /* Visous vorticity exchange methods ----------------------------------------*/
 
-namespace cvtx {
-namespace detail {
-template <cvtx_VortFunc VortFunc>
-float P2D_visc_dvort(const cvtx_P2D *self, const cvtx_P2D *induced_particle,
-                     float regularisation_radius, float kinematic_visc) {
-  bsv_V2f rad;
-  float radd, rho, ret, t1, t2, t22, t21, t211, t212;
-  if (bsv_V2f_isequal(self->coord, induced_particle->coord)) {
-    ret = 0.f;
-  } else {
-    rad = bsv_V2f_minus(self->coord, induced_particle->coord);
-    radd = bsv_V2f_abs(rad);
-    rho = std::abs(radd / regularisation_radius);
-    t1 = 2 * kinematic_visc / (regularisation_radius * regularisation_radius);
-    t211 = self->vorticity * induced_particle->area;
-    t212 = -induced_particle->vorticity * self->area;
-    t21 = t211 + t212;
-    t22 = vkernel::eta_2D<VortFunc>(rho);
-    t2 = t21 * t22;
-    ret = t2 * t1;
-  }
-  return ret;
-}
-} // namespace detail
-} // namespace cvtx
 
 CVTX_EXPORT float cvtx_P2D_S2S_visc_dvort(const cvtx_P2D *self,
                                           const cvtx_P2D *induced_particle,
@@ -267,10 +226,10 @@ CVTX_EXPORT float cvtx_P2D_S2S_visc_dvort(const cvtx_P2D *self,
                                           float kinematic_visc) {
   switch (kernel) {
   case cvtx_VortFunc_gaussian:
-    return cvtx::detail::P2D_visc_dvort<cvtx_VortFunc_gaussian>(
+      return cvtx::core::visc_dvort<cvtx_VortFunc_gaussian>(
         self, induced_particle, regularisation_radius, kinematic_visc);
   case cvtx_VortFunc_winckelmans:
-    return cvtx::detail::P2D_visc_dvort<cvtx_VortFunc_winckelmans>(
+    return cvtx::core::visc_dvort<cvtx_VortFunc_winckelmans>(
         self, induced_particle, regularisation_radius, kinematic_visc);
   default:
     assert(false && "Invalid kernel choice.");

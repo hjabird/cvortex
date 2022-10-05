@@ -29,6 +29,7 @@ SOFTWARE.
 
 #include <cstdint>
 #include <tuple>
+#include <string>
 
 #ifdef __GNUC__
 /* No need to include anything. */
