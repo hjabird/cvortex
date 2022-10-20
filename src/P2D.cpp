@@ -33,6 +33,7 @@ SOFTWARE.
 #include "redistribution_helper_funcs.h"
 #include "vortex_kernels.h"
 #include "particle_core_functions.hpp"
+#include "eigen_types.hpp"
 
 #ifdef CVTX_USING_OPENCL
 #include "ocl_P2D.h"
@@ -78,14 +79,25 @@ bsv_V2f P2D_M2S_vel(const cvtx_P2D *array_start, const int num_particles,
 namespace open_mp {
 
 template <cvtx_VortFunc VortFunc>
-void P2D_M2M_vel(const cvtx_P2D *array_start, const int num_particles,
-                 const bsv_V2f *mes_start, const int num_mes,
-                 bsv_V2f *result_array, float regularisation_radius) {
-#pragma omp parallel for schedule(static)
-  for (int i = 0; i < num_mes; ++i) {
-    result_array[i] = cvtx::P2D_M2S_vel<VortFunc>(
-        array_start, num_particles, mes_start[i], regularisation_radius);
+void P2D_M2M_vel(const cvtx_P2D *arrayStart, const int numParticles,
+                 const bsv_V2f *mesStart, const int numMes,
+                 bsv_V2f *resultArray, float regularisationRadius) {
+  static constexpr int blockSize{32};
+  using result_array_t = typename detail::eigen_equiv<bsv_V2f*>::type;
+  auto particleArr =
+      detail::to_eigen<blockSize>(arrayStart, numParticles);
+  auto mesArr = detail::to_eigen<blockSize>(mesStart, numMes);
+  result_array_t resArr =
+      result_array_t::Zero(detail::padded_size<blockSize>(numMes), 2);
+#pragma omp parallel for
+  for (int j{0}; j < numMes; j += blockSize) {
+      for (int i{0}; i < numParticles; ++i) {
+        resArr.block(j, 0, blockSize, 2) += core::vel<VortFunc, blockSize>(
+            particleArr.coords.row(i), particleArr.vorts(i),
+            mesArr.block(j, 0, blockSize, 2), 1.f / regularisationRadius);
+      }
   }
+  detail::to_array(resArr, resultArray, numMes);
   return;
 }
 
@@ -126,7 +138,6 @@ CVTX_EXPORT bsv_V2f cvtx_P2D_S2S_vel(const cvtx_P2D *self,
                                      const bsv_V2f mes_point,
                                      const cvtx_VortFunc kernel,
                                      float regularisation_radius) {
-  bsv_V2f ret;
   float recip_rad = 1.f / std::abs(regularisation_radius);
   switch (kernel) {
   case cvtx_VortFunc_singular:

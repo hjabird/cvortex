@@ -37,6 +37,7 @@ else()
 	add_library(cvortex SHARED ${CVORTEX_INCLUDE} ${CVORTEX_SOURCE})
 	if(WIN32)
 		target_compile_definitions(cvortex PRIVATE CVTX_EXPORT=__declspec\(dllexport\))
+		target_sources(cvortex PRIVATE tools/natvis/Eigen.natvis)
 	else()
 		target_compile_definitions(cvortex PRIVATE CVTX_EXPORT=)
 	endif()
@@ -47,6 +48,10 @@ target_compile_definitions(cvortex PRIVATE  CVORTEX_VERSION=${CVORTEX_VERSION}
 											CVORTEX_VERSION_MAJOR=${CVORTEX_VERSION_MAJOR}
 											CVORTEX_VERSION_MINOR=${CVORTEX_VERSION_MINOR}
 											CVORTEX_VERSION_PATCH=${CVORTEX_VERSION_PATCH})
+											
+find_package(Eigen3 CONFIG REQUIRED)
+target_link_libraries(cvortex PRIVATE Eigen3::Eigen)
+
 if(CVORTEX_USE_OPENMP)
 	find_package(OpenMP)
 	if(OpenMP_CXX_FOUND)

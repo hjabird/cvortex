@@ -28,6 +28,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
 
+#include <Eigen/Dense>
 
 namespace cvtx {
 namespace core {
@@ -49,6 +50,29 @@ inline bsv_V2f vel(const cvtx_P2D &self, const bsv_V2f &mes_point,
   ret.x[1] = g * -rad.x[0] * cor;
   ret = bsv_V2f_isequal(self.coord, mes_point) ? bsv_V2f_zero() : ret;
   return bsv_V2f_mult(ret, 1.f / (2.f * pi_f));
+}
+
+template<cvtx_VortFunc VortFunc, int NumPoints>
+inline Eigen::Matrix<float, NumPoints, 2> vel(
+    const Eigen::Matrix<float, 1, 2> particleCoord,
+                const float particleVort,
+                const Eigen::Matrix<float, NumPoints, 2>& mesCoord,
+                float recipRegRad) {
+  using column_array_t = Eigen::Array<float, NumPoints, 1>;
+  using matrix_t = Eigen::Matrix<float, NumPoints, 2>;
+  matrix_t coordDiff = mesCoord.rowwise() - particleCoord;
+  column_array_t radius = coordDiff.rowwise().norm().array();
+  column_array_t rho = radius * recipRegRad;
+  column_array_t g =
+      rho.unaryExpr([](float rho) { return vkernel::g_2D<VortFunc>(rho); });
+  column_array_t cor = (g / radius.square()) * particleVort;
+  // Where cor is NaN, set it to zero.
+  cor = (!(radius > 0)).select(0.f, cor);
+  // Rotate the coord: {x[1], -x[0]}
+  coordDiff.col(0).swap(coordDiff.col(1));
+  coordDiff.col(1) *= -1;
+  matrix_t ret = (coordDiff.array().colwise() * cor).matrix();
+  return ret * (1.f / (2.f * pi_f));
 }
 
 template <cvtx_VortFunc VortFunc>
@@ -90,6 +114,25 @@ inline bsv_V3f vel(const cvtx_P3D &self, const bsv_V3f mes_point,
   return bsv_V3f_mult(ret, 1.f / (4.f * pi_f));
 }
 
+template <cvtx_VortFunc VortFunc, int NumPoints>
+inline Eigen::Matrix<float, NumPoints, 3> vel(const Eigen::Matrix<float, 1, 3> particleCoord,
+                const Eigen::Matrix<float, 1, 3> particleVort,
+                const Eigen::Matrix<float, NumPoints, 3> &mesCoord,
+                float recipRegRad) {
+  using column_array_t = Eigen::Array<float, NumPoints, 1>;
+  using matrix_t = Eigen::Matrix<float, NumPoints, 3>;
+  matrix_t coordDiff = mesCoord.rowwise() - particleCoord;
+  column_array_t radius = coordDiff.rowwise().norm().array();
+  column_array_t rho = radius * recipRegRad;
+  column_array_t g =
+      rho.unaryExpr([](float rho) { return -vkernel::g_3D<VortFunc>(rho); });
+  column_array_t cor = g / radius.cube();
+  // Where cor is NaN, set it to zero.
+  cor = (!(radius > 0)).select(0.f, cor);
+  matrix_t mat = coordDiff.rowwise().cross(particleVort);
+  matrix_t ret = (mat.array().colwise() * cor).matrix();
+  return ret * (1.f / (4.f * pi_f));
+}
 
 template <cvtx_VortFunc VortFunc>
 inline bsv_V3f dvort(const cvtx_P3D &self, const cvtx_P3D &induced_particle,
@@ -115,6 +158,38 @@ inline bsv_V3f dvort(const cvtx_P3D &self, const cvtx_P3D &induced_particle,
   ret = bsv_V3f_mult(t2, t1);
   ret = bsv_V3f_isequal(self.coord, induced_particle.coord) ? bsv_V3f_zero()
                                                             : ret;
+  return ret;
+}
+
+template <cvtx_VortFunc VortFunc, int NumPoints>
+inline Eigen::Matrix<float, NumPoints, 3> dvort(
+    const Eigen::Matrix<float, 1, 3> particleCoord,
+    const Eigen::Matrix<float, 1, 3> particleVort,
+    const Eigen::Matrix<float, NumPoints, 3> &inducedCoords, 
+    const Eigen::Matrix<float, NumPoints, 3> &inducedVorts,
+    float regularisationRadius) {
+  using column_array_t = Eigen::Array<float, NumPoints, 1>;
+  using matrix_t = Eigen::Matrix<float, NumPoints, 3>;
+  matrix_t coordDiff = inducedCoords.rowwise() - particleCoord;
+  column_array_t radius = coordDiff.rowwise().norm().array();
+  column_array_t rho = radius * (1.f / regularisationRadius);
+  column_array_t g =
+      rho.unaryExpr([](float rho) { return vkernel::g_3D<VortFunc>(rho); });
+  column_array_t f =
+      rho.unaryExpr([](float rho) { return vkernel::zeta_fn<VortFunc>(rho); });
+  matrix_t cross_om = inducedVorts.rowwise().cross(particleVort);
+  float t1 = 1.f / (4.f * pi_f * maths::pow<3>(regularisationRadius));
+  matrix_t t21 = cross_om.array().colwise() * (g * rho.cube().inverse());
+  column_array_t t221 = -1.f / radius.square();
+  column_array_t t222 = (3 * g) / rho.cube() - f;
+  // Dot product:
+  column_array_t t223 = (coordDiff.array() * cross_om.array()).rowwise().sum();
+  matrix_t t22 = coordDiff.array().colwise() * (t221 * t222 * t223);
+  matrix_t t2 = t21 + t22;
+  matrix_t ret = (t2.array() * t1).matrix();
+  for (int i{0}; i < ret.cols(); ++i) {
+    ret.col(i) = (!(radius > 0)).select(0.f, ret.col(i));
+  }
   return ret;
 }
 

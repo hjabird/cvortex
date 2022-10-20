@@ -166,13 +166,21 @@ template <> inline float zeta_fn<cvtx_VortFunc_gaussian>(float rho) {
   return SQRTF_2_OVER_PI * std::exp(-rho * rho * 0.5f);
 }
 template <> inline float g_2D<cvtx_VortFunc_gaussian>(float rho) {
-  return 1.f - std::exp(-rho * rho * 0.5f);
+  if (rho > 6.f) {
+    return 1.f;
+  } else {
+    return 1.f - std::exp(-rho * rho * 0.5f);
+  }
 }
 template <> constexpr bool has_eta_fns<cvtx_VortFunc_gaussian>() {
   return true;
 }
 template <> inline float eta_2D<cvtx_VortFunc_gaussian>(float rho) {
-  return std::exp(-rho * rho * 0.5f);
+  if (rho > 6.f) {
+    return 1.f;
+  } else {
+    return 1.f - std::exp(-rho * rho * 0.5f);
+  }
 }
 template <> inline float eta_3D<cvtx_VortFunc_gaussian>(float rho) {
   return zeta_fn<cvtx_VortFunc_gaussian>(rho);

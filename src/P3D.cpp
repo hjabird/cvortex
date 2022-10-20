@@ -38,6 +38,7 @@ SOFTWARE.
 #include "redistribution_helper_funcs.h"
 #include "vortex_kernels.h"
 #include "particle_core_functions.hpp"
+#include "eigen_types.hpp"
 
 #ifdef CVTX_USING_OPENCL
 #include "ocl_P3D.h"
@@ -151,7 +152,7 @@ bsv_V3f P3D_M2S_visc_dvort(const cvtx_P3D *array_start, const int num_particles,
 template <cvtx_VortFunc VortFunc>
 bsv_V3f P3D_M2S_vort(const cvtx_P3D *array_start, const int num_particles,
                      const bsv_V3f mes_point, float regularisation_radius) {
-  float cutoff, rsigma, radd, coeff;
+  float cutoff, rsigma, radd;
   bsv_V3f rad, sum = bsv_V3f_zero();
   cutoff = 5.f * regularisation_radius;
   assert(num_particles > 0);
@@ -170,14 +171,26 @@ bsv_V3f P3D_M2S_vort(const cvtx_P3D *array_start, const int num_particles,
 namespace open_mp {
 
 template <cvtx_VortFunc VortFunc>
-void P3D_M2M_vel(const cvtx_P3D *array_start, const int num_particles,
-                 const bsv_V3f *mes_start, const int num_mes,
-                 bsv_V3f *result_array, float regularisation_radius) {
-#pragma omp parallel for schedule(static)
-  for (int i = 0; i < num_mes; ++i) {
-    result_array[i] = P3D_M2S_vel<VortFunc>(
-        array_start, num_particles, mes_start[i], regularisation_radius);
+void P3D_M2M_vel(const cvtx_P3D *arrayStart, const int numParticles,
+                 const bsv_V3f *mesStart, const int numMes,
+                 bsv_V3f *resultArray, float regularisationRadius) {
+  static constexpr int blockSize{32};
+  using result_array_t =
+      typename detail::eigen_equiv<bsv_V3f *>::type;
+  auto particleArr =
+      detail::to_eigen<blockSize>(arrayStart, numParticles);
+  auto mesArr = detail::to_eigen<blockSize>(mesStart, numMes);
+  result_array_t resArr =
+      result_array_t::Zero(detail::padded_size<blockSize>(numMes), 3);
+#pragma omp parallel for
+  for (int j{0}; j < numMes; j += blockSize) {
+    for (int i{0}; i < numParticles; ++i) {
+      resArr.block(j, 0, blockSize, 3) += core::vel<VortFunc, blockSize>(
+          particleArr.coords.row(i), particleArr.vorts.row(i),
+          mesArr.block(j, 0, blockSize, 3), 1.f / regularisationRadius);
+    }
   }
+  detail::to_array(resArr, resultArray, numMes);
   return;
 }
 
@@ -206,14 +219,26 @@ void P3D_M2M_vel(const cvtx_P3D *array_start, const int num_particles,
 }
 
 template <cvtx_VortFunc VortFunc>
-void P3D_M2M_dvort(const cvtx_P3D *array_start, const int num_particles,
-                   const cvtx_P3D *induced_start, const int num_induced,
-                   bsv_V3f *result_array, float regularisation_radius) {
-#pragma omp parallel for schedule(static)
-  for (int i = 0; i < num_induced; ++i) {
-    result_array[i] = P3D_M2S_dvort<VortFunc>(
-        array_start, num_particles, induced_start[i], regularisation_radius);
+void P3D_M2M_dvort(const cvtx_P3D *arrayStart, const int numParticles,
+                   const cvtx_P3D *inducedStart, const int numInduced,
+                   bsv_V3f *resultArray, float regularisationRadius) {
+  static constexpr int blockSize{32};
+  using result_array_t = typename detail::eigen_equiv<bsv_V3f *>::type;
+  auto particleArr = detail::to_eigen<blockSize>(arrayStart, numParticles);
+  auto inducedArr = detail::to_eigen<blockSize>(inducedStart, numInduced);
+  result_array_t resArr =
+      result_array_t::Zero(detail::padded_size<blockSize>(numInduced), 3);
+#pragma omp parallel for
+  for (int j{0}; j < numInduced; j += blockSize) {
+    for (int i{0}; i < numParticles; ++i) {
+      resArr.block(j, 0, blockSize, 3) += core::dvort<VortFunc, blockSize>(
+          particleArr.coords.row(i), particleArr.vorts.row(i),
+          inducedArr.coords.block(j, 0, blockSize, 3), 
+          inducedArr.vorts.block(j, 0, blockSize, 3), 
+          regularisationRadius);
+    }
   }
+  detail::to_array(resArr, resultArray, numInduced);
   return;
 }
 

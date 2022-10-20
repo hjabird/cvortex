@@ -78,12 +78,6 @@ constexpr float pow<9, 1>(float x) {
   return pow<3>(x) * pow<3>(x) * pow<3>(x);
 }
 
-/** Compute exp(-x^2 / 2).
-**/
-constexpr float expm2(float x) {
-
-}
-
 }	// namespace maths
 }	// namespace cvtx
 #endif  // CVTX_FAST_MATHS_H

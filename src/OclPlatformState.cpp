@@ -115,12 +115,16 @@ void OclPlatformState::find_devices()
 	cl_uint num_devices;
 	std::vector<cl_device_id> device_ids;
 	/* We're only interested in GPUs - cpus work better with OpenMP */
-	status = clGetDeviceIDs(m_platform, CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices);
+    status = clGetDeviceIDs(m_platform, CL_DEVICE_TYPE_GPU, 0, NULL,
+                            &num_devices);
+    if (status != CL_SUCCESS) {
+      return;
+    }
 	device_ids.resize(num_devices);
 	status = clGetDeviceIDs(m_platform, CL_DEVICE_TYPE_GPU, 
 		(cl_uint)device_ids.size(), device_ids.data(), NULL);
 	if (status != CL_SUCCESS) {
-		retv = -1;
+       return;
 	}
 	else
 	{
