@@ -205,15 +205,15 @@ inline particle_array<3> to_eigen(const cvtx_P3D* arr, const int n) {
 template <int BlockSize = 1>
 inline auto to_eigen(const cvtx_F3D* arr, const int n) {
   int nRows = padded_size<BlockSize>(n);
-    Eigen::Matrix<float, Eigen::Dynamic, 3, DataOrder> starts(nRows, 3);
-    Eigen::Matrix<float, Eigen::Dynamic, 3, DataOrder> ends(nRows, 3);
-    Eigen::Matrix<float, Eigen::Dynamic, 1, DataOrder> strengths(nRows);
+    Eigen::Matrix<float, Eigen::Dynamic, 3> starts(nRows, 3);
+    Eigen::Matrix<float, Eigen::Dynamic, 3> ends(nRows, 3);
+    Eigen::Matrix<float, Eigen::Dynamic, 1> strengths(nRows);
     for (int i{0}; i < n; ++i) {
         for (int j{0}; j < 3; ++j) {
-            starts(i, j) = arr[i].starts.x[j];
-            ends(i, j) = arr[i].ends.x[j];
+            starts(i, j) = arr[i].start.x[j];
+            ends(i, j) = arr[i].end.x[j];
         }
-        strengths(i) = arr[i].strengths;
+        strengths(i) = arr[i].strength;
     }
     for (int i{n}; i < nRows; ++i) {
       for (int j{0}; j < 3; ++j) {

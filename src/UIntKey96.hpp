@@ -31,8 +31,6 @@ SOFTWARE.
 #include <tuple>
 #include <string>
 
-#include "cpp_types.hpp"
-
 #ifdef __GNUC__
 /* No need to include anything. */
 #elif defined(_MSC_VER)
